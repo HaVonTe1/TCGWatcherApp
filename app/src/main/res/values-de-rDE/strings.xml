@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TCG Watcher</string>
+    <string name="items">Objekte</string>
+    <string name="search">Suche</string>
+    <string name="settings">Einstellungen</string>
+    <string name="searchPlaceHolder">Produktsuche</string>
+    <string name="clearSearch">Suche löschen</string>
+    <string name="nameLabel">"Name: "</string>
+    <string name="priceLabel">"Preis: "</string>
+    <string name="lastUpdateLabel">"aktualisiert: "</string>
+    <string name="emptySearch">Keine Ergebnisse</string>
+</resources>

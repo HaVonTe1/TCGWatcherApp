@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TCG Watcher</string>
+    <string name="bisaflor" translatable="false">Bisaflor\t\t\t</string>
+    <string name="items">Items</string>
+    <string name="search">Search</string>
+    <string name="settings">Settings</string>
+    <string name="searchPlaceHolder">Search for products</string>
+    <string name="clearSearch">Clear search</string>
+    <string name="nameLabel">Name:</string>
+    <string name="priceLabel">Price:</string>
+    <string name="lastUpdateLabel">Last Updated:</string>
+    <string name="emptySearch">No Results</string>
+</resources>
