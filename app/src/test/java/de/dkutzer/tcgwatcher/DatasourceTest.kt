@@ -1,10 +1,15 @@
 package de.dkutzer.tcgwatcher
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+
 
 class DatasourceTest {
 
-    @org.junit.jupiter.api.Test
+
+    @Test
     fun loadFromCardMarket() {
+
+        Datasource().loadFromCardMarket()
+
     }
 }

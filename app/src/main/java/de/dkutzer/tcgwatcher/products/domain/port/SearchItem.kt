@@ -1,3 +1,11 @@
 package de.dkutzer.tcgwatcher.products.domain.port
 
-data class SearchItem()
+import android.icu.util.Currency
+import android.icu.util.CurrencyAmount
+
+data class SearchItem(
+    val displayName : String,
+    val orgName: String,
+    val cmLink: String,
+    val price : CurrencyAmount
+)

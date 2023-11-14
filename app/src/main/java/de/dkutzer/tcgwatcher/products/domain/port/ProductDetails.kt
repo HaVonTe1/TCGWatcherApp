@@ -1,14 +1,13 @@
-package de.dkutzer.tcgwatcher.products.domain.ports
+package de.dkutzer.tcgwatcher.products.domain.port
 
-import org.apache.commons.lang3.StringEscapeUtils
 
 data class ProductDetails(
-    val id : String
+    val id : String,
     val name: String,
-
+    val prices : PriceDetails
 )
 
 data class PriceDetails(
     val current: Float,
-    
+    val trend: Float
 )
