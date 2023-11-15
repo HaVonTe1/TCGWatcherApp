@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +39,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.models.ItemOfInterest
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestCardView
@@ -46,10 +53,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainTheme (Datasource().loadMockData())//TODO
+            MainTheme ()
         }
     }
 }
+
 
 sealed class Screen(
     val route: String,
@@ -64,40 +72,84 @@ sealed class Screen(
 }
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainTheme(ioiList : List<ItemOfInterest> ) {
-    val navController = rememberNavController()
+private fun MainTheme( ) {
+    val internetPermissionState = rememberPermissionState(
+        android.Manifest.permission.INTERNET
+    )
 
     TCGWatcherTheme {
 
+        if (!internetPermissionState.status.isGranted) {
+            permissionsScreen(internetPermissionState)
+        }
+        else {
+            MainScreen()
+        }
 
-        Scaffold(
-            bottomBar = {
+    }
+}
 
-                BottomNavigation(
-                    backgroundColor = Color.LightGray,
-                    contentColor = Color.Black,
-                    elevation = 2.dp
-                ) {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
-                    MyBottomNavigationItem(currentDestination, navController, Screen.ItemsOfInterestScreen)
-                    MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
-                    MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
+@Composable
+@OptIn(ExperimentalPermissionsApi::class)
+private fun permissionsScreen(internetPermissionState: PermissionState) {
+    Column {
+        val textToShow = if (internetPermissionState.status.shouldShowRationale) {
+            // If the user has denied the permission but the rationale can be shown,
+            // then gently explain why the app requires this permission
+            "The Internet access is important for this app. Please grant the permission."
+        } else {
+            // If it's the first time the user lands on this feature, or the user
+            // doesn't want to be asked again for this permission, explain that the
+            // permission is required
+            "Internet access permission required for this feature to be available. " +
+                    "Please grant the permission"
+        }
+        Text(textToShow)
+        Button(onClick = { internetPermissionState.launchPermissionRequest() }) {
+            Text("Request permission")
+        }
+    }
+}
 
-                }
-            }
-        ) { innerPadding ->
-            NavHost(navController, startDestination = Screen.ItemsOfInterestScreen.route, Modifier.padding(innerPadding)) {
-                composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestCardView(ioiList) }
-                composable(Screen.SearchScreen.route) { SearchView() }
-                composable(Screen.SettingsScreen.route) { DummyView(navController) }
+@Composable
+private fun MainScreen(items: List<ItemOfInterest> = emptyList()) {
+
+    val navController = rememberNavController()
+
+    Scaffold(
+        bottomBar = {
+
+            BottomNavigation(
+                backgroundColor = Color.LightGray,
+                contentColor = Color.Black,
+                elevation = 2.dp
+            ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                MyBottomNavigationItem(
+                    currentDestination,
+                    navController,
+                    Screen.ItemsOfInterestScreen
+                )
+                MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
+                MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
 
             }
         }
+    ) { innerPadding ->
+        NavHost(
+            navController,
+            startDestination = Screen.ItemsOfInterestScreen.route,
+            Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestCardView(items) }
+            composable(Screen.SearchScreen.route) { SearchView() }
+            composable(Screen.SettingsScreen.route) { DummyView(navController) }
 
+        }
     }
 }
 
@@ -131,6 +183,6 @@ fun DummyView(navController: NavController, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun TestMainPreview() {
-    MainTheme(Datasource().loadMockData())
+    MainScreen(Datasource().loadMockData())
 
 }

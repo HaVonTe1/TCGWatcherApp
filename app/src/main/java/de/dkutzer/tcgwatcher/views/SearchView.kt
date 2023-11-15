@@ -38,27 +38,26 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.models.ItemOfInterest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
-val searchViewModel = SearchViewModel()
-fun onSearchQueryChange(newQuery: String) {
-    searchQuery = newQuery
-
-}
 
 @Composable
 fun SearchView() {
+    val searchViewModel = SearchViewModel()
+
+
     val searchResults by searchViewModel.searchResults.collectAsStateWithLifecycle()
 
     SearchView(
-        searchQuery = searchQuery,
+        searchQuery = searchViewModel.searchQuery,
         searchResults = searchResults,
-        onSearchQueryChange = { onSearchQueryChange(it) }
+        onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
+        onSearchSubmit = { searchViewModel.onSearchSubmit(it) }
     )
 }
-var searchQuery by mutableStateOf("")
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +65,8 @@ var searchQuery by mutableStateOf("")
 private fun SearchView(
     searchQuery: String,
     searchResults: List<ItemOfInterest>,
-    onSearchQueryChange: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit,
+    onSearchSubmit: (String) -> Unit
 ) {
 
     var active by rememberSaveable { mutableStateOf(false) } //needed to indicate if a searchResultItem is clickable
@@ -95,7 +95,10 @@ private fun SearchView(
                 }
             }
         },
-        onSearch = { active = false },
+        onSearch = {
+            active = false
+            onSearchSubmit(searchQuery)
+                   },
         active = active,
         onActiveChange = {
             active = it
@@ -128,7 +131,7 @@ private fun SearchView(
 
 
 @Composable
-fun SearchListItem(
+private fun SearchListItem(
     item: ItemOfInterest,
     modifier: Modifier = Modifier
 ) {
@@ -142,36 +145,47 @@ fun SearchListItem(
 }
 
 
-class SearchViewModel : ViewModel() {
+private class SearchViewModel : ViewModel() {
 
-    var searchResults = createStateFlowFromItemList(emptyList())
+    var searchResults = createStateFlowFromItemList(mutableListOf())
+    var searchQuery by mutableStateOf("")
 
-    fun createStateFlowFromItemList(items: List<ItemOfInterest>):StateFlow<List<ItemOfInterest>> {
+
+    fun createStateFlowFromItemList(items: MutableList<ItemOfInterest>):StateFlow<MutableList<ItemOfInterest>> {
         val itemFlow = flowOf(
             items
         )
+
+
         return snapshotFlow { searchQuery }
             .combine(itemFlow) { searchQuery, items ->
 
                 when {
-                    searchQuery.isNotEmpty() -> items.filter { item ->
-                        item.details.name.contains(searchQuery, ignoreCase = true)
-                    }
+                    searchQuery.isNotEmpty() -> items
 
                     else -> items
                 }
             }.stateIn(
                 scope = viewModelScope,
-                initialValue = emptyList(),
+                initialValue = mutableListOf(),
                 started = SharingStarted.WhileSubscribed(5_000)
             )
 
+
+    }
+
+    fun onSearchQueryChange(newQuery: String) {
+        searchQuery = newQuery
+    }
+    fun onSearchSubmit(searchString: String) {
+        searchResults.value.clear()
+        searchResults.value.addAll(Datasource().loadMockData())
     }
 
 }
 
 @Composable
-fun NoSearchResults() {
+private fun NoSearchResults() {
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally

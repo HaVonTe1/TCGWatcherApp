@@ -46,8 +46,12 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "mozilla/public-suffix-list.txt"
         }
     }
+
+
     buildToolsVersion = "33.0.1"
 
     testOptions {
@@ -55,7 +59,17 @@ android {
             isReturnDefaultValues = true
         }
     }
+//    configurations.all {
+//        exclude("org.slf4j", "slf4j-api")
+//    }
 
+    configurations.all {
+        resolutionStrategy {
+            force("org.slf4j:log4j-over-slf4j:1.7.30")
+            force("ch.qos.logback:logback-classic:1.2.3")
+//            force("com.google.guava:guava-gwt:14.0.1")
+        }
+    }
 }
 
 dependencies {
@@ -72,12 +86,13 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
-    implementation("it.skrape:skrapeit:1.3.0-alpha.1")
-    implementation("it.skrape:skrapeit-browser-fetcher:1.3.0-alpha.1")
+    implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+    implementation("it.skrape:skrapeit:1.2.2")
+    implementation("it.skrape:skrapeit-browser-fetcher:1.2.2")
     implementation("io.ktor:ktor-client-core:2.3.6")
     implementation("io.ktor:ktor-client-okhttp:2.3.6")
-    implementation("io.ktor:ktor-client-logging:2.3.6")
-    implementation("io.ktor:ktor-client-encoding:2.3.6")
+//    implementation("io.ktor:ktor-client-logging:2.3.6")
+//    implementation("io.ktor:ktor-client-encoding:2.3.6")
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-datetime
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 

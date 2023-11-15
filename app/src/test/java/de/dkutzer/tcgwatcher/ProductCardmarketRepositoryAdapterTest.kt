@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher
 
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 import io.ktor.util.date.GMTDate
@@ -10,11 +11,11 @@ class ProductCardmarketRepositoryAdapterTest {
 
     @org.junit.jupiter.api.Test
     fun search() {
-        val cardmarketConfig = CardmarketConfig()
+        val client  = CardmarketApiClientImpl(CardmarketConfig())
         val repositoryAdapter =
-            ProductCardmarketRepositoryAdapter(cardmarketConfig)
+            ProductCardmarketRepositoryAdapter(client)
 
-        val searchItems = repositoryAdapter.search("Bisa")
+        val searchItems = repositoryAdapter.search("Bisaflor")
         searchItems.forEach {
             println(it)
         }

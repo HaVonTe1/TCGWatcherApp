@@ -1,6 +1,5 @@
 package de.dkutzer.tcgwatcher.products.domain.port
 
-import android.icu.util.Currency
 import android.icu.util.CurrencyAmount
 
 data class SearchItem(
