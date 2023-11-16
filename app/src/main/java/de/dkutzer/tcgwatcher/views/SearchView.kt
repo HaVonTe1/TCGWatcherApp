@@ -1,17 +1,17 @@
 package de.dkutzer.tcgwatcher.views
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,15 +37,14 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.models.ItemOfInterest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
+val searchViewModel = SearchViewModel()
 
 @Composable
 fun SearchView() {
-    val searchViewModel = SearchViewModel()
 
 
     val searchResults by searchViewModel.searchResults.collectAsStateWithLifecycle()
@@ -70,82 +68,83 @@ private fun SearchView(
 ) {
 
     var active by rememberSaveable { mutableStateOf(false) } //needed to indicate if a searchResultItem is clickable
-    SearchBar(
-        query = searchQuery,
-        onQueryChange = onSearchQueryChange,
 
-        placeholder = {
-            Text(text = stringResource(id = R.string.searchPlaceHolder))
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                tint = MaterialTheme.colorScheme.onSurface,
-                contentDescription = null
-            )
-        },
-        trailingIcon = {
-            if (searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        contentDescription = stringResource(id = R.string.clearSearch)
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = onSearchQueryChange,
+
+            placeholder = {
+                Text(text = stringResource(id = R.string.searchPlaceHolder))
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    contentDescription = null
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchQueryChange("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = stringResource(id = R.string.clearSearch)
+                        )
+                    }
+                }
+            },
+            onSearch = {
+                active = false
+                onSearchSubmit(searchQuery)
+            },
+            active = active,
+            onActiveChange = {
+                active = it
+            },
+            tonalElevation = 4.dp,
+            content = {
+//           add history items here
+            }
+        )
+        if (searchResults.isEmpty()) {
+            NoSearchResults()
+        } else {
+
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(searchResults) {
+                    ItemOfInterestCard(
+                        itemOfInterest = it,
+                        showLastUpdated = false,
+                        iconRowContent = { SearchViewCardIconRow() },
                     )
                 }
             }
-        },
-        onSearch = {
-            active = false
-            onSearchSubmit(searchQuery)
-                   },
-        active = active,
-        onActiveChange = {
-            active = it
-        },
-        tonalElevation = 4.dp,
-        content = {
-//           add history items here
-        }
-    )
-    if(searchResults.isEmpty()) {
-        NoSearchResults()
-    }else
-    {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(32.dp),
-            contentPadding = PaddingValues(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                count = searchResults.size,
-                key = { index -> searchResults[index].id },
-                itemContent = { index ->
-                    val item = searchResults[index]
-                    SearchListItem(item = item)
-                }
-            )
         }
     }
-    }
-
+}
 
 @Composable
-private fun SearchListItem(
-    item: ItemOfInterest,
-    modifier: Modifier = Modifier
-) {
+fun SearchViewCardIconRow( modifier: Modifier = Modifier) {
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.fillMaxWidth().border(1.dp, Color.Black)
+        modifier = modifier
+            .padding(1.dp)
+            .fillMaxSize(),
+        horizontalArrangement = Arrangement.SpaceBetween
+
     ) {
-        Text(text = item.details.name)
-        Text(text = item.details.price.toString())
+        ClickableIconButton(icon = Icons.TwoTone.Add, desc = stringResource(id = R.string.addDesc), onClick = {})
     }
 }
 
 
-private class SearchViewModel : ViewModel() {
+
+class SearchViewModel : ViewModel() {
 
     var searchResults = createStateFlowFromItemList(mutableListOf())
     var searchQuery by mutableStateOf("")
@@ -179,7 +178,8 @@ private class SearchViewModel : ViewModel() {
     }
     fun onSearchSubmit(searchString: String) {
         searchResults.value.clear()
-        searchResults.value.addAll(Datasource().loadMockData())
+
+        searchResults.value.addAll(Datasource().loadRealTestData(searchString))
     }
 
 }

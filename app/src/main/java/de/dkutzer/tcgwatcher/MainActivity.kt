@@ -1,32 +1,35 @@
 package de.dkutzer.tcgwatcher
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,7 +56,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainTheme ()
+            MainTheme()
         }
     }
 }
@@ -66,6 +69,7 @@ sealed class Screen(
 ) {
     object ItemsOfInterestScreen :
         Screen("itemsOfInterest", R.string.items, icon = Icons.TwoTone.Menu)
+
     object SearchScreen : Screen("search", R.string.search, icon = Icons.TwoTone.Search)
     object SettingsScreen : Screen("settings", R.string.settings, icon = Icons.TwoTone.Settings)
 
@@ -75,49 +79,84 @@ sealed class Screen(
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-private fun MainTheme( ) {
+private fun MainTheme() {
     val internetPermissionState = rememberPermissionState(
-        android.Manifest.permission.INTERNET
+        android.Manifest.permission.INTERNET // default - no permission needed
     )
+
+    val activity = (LocalContext.current as? Activity)
 
     TCGWatcherTheme {
 
         if (!internetPermissionState.status.isGranted) {
-            permissionsScreen(internetPermissionState)
-        }
-        else {
-            MainScreen()
-        }
+            permissionsDialog(
+                onDismissRequest = {
+                    activity?.finishAffinity()
+                },
+                onConfirmation = {
 
+                    internetPermissionState.launchPermissionRequest()
+                },
+                currentPermissionState = internetPermissionState
+            )
+        }
+        MainScreen(Datasource().loadMockData())
     }
 }
 
 @Composable
 @OptIn(ExperimentalPermissionsApi::class)
-private fun permissionsScreen(internetPermissionState: PermissionState) {
-    Column {
-        val textToShow = if (internetPermissionState.status.shouldShowRationale) {
-            // If the user has denied the permission but the rationale can be shown,
-            // then gently explain why the app requires this permission
-            "The Internet access is important for this app. Please grant the permission."
-        } else {
-            // If it's the first time the user lands on this feature, or the user
-            // doesn't want to be asked again for this permission, explain that the
-            // permission is required
-            "Internet access permission required for this feature to be available. " +
-                    "Please grant the permission"
-        }
-        Text(textToShow)
-        Button(onClick = { internetPermissionState.launchPermissionRequest() }) {
-            Text("Request permission")
-        }
+private fun permissionsDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+    currentPermissionState: PermissionState
+
+) {
+
+    if (currentPermissionState.status.shouldShowRationale) {
+
+        AlertDialog(
+            icon = {
+                Icon(Icons.Default.Info, contentDescription = "Info Icon")
+            },
+            title = {
+                Text(text = stringResource(id = R.string.permissionInternetAccessDialogTitle))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.permissionInternetAccessDialogText))
+            },
+            onDismissRequest = {
+                onDismissRequest()
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirmation()
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                    }
+                ) {
+                    Text("Dismiss")
+                }
+            }
+        )
     }
+
+
 }
+
 
 @Composable
 private fun MainScreen(items: List<ItemOfInterest> = emptyList()) {
-
     val navController = rememberNavController()
+
 
     Scaffold(
         bottomBar = {
@@ -177,7 +216,7 @@ private fun RowScope.MyBottomNavigationItem(
 
 @Composable
 fun DummyView(navController: NavController, modifier: Modifier = Modifier) {
-    Text(text ="Hallo")
+    Text(text = "Hallo")
 }
 
 @Preview(showBackground = true)

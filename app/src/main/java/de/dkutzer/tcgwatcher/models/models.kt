@@ -1,19 +1,20 @@
 package de.dkutzer.tcgwatcher.models
 
 import android.icu.util.CurrencyAmount
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
+import android.media.Image
+import io.ktor.http.Url
 import java.time.OffsetDateTime
 
 data class ItemOfInterest(
     val id : Long,
-    @StringRes val stringResourceId: Int,
-    @DrawableRes val imageResourceId: Int,
+    val imageUrl : String,
+    val detailsUrl : String,
     val details: ItemDetails
 )
 
 data class ItemDetails(
-    val name: String,
+    val localName: String,
+    val intName: String,
     val price: CurrencyAmount,
     val lastUpdate: OffsetDateTime
 )

@@ -10,4 +10,9 @@
     <string name="priceLabel">Price:</string>
     <string name="lastUpdateLabel">Last Updated:</string>
     <string name="emptySearch">No Results</string>
+    <string name="permissionInternetAccessDialogTitle">Grant Permission for Internet access</string>
+    <string name="permissionInternetAccessDialogText">Internet access permission required for this feature to be available. Please grant the permission</string>
+    <string name="addDesc">Add</string>
+    <string name="deleteDesc">Delete</string>
+    <string name="editDesc">Edit</string>
 </resources>

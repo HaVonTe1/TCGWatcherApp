@@ -10,4 +10,9 @@
     <string name="priceLabel">"Preis: "</string>
     <string name="lastUpdateLabel">"aktualisiert: "</string>
     <string name="emptySearch">Keine Ergebnisse</string>
+    <string name="permissionInternetAccessDialogTitle">Zugriff zum Internet erlauben</string>
+    <string name="permissionInternetAccessDialogText">Bitte gewähren sie Zugriff zum Internet für die App. Sie kann sonst nicht funktionieren. Danke.</string>
+    <string name="addDesc">Hinzufügen</string>
+    <string name="deleteDesc">Löschen</string>
+    <string name="editDesc">Bearbeiten</string>
 </resources>
