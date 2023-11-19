@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.models.ItemDetails
-import de.dkutzer.tcgwatcher.models.ItemOfInterest
+import de.dkutzer.tcgwatcher.products.domain.model.ProductDetails
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -72,10 +72,11 @@ fun RowScope.TableCell(
 }
 @Composable
 fun ItemOfInterestCard(
-    itemOfInterest: ItemOfInterest,
+    productModel: ProductModel,
     showLastUpdated: Boolean,
-    iconRowContent : @Composable() () -> Unit,
-    modifier: Modifier = Modifier) {
+    iconRowContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
 
     Card(modifier = modifier.padding(8.dp), elevation = CardDefaults.cardElevation()) {
         Row(
@@ -85,11 +86,11 @@ fun ItemOfInterestCard(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(itemOfInterest.imageUrl)
+                    .data(productModel.imageUrl)
                     .setHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
                     .setHeader("Referer", "https://www.cardmarket.com/") //TODO: cloudflare protection is kicking in without the referer
                     .build(),
-                contentDescription = itemOfInterest.details.intName,
+                contentDescription = productModel.details.intName,
                 modifier = Modifier
                     .padding(4.dp)
                     .width(100.dp),
@@ -105,7 +106,7 @@ fun ItemOfInterestCard(
 
 
                 ItemDetailsTable(
-                    itemDetails = itemOfInterest.details,
+                    itemDetails = productModel.details,
                     showLastUpdated = showLastUpdated,
                     modifier = Modifier.padding(1.dp))
                 Spacer(modifier = Modifier.height(16.dp)) // doesnt work with arrangement. why?
@@ -118,7 +119,7 @@ fun ItemOfInterestCard(
 
 @Composable
 fun ItemDetailsTable(
-    itemDetails: ItemDetails,
+    itemDetails: ProductDetails,
     showLastUpdated: Boolean,
     modifier: Modifier = Modifier) {
 

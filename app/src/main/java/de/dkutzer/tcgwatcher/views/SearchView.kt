@@ -32,9 +32,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.models.ItemOfInterest
+import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientImpl
+import de.dkutzer.tcgwatcher.products.adapter.api.ProductApiClient
+import de.dkutzer.tcgwatcher.products.adapter.port.ProductRepository
+import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import de.dkutzer.tcgwatcher.products.services.ProductMapper
+import de.dkutzer.tcgwatcher.products.services.ProductService
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -62,7 +68,7 @@ fun SearchView() {
 @Composable
 private fun SearchView(
     searchQuery: String,
-    searchResults: List<ItemOfInterest>,
+    searchResults: List<ProductModel>,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit
 ) {
@@ -109,7 +115,7 @@ private fun SearchView(
             },
             tonalElevation = 4.dp,
             content = {
-//           add history items here
+                //TODO:           add history items here
             }
         )
         if (searchResults.isEmpty()) {
@@ -119,7 +125,7 @@ private fun SearchView(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(searchResults) {
                     ItemOfInterestCard(
-                        itemOfInterest = it,
+                        productModel = it,
                         showLastUpdated = false,
                         iconRowContent = { SearchViewCardIconRow() },
                     )
@@ -146,11 +152,18 @@ fun SearchViewCardIconRow( modifier: Modifier = Modifier) {
 
 class SearchViewModel : ViewModel() {
 
+    //todo: look for a DI lib
+    val cardmarketConfig = CardmarketConfig()
+    val productApiClient = CardmarketApiClientImpl(cardmarketConfig)
+    val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
+    val productMapper = ProductMapper(cardmarketConfig)
+    val productService: ProductService = ProductService(productRepository, productMapper)
+
     var searchResults = createStateFlowFromItemList(mutableListOf())
     var searchQuery by mutableStateOf("")
 
 
-    fun createStateFlowFromItemList(items: MutableList<ItemOfInterest>):StateFlow<MutableList<ItemOfInterest>> {
+    fun createStateFlowFromItemList(items: MutableList<ProductModel>):StateFlow<MutableList<ProductModel>> {
         val itemFlow = flowOf(
             items
         )
@@ -178,8 +191,7 @@ class SearchViewModel : ViewModel() {
     }
     fun onSearchSubmit(searchString: String) {
         searchResults.value.clear()
-
-        searchResults.value.addAll(Datasource().loadRealTestData(searchString))
+        searchResults.value.addAll(productService.search(searchString))
     }
 
 }

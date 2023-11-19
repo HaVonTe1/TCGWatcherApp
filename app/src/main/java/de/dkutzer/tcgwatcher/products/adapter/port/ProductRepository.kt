@@ -1,11 +1,12 @@
 package de.dkutzer.tcgwatcher.products.adapter.port
 
-import de.dkutzer.tcgwatcher.products.domain.port.ProductDetails
-import de.dkutzer.tcgwatcher.products.domain.port.SearchItem
+import android.net.Uri
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import de.dkutzer.tcgwatcher.products.domain.model.SearchItem
 
 interface ProductRepository {
 
-    fun getProductDetailsById(id: String) : ProductDetails
+    fun getProductImageUrlById(link: String) : String
 
     fun search(searchString : String) : List<SearchItem>
 }

@@ -58,8 +58,22 @@ class CardmarketApiClientImpl(val config: BaseConfig) : ProductApiClient {
 
     }
 
-    override fun getProductDetails(id: String): ProductDetailsDto {
-        TODO("Not yet implemented")
+    override fun getProductDetails(link: String): ProductDetailsDto {
+
+        var productDto : ProductDetailsDto
+        runBlocking {
+            val response = client.get("${config.baseUrl}$link") {
+
+                headers {
+                    append(HttpHeaders.Accept, "text/html")
+                    append(HttpHeaders.AcceptLanguage, "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7")
+
+                }
+            }
+            productDto = ProductDetailsDto(response.bodyAsText())
+            client.close()
+        }
+        return productDto
     }
 
 

@@ -16,15 +16,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.models.ItemOfInterest
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 
 @Composable
-fun ItemOfInterestCardView(ioiList: List<ItemOfInterest>, modifier: Modifier = Modifier) {
+fun ItemOfInterestCardView(ioiList: List<ProductModel>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(ioiList) {
             ItemOfInterestCard(
-                itemOfInterest = it,
+                productModel = it,
                 iconRowContent =  {ItemViewCardIconRow()},
+                showLastUpdated= true,
                 modifier = modifier)
         }
     }

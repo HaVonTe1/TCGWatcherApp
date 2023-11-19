@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -18,14 +17,11 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,7 +43,7 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import de.dkutzer.tcgwatcher.models.ItemOfInterest
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestCardView
 import de.dkutzer.tcgwatcher.views.SearchView
@@ -154,7 +150,7 @@ private fun permissionsDialog(
 
 
 @Composable
-private fun MainScreen(items: List<ItemOfInterest> = emptyList()) {
+private fun MainScreen(items: List<ProductModel> = emptyList()) {
     val navController = rememberNavController()
 
 

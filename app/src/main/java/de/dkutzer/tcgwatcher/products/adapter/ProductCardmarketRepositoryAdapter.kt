@@ -4,20 +4,48 @@ import android.icu.util.Currency
 import android.icu.util.CurrencyAmount
 import de.dkutzer.tcgwatcher.products.adapter.api.ProductApiClient
 import de.dkutzer.tcgwatcher.products.adapter.port.ProductRepository
+import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import de.dkutzer.tcgwatcher.products.domain.model.SearchItem
 import de.dkutzer.tcgwatcher.products.domain.port.ProductDetails
-import de.dkutzer.tcgwatcher.products.domain.port.SearchItem
 import it.skrape.core.htmlDocument
 import it.skrape.selects.and
 import it.skrape.selects.html5.div
+import it.skrape.selects.html5.img
 import java.util.Locale
 
 class ProductCardmarketRepositoryAdapter(val client: ProductApiClient) :
     ProductRepository {
 
 
-    override fun getProductDetailsById(id: String): ProductDetails {
+    override fun getProductImageUrlById(link: String): String {
+/*
+Examples:
+https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Mew-ex-V1-MEW151
+https://www.cardmarket.com/de/Pokemon/Products/Singles/Paradox-Rift/Earthen-Vessel-PAR163
+https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009
+ */
 
-        TODO("Not yet implemented")
+        var imageUrl = "";
+        val productDetails = client.getProductDetails(link)
+        htmlDocument(productDetails.htmlCode) {
+            relaxed = true
+
+            val mainContent = div {
+                withId = "mainContent"
+                findFirst { this }
+            }
+            val slideCardDiv = mainContent.div {
+                withClass = "image" and "card-image" and "is-pokemon" and "has-shadow"
+                findSecond { this }
+            }
+            val image = slideCardDiv.img {
+                findFirst { this }
+            }
+            imageUrl = image.attribute("src")
+
+        }
+
+        return imageUrl
     }
 
     override fun search(searchString: String): List<SearchItem> {
