@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.domain.model.ProductDetails
+import de.dkutzer.tcgwatcher.products.domain.model.ProductDetailsModel
 import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -119,7 +119,7 @@ fun ItemOfInterestCard(
 
 @Composable
 fun ItemDetailsTable(
-    itemDetails: ProductDetails,
+    itemDetails: ProductDetailsModel,
     showLastUpdated: Boolean,
     modifier: Modifier = Modifier) {
 

@@ -2,11 +2,8 @@ package de.dkutzer.tcgwatcher
 
 import android.icu.util.Currency
 import android.icu.util.CurrencyAmount
-import de.dkutzer.tcgwatcher.products.domain.model.ProductDetails
+import de.dkutzer.tcgwatcher.products.domain.model.ProductDetailsModel
 import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
-import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
-import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientImpl
-import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 import java.time.OffsetDateTime
 import java.util.Locale
 import kotlin.random.Random
@@ -46,7 +43,7 @@ class Datasource {
             imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
             detailsUrl = "https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009",
             details =
-            ProductDetails(
+            ProductDetailsModel(
                 localName = randomStringByKotlinRandom(),
                 intName = randomStringByKotlinRandom(),
                 price = CurrencyAmount(

@@ -2,6 +2,9 @@ package de.dkutzer.tcgwatcher
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
+import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,10 +18,24 @@ import org.junit.Assert.*
  */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
+//    @Test
+//    fun useAppContext() {
+//        // Context of the app under test.
+//        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+//        assertEquals("de.dkutzer.tcgwatcher", appContext.packageName)
+//    }
+
     @Test
-    fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("de.dkutzer.tcgwatcher", appContext.packageName)
+    fun search() {
+
+        val client  = CardmarketHtmlUnitApiClientImpl(CardmarketConfig())
+        val repositoryAdapter =
+            ProductCardmarketRepositoryAdapter(client)
+
+        val searchResults = repositoryAdapter.search("Bisaflor")
+        searchResults.items.forEach {
+            println(it)
+        }
+
     }
 }

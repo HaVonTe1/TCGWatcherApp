@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("de.mannodermaus.android-junit5") version "1.10.0.0"
 }
 
 android {
@@ -33,6 +32,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+
+        isCoreLibraryDesugaringEnabled = true
+
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -55,11 +57,23 @@ android {
     buildToolsVersion = "33.0.1"
 
     testOptions {
+
         unitTests {
             isReturnDefaultValues = true
+
         }
+
     }
 
+
+
+    tasks.withType<Test> {
+        testLogging {
+            events("standardOut", "started", "passed", "skipped", "failed")
+            showStandardStreams = true
+
+        }
+    }
 
     configurations.all {
         resolutionStrategy {
@@ -73,7 +87,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation("androidx.activity:activity-compose:1.8.1")
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -85,23 +99,18 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
     implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("it.skrape:skrapeit:1.2.2")
-    implementation("it.skrape:skrapeit-browser-fetcher:1.2.2")
     implementation("io.ktor:ktor-client-core:2.3.6")
     implementation("io.ktor:ktor-client-okhttp:2.3.6")
-//    implementation("io.ktor:ktor-client-logging:2.3.6")
-//    implementation("io.ktor:ktor-client-encoding:2.3.6")
+    implementation("io.ktor:ktor-client-logging:2.3.6")
+    implementation("io.ktor:ktor-client-encoding:2.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation("org.htmlunit:htmlunit3-android:3.7.0")
+    implementation("org.jsoup:jsoup:1.17.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    // (Required) Writing and executing Unit Tests on the JUnit Platform
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    testImplementation ("junit:junit:4.13.2")
 
-    // (Optional) If you need "Parameterized Tests"
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
 
-    // (Optional) If you also have JUnit 4-based tests
-    testImplementation("junit:junit:4.13.2")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

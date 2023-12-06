@@ -34,9 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
-import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientImpl
-import de.dkutzer.tcgwatcher.products.adapter.api.ProductApiClient
-import de.dkutzer.tcgwatcher.products.adapter.port.ProductRepository
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
@@ -154,7 +152,7 @@ class SearchViewModel : ViewModel() {
 
     //todo: look for a DI lib
     val cardmarketConfig = CardmarketConfig()
-    val productApiClient = CardmarketApiClientImpl(cardmarketConfig)
+    val productApiClient = CardmarketHtmlUnitApiClientImpl(cardmarketConfig)
     val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
     val productMapper = ProductMapper(cardmarketConfig)
     val productService: ProductService = ProductService(productRepository, productMapper)
@@ -191,7 +189,7 @@ class SearchViewModel : ViewModel() {
     }
     fun onSearchSubmit(searchString: String) {
         searchResults.value.clear()
-        searchResults.value.addAll(productService.search(searchString))
+        searchResults.value.addAll(productService.search(searchString, 1))
     }
 
 }
