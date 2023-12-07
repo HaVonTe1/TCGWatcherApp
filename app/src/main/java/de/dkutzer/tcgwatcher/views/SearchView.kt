@@ -1,29 +1,15 @@
 package de.dkutzer.tcgwatcher.views
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,14 +22,10 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
-import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
+import de.dkutzer.tcgwatcher.products.services.ProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductService
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 
 val searchViewModel = SearchViewModel()
 
@@ -121,9 +103,10 @@ private fun SearchView(
         } else {
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(searchResults) {
+                items(searchResults.size) {
+                    val productModel = searchResults[it]
                     ItemOfInterestCard(
-                        productModel = it,
+                        productModel = productModel,
                         showLastUpdated = false,
                         iconRowContent = { SearchViewCardIconRow() },
                     )

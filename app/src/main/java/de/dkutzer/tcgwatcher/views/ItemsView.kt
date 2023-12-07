@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
@@ -16,14 +15,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import de.dkutzer.tcgwatcher.products.services.ProductModel
 
 @Composable
 fun ItemOfInterestCardView(ioiList: List<ProductModel>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        items(ioiList) {
+        items(ioiList.size) {
             ItemOfInterestCard(
-                productModel = it,
+                productModel = ioiList[it],
                 iconRowContent =  {ItemViewCardIconRow()},
                 showLastUpdated= true,
                 modifier = modifier)

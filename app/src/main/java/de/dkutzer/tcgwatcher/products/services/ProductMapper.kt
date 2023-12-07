@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.products.services
 import android.icu.util.Currency
 import android.icu.util.CurrencyAmount
 import de.dkutzer.tcgwatcher.products.adapter.api.ProductDetailsDto
+import de.dkutzer.tcgwatcher.products.adapter.port.toCurrencyAmount
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -27,15 +28,5 @@ class ProductMapper(val config: BaseConfig) {
         )
     }
 
-    val curRegex = "[^\\d.,]".toRegex()
-    fun String.toCurrencyAmount() : CurrencyAmount {
-        val numberInstance = NumberFormat.getNumberInstance(Locale.getDefault())
-        if(numberInstance is DecimalFormat) {
-            numberInstance.isParseBigDecimal = true
-        }
 
-        val number = numberInstance.parse(this.replace(curRegex, ""))
-
-        return CurrencyAmount(number, Currency.getInstance(Locale.getDefault()))
-    }
 }

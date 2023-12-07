@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.TextButton
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,12 +38,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
-import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import com.google.accompanist.permissions.*
+import de.dkutzer.tcgwatcher.products.services.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestCardView
 import de.dkutzer.tcgwatcher.views.SearchView

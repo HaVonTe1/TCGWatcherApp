@@ -2,8 +2,8 @@ package de.dkutzer.tcgwatcher
 
 import android.icu.util.Currency
 import android.icu.util.CurrencyAmount
-import de.dkutzer.tcgwatcher.products.domain.model.ProductDetailsModel
-import de.dkutzer.tcgwatcher.products.domain.model.ProductModel
+import de.dkutzer.tcgwatcher.products.services.ProductDetailsModel
+import de.dkutzer.tcgwatcher.products.services.ProductModel
 import java.time.OffsetDateTime
 import java.util.Locale
 import kotlin.random.Random
@@ -51,10 +51,21 @@ class Datasource {
                         Locale.GERMANY
                     )
                 ),
+                localPrice = CurrencyAmount(
+                    Random.nextFloat(), Currency.getInstance(
+                        Locale.GERMANY
+                    )
+                ),
+                localPriceTrend = CurrencyAmount(
+                    Random.nextFloat(), Currency.getInstance(
+                        Locale.GERMANY
+                    )
+                ),
                 lastUpdate = OffsetDateTime.now()
             )
         )
     }
+
 
 
 }

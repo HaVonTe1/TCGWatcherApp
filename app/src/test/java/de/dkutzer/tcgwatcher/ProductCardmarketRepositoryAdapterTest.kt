@@ -31,7 +31,7 @@ class ProductCardmarketRepositoryAdapterTest {
         val repositoryAdapter =
             ProductCardmarketRepositoryAdapter(client)
 
-        val imageUrlById = repositoryAdapter.getProductImageUrlById("https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Vulpix-MEW037")
+        val imageUrlById = repositoryAdapter.getProductDetails("https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Vulpix-MEW037")
 
 
 //        assertEquals("dsfsd", imageUrlById)
