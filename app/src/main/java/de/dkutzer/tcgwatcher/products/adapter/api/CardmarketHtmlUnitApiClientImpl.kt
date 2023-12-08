@@ -1,7 +1,13 @@
 package de.dkutzer.tcgwatcher.products.adapter.api
 
+import android.util.Log
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.apache.commons.lang3.StringUtils
 import org.htmlunit.BrowserVersion
 import org.htmlunit.NicelyResynchronizingAjaxController
 import org.htmlunit.WebClient
@@ -10,10 +16,13 @@ import org.htmlunit.html.HtmlPage
 import org.htmlunit.javascript.SilentJavaScriptErrorListener
 import org.htmlunit.util.NameValuePair
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import java.net.URL
+import kotlin.system.measureTimeMillis
 
+private val logger = KotlinLogging.logger {}
 
-class CardmarketHtmlUnitApiClientImpl (val config: BaseConfig) : ProductApiClient {
+class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : ProductApiClient {
 
     val paginationRegex = "/^.+ \\d{1,3} .+ (\\d{1,3})/gm".toRegex()
 
@@ -24,90 +33,116 @@ class CardmarketHtmlUnitApiClientImpl (val config: BaseConfig) : ProductApiClien
     But I think its still very tricky. CF knows what its doing.
 
     I can totally understand that CM doesnt want scraping but ffs just open your ReST API
-    and you will have much more control over stuff like this app. Use Oauth2/OpenId  the next time.
+    and you will have much more control over stuff like this app.
+    Use Oauth2/OpenId instead of this multiple onion like token/secret/pass crap the next time.
      */
 
-    override fun search(searchString: String, page: Int): SearchResultsPageDto {
+    override suspend fun search(
+        searchString: String,
+        page: Int
+    ): SearchResultsPageDto {
 
-           /*
-           I searched half the internet for the best way to use htmlunit to bypass cloudflare
-           but it not working always.
-           We get some JS Exceptions which dont come up in a Browser. I guess I can ignore them.
+        /*
+        I searched half the internet for the best way to use htmlunit to bypass cloudflare
+        but it not working always.
+        We get some JS Exceptions which dont come up in a Browser. I guess I can ignore them.
 
-            */
-           WebClient(BrowserVersion.CHROME).use { webClient ->
-               modifiyWebClient(webClient)
-               val webRequest =  createWebRequest(
-                   config.searchUrl,
-                   mapOf("searchString" to searchString, "sortBy" to "price_asc", "perSite" to "5", "site" to "$page")
-               )
-               webClient.waitForBackgroundJavaScript(5000)
+         */
+        logger.debug { "Searching for $searchString with page: $page" }
+        WebClient(BrowserVersion.CHROME).use { webClient ->
+            modifiyWebClient(webClient)
+            val params = mapOf(
+                "searchString" to searchString,
+                /* "sortBy" to "price_asc",*/
+                "perSite" to "5",
+                "mode" to "gallery",
+//                "language" to "3", //german -- TODO: the language is set via the path
+                "site" to "$page"
+            )
+            val webRequest = createWebRequest(
+                config.searchUrl,
+                //sorting defaults to popularity which is the best i think
+                params
+            )
+            webClient.waitForBackgroundJavaScript(5000)
 
-               val htmlPage: HtmlPage = webClient.getPage(webRequest)
+            logger.debug { "Executing Request now" }
+            lateinit var htmlPage: HtmlPage
+            val duration = measureTimeMillis {
+                htmlPage = webClient.getPage(webRequest)
+                webClient.waitForBackgroundJavaScript(5000)
+                //this should trick CF to do its thing and refresh the page before we parse it
+                //sadly i couldnt find a way to log this behaviour
+                htmlPage.enclosingWindow.jobManager.waitForJobs(5000)
+            }
+            logger.debug { "Duration: $duration" }
 
-               //this should trick CF to do its thing and refresh the page before we parse it
-               //sadly i couldnt find a way to log this behaviour
-               webClient.waitForBackgroundJavaScript(5000)
-               htmlPage.enclosingWindow.jobManager.waitForJobs(5000)
 
-               println("Status: ${htmlPage.webResponse.statusCode}")
+            logger.info { "Status: ${htmlPage.webResponse.statusCode}" }
 
-               val document = Jsoup.parse(htmlPage.asXml())
+            val document = Jsoup.parse(htmlPage.asXml())
 
-               //this parses should be imune to html rewriting
-               val rows = document.getElementsByClass("row")
+            return parseGallerySearchResults(document, page)
 
-               val productRows = rows.filter { row -> row.id().startsWith("productRow") }.toList()
-               val searchResultItemDtos = ArrayList<SearchResultItemDto>(productRows.size)
 
-               productRows.forEach { row ->
-                   var displayName= "";
-                   var orgName = ""
-                   var cmLink = ""
-                   var price = ""
+        }
 
-                   val nameAndLinkColDivs = row.getElementsByClass("col").filter { div -> div.classNames().size==1 } //filter first col with "d-none" class
+    }
 
-                   val nameAndLinkColDiv = nameAndLinkColDivs.firstOrNull()
-                   if(nameAndLinkColDiv!=null) {
-                       val aRefs = nameAndLinkColDiv.getElementsByTag("a")
-                       if(aRefs.size==1) {
-                           val aRef = aRefs.first()
-                           if (aRef != null) {
-                               displayName = aRef.text()
-                               cmLink = aRef.attr("href")
-                               val firstElementSibling = aRef.nextElementSibling()
-                               if (firstElementSibling != null) {
-                                   orgName= firstElementSibling.text()
-                               }
+    private fun parseGallerySearchResults(document: Document, page: Int): SearchResultsPageDto {
+        logger.debug { "Parsing a tags with class card and a href" }
+        val tiles = document.getElementsByTag("a").filter { element ->  element.hasClass("card") && element.hasAttr("href") }
+        logger.debug { "Found: ${tiles.size}" }
 
-                           }
-                       }
-                   }
+        val searchResultItemDtos = ArrayList<SearchResultItemDto>(tiles.size)
 
-                   val priceCols = row.getElementsByClass("col-price")
-                   if(priceCols.size>0) {
-                       val priceCol = priceCols.first()
-                       if (priceCol != null) {
-                           price = priceCol.text()
-                       }
-                   }
+        tiles.forEach {
+            logger.debug { "Parsing: $it" }
+            val cmLink = it.attr("href")
+            logger.info { "link: $cmLink" }
 
-                   val itemDto =
-                       SearchResultItemDto(displayName, orgName, cmLink, price)
+            val imgTag = it.getElementsByTag("img")
+            logger.debug { "ImgTag: $imgTag" }
+            val imageLink = imgTag.attr("data-echo")
+            logger.info { "Image Link: $imageLink" }
 
-                   searchResultItemDtos.add(itemDto)
+            val titleTag = it.getElementsByTag("h2")
+            logger.debug { "TitleTag: $titleTag" }
+            val localName = titleTag.text()
+            logger.debug { "Local Name: $localName" }
 
-               }
-               val paginationDiv = document.getElementById("pagination")
-               val paginationSpans = paginationDiv?.getElementsByTag("span")
-               val paginationSpan = paginationSpans?.first { s -> s.hasClass("mx-1") }
-               val groupValues = paginationSpan?.let { paginationRegex.find(it.text())?.groupValues }
-               val totalPages = groupValues?.firstOrNull()?.toInt() ?: 0
+            val intPriceTag = it.getElementsByTag("b")
+            logger.debug { "Found intPriceTag: $intPriceTag" }
+            val intPrice = intPriceTag.text()
+            logger.debug { "Price: $intPrice" }
 
-               return SearchResultsPageDto(searchResultItemDtos, page , totalPages )
-           }
+            val itemDto = SearchResultItemDto(
+                displayName = localName,
+                orgName = "",
+                cmLink = cmLink,
+                imgLink = imageLink,
+                price = intPrice
+            )
 
+            searchResultItemDtos.add(itemDto)
+
+        }
+        val totalPages = parsePageination(document)
+
+
+        return SearchResultsPageDto(searchResultItemDtos, page, totalPages)
+
+    }
+
+    private fun parsePageination(document: Document): Int {
+        logger.debug { "Looking for Pagination info" }
+        val paginationDiv = document.getElementById("pagination")
+        val paginationSpans = paginationDiv?.getElementsByTag("span")
+        val paginationSpan = paginationSpans?.first { s -> s.hasClass("mx-1") }
+        val groupValues = paginationSpan?.let { paginationRegex.find(it.text())?.groupValues }
+        val totalPages = groupValues?.firstOrNull()?.toInt() ?: 0
+        logger.info { "Found: $totalPages" }
+        return totalPages
     }
 
     private fun modifiyWebClient(webClient: WebClient) {
@@ -130,20 +165,22 @@ class CardmarketHtmlUnitApiClientImpl (val config: BaseConfig) : ProductApiClien
         )
     }
 
-    private fun createWebRequest(url: String, params: Map<String, String>) : WebRequest {
+    private fun createWebRequest(url: String, params: Map<String, String>): WebRequest {
         val webRequest = WebRequest(URL(url), "text/html", "gzip, deflate")
-        if(params.isNotEmpty()) {
-            webRequest.requestParameters = params.map { p -> NameValuePair(p.key,p.value) }.toList()
+        if (params.isNotEmpty()) {
+            webRequest.requestParameters =
+                params.map { p -> NameValuePair(p.key, p.value) }.toList()
         }
         return webRequest
     }
 
 
-    override fun getProductDetails(link: String): ProductDetailsDto {
+    override suspend fun getProductDetails(link: String): ProductDetailsDto {
+
         WebClient(BrowserVersion.CHROME).use { webClient ->
             modifiyWebClient(webClient)
             val webRequest = createWebRequest(
-                link,
+                "${config.baseUrl}$link",
                 mapOf()
             )
             webClient.waitForBackgroundJavaScript(5000)
@@ -165,18 +202,18 @@ class CardmarketHtmlUnitApiClientImpl (val config: BaseConfig) : ProductApiClien
             val infoDivs = document.getElementsByClass("info-list-container")
             var localPrice = "0,00 €"
             var localPriceTrend = "0,00 €"
-            if(infoDivs.size==1) {
+            if (infoDivs.size == 1) {
                 val infoDiv = infoDivs.first()
                 val dts = infoDiv?.getElementsByTag("dt")
                 val abDt = dts?.first { dt -> dt.text().equals("ab") }
                 val abDd = abDt?.nextElementSibling()
                 if (abDd != null) {
-                    localPrice=  abDd.text()
+                    localPrice = abDd.text()
                 }
 
                 val priceTrendDt = dts?.first { dt -> dt.text().equals("Preis-Trend") }
                 val priceTrendDd = priceTrendDt?.nextElementSibling()
-                if(priceTrendDd!=null) {
+                if (priceTrendDd != null) {
                     val span = priceTrendDd.getElementsByTag("span")
                     localPriceTrend = span.text()
                 }

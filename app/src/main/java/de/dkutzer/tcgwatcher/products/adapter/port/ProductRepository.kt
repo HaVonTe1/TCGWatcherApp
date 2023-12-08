@@ -5,7 +5,7 @@ import de.dkutzer.tcgwatcher.products.services.SearchResults
 
 interface ProductRepository {
 
-    fun getProductDetails(link: String) : ProductDetailsDto
+    suspend fun getProductDetails(link: String) : ProductDetailsDto
 
-    fun search(searchString : String, page: Int = 1) : SearchResults
+    suspend fun search(searchString : String, page: Int = 1) : SearchResults
 }

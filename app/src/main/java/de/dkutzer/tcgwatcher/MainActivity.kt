@@ -2,6 +2,7 @@ package de.dkutzer.tcgwatcher
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -43,11 +44,15 @@ import de.dkutzer.tcgwatcher.products.services.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestCardView
 import de.dkutzer.tcgwatcher.views.SearchView
+import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            HandroidLoggerAdapter.APP_NAME = "TCGWatcher"
+            HandroidLoggerAdapter.DEBUG = true
+            HandroidLoggerAdapter.ANDROID_API_LEVEL = Build.VERSION.SDK_INT
             MainTheme()
         }
     }

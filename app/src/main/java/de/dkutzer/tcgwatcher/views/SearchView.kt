@@ -7,9 +7,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
+import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.icons.twotone.KeyboardArrowLeft
+import androidx.compose.material.icons.twotone.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,28 +22,41 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
 import de.dkutzer.tcgwatcher.products.services.ProductModel
+import de.dkutzer.tcgwatcher.products.services.ProductSearchModel
 import de.dkutzer.tcgwatcher.products.services.ProductService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 val searchViewModel = SearchViewModel()
 
 @Composable
 fun SearchView() {
 
-
     val searchResults by searchViewModel.searchResults.collectAsStateWithLifecycle()
+
+    val scope = rememberCoroutineScope()
 
     SearchView(
         searchQuery = searchViewModel.searchQuery,
         searchResults = searchResults,
+        currentPage = searchViewModel.currentPage,
+        totalPages = searchViewModel.totalPages,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
-        onSearchSubmit = { searchViewModel.onSearchSubmit(it) }
+        onSearchSubmit = {
+            scope.launch(Dispatchers.IO) {
+                searchViewModel.onSearchSubmit(it)
+            }
+        },
+        onForward = { scope.launch(Dispatchers.IO) { searchViewModel.onForward() } },
+        onBackward = { scope.launch(Dispatchers.IO) { searchViewModel.onBackward() } }
     )
 }
 
@@ -48,10 +65,15 @@ fun SearchView() {
 @Composable
 private fun SearchView(
     searchQuery: String,
-    searchResults: List<ProductModel>,
+    searchResults: List<ProductSearchModel>,
+    currentPage: Int,
+    totalPages: Int,
     onSearchQueryChange: (String) -> Unit,
-    onSearchSubmit: (String) -> Unit
+    onSearchSubmit: (String) -> Unit,
+    onForward: () -> Unit,
+    onBackward: () -> Unit
 ) {
+
 
     var active by rememberSaveable { mutableStateOf(false) } //needed to indicate if a searchResultItem is clickable
 
@@ -98,26 +120,76 @@ private fun SearchView(
                 //TODO:           add history items here
             }
         )
-        if (searchResults.isEmpty()) {
-            NoSearchResults()
-        } else {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(searchResults.size) {
-                    val productModel = searchResults[it]
-                    ItemOfInterestCard(
-                        productModel = productModel,
-                        showLastUpdated = false,
-                        iconRowContent = { SearchViewCardIconRow() },
+            if (searchResults.isEmpty()) {
+                NoSearchResults()
+            } else {
+
+                LazyColumn(
+                    modifier = Modifier.weight(0.95f)
+                ) {
+                    items(searchResults.size) {
+                        val productModel = searchResults[it]
+                        ItemOfInterestCard(
+                            productModel = productModel,
+                            showLastUpdated = false,
+                            iconRowContent = { SearchViewCardIconRow() },
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(1.dp)
+                        .weight(0.05f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+
+
+                ) {
+
+                    Spacer(modifier = Modifier.weight(0.5f))
+                    ClickableIconButton(
+                        modifier = Modifier.weight(0.1f),
+                        icon = Icons.TwoTone.KeyboardArrowLeft,
+                        desc = stringResource(id = R.string.back),
+                        enabled = currentPage != 1,
+                        onClick = {
+                            onBackward()
+                        }
                     )
+                    Text(
+                        modifier = Modifier.padding(1.dp),
+                        text = stringResource(id = R.string.pageXofY).format(
+                            currentPage,
+                            totalPages
+                        ),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+
+                    ClickableIconButton(
+                        modifier = Modifier.weight(0.1f),
+                        icon = Icons.TwoTone.KeyboardArrowRight,
+                        desc = stringResource(id = R.string.forward),
+                        enabled = currentPage != totalPages,
+                        onClick = {
+                            onForward()
+                        })
+                    Spacer(modifier = Modifier.weight(0.5f))
+
                 }
             }
+
         }
+
     }
 }
 
 @Composable
-fun SearchViewCardIconRow( modifier: Modifier = Modifier) {
+fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .padding(1.dp)
@@ -125,10 +197,12 @@ fun SearchViewCardIconRow( modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.SpaceBetween
 
     ) {
-        ClickableIconButton(icon = Icons.TwoTone.Add, desc = stringResource(id = R.string.addDesc), onClick = {})
+        ClickableIconButton(
+            icon = Icons.TwoTone.Add,
+            desc = stringResource(id = R.string.addDesc),
+            onClick = {})
     }
 }
-
 
 
 class SearchViewModel : ViewModel() {
@@ -142,9 +216,11 @@ class SearchViewModel : ViewModel() {
 
     var searchResults = createStateFlowFromItemList(mutableListOf())
     var searchQuery by mutableStateOf("")
+    var currentPage by mutableStateOf(1)
+    var totalPages by mutableStateOf(1)
 
 
-    fun createStateFlowFromItemList(items: MutableList<ProductModel>):StateFlow<MutableList<ProductModel>> {
+    fun createStateFlowFromItemList(items: MutableList<ProductSearchModel>): StateFlow<MutableList<ProductSearchModel>> {
         val itemFlow = flowOf(
             items
         )
@@ -164,15 +240,34 @@ class SearchViewModel : ViewModel() {
                 started = SharingStarted.WhileSubscribed(5_000)
             )
 
-
     }
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery = newQuery
     }
-    fun onSearchSubmit(searchString: String) {
+
+    suspend fun onSearchSubmit(searchString: String) {
+        currentPage = 1
         searchResults.value.clear()
-        searchResults.value.addAll(productService.search(searchString, 1))
+        val viewModel = productService.search(searchString, 1)
+        searchResults.value.addAll(viewModel.products)
+        totalPages = viewModel.pages
+    }
+
+    suspend fun onForward() {
+        currentPage++
+        searchResults.value.clear()
+        val viewModel = productService.search(searchQuery, currentPage)
+        searchResults.value.addAll(viewModel.products)
+        totalPages = viewModel.pages
+    }
+
+    suspend fun onBackward() {
+        currentPage--
+        searchResults.value.clear()
+        val viewModel = productService.search(searchQuery, currentPage)
+        searchResults.value.addAll(viewModel.products)
+        totalPages = viewModel.pages
     }
 
 }
@@ -180,15 +275,20 @@ class SearchViewModel : ViewModel() {
 @Composable
 private fun NoSearchResults() {
 
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
         Text(stringResource(id = R.string.emptySearch))
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun TestSearchPreview() {
+
+    searchViewModel.searchResults.value.addAll(Datasource().loadMockSearchData())
     SearchView()
 
 }

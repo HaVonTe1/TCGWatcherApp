@@ -103,15 +103,17 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:2.3.6")
     implementation("io.ktor:ktor-client-logging:2.3.6")
     implementation("io.ktor:ktor-client-encoding:2.3.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("org.htmlunit:htmlunit3-android:3.7.0")
     implementation("org.jsoup:jsoup:1.17.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
+    implementation("io.github.oshai:kotlin-logging-jvm:5.1.1")
+//    implementation ("ch.qos.logback:logback-classic:1.4.11")
+    implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.4")
     testImplementation ("junit:junit:4.13.2")
 
 
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.01"))

@@ -15,4 +15,7 @@
     <string name="addDesc">Add</string>
     <string name="deleteDesc">Delete</string>
     <string name="editDesc">Edit</string>
+    <string name="pageXofY">Page %s of %s</string>
+    <string name="forward">forward</string>
+    <string name="back">back</string>
 </resources>

@@ -1,9 +1,9 @@
 package de.dkutzer.tcgwatcher.products.adapter.api
 
 interface ProductApiClient {
-    fun search(searchString: String, page: Int = 1): SearchResultsPageDto
+    suspend fun search(searchString: String, page: Int = 1): SearchResultsPageDto
 
-    fun getProductDetails(link: String): ProductDetailsDto
+    suspend fun getProductDetails(link: String): ProductDetailsDto
 }
 
 data class SearchResultsPageDto(
@@ -16,6 +16,7 @@ data class SearchResultItemDto(
     val displayName: String,
     val orgName: String,
     val cmLink: String,
+    val imgLink: String,
     val price: String
 )
 

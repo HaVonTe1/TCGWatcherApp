@@ -13,10 +13,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import coil.request.ImageRequest
+import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
+import de.dkutzer.tcgwatcher.products.services.BaseProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductDetailsModel
 import de.dkutzer.tcgwatcher.products.services.ProductModel
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -26,11 +30,13 @@ fun ClickableIconButton(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     desc: String,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     IconButton(
         modifier = modifier.fillMaxHeight(),
-        onClick = onClick
+        onClick = onClick,
+        enabled = enabled
     ) {
         Icon(
             imageVector = icon,
@@ -57,29 +63,35 @@ fun RowScope.TableCell(
 }
 @Composable
 fun ItemOfInterestCard(
-    productModel: ProductModel,
+    productModel: BaseProductModel,
     showLastUpdated: Boolean,
     iconRowContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
-    Card(modifier = modifier.padding(8.dp), elevation = CardDefaults.cardElevation()) {
+    Card(
+        modifier = modifier.padding(8.dp),
+        elevation = CardDefaults.cardElevation()
+    ) {
         Row(
             modifier = Modifier
                 .padding(1.dp)
                 .fillMaxWidth()
         ) {
+            val userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(productModel.imageUrl)
-                    .setHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+                    .setHeader("User-Agent", userAgent)
                     .setHeader("Referer", "https://www.cardmarket.com/") //TODO: cloudflare protection is kicking in without the referer
                     .build(),
-                contentDescription = productModel.details.intName,
+
+                contentDescription = productModel.id,
                 modifier = Modifier
                     .padding(4.dp)
                     .width(100.dp),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Fit,
+                imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger()).build()
 
             )
             Column(
@@ -91,8 +103,10 @@ fun ItemOfInterestCard(
 
 
                 ItemDetailsTable(
-                    itemDetails = productModel.details,
+                    localName = productModel.localName,
+                    price = productModel.intPrice.toString(),
                     showLastUpdated = showLastUpdated,
+                    lastUpdated = OffsetDateTime.now(),
                     modifier = Modifier.padding(1.dp))
                 Spacer(modifier = Modifier.height(16.dp)) // doesnt work with arrangement. why?
                 iconRowContent()
@@ -104,8 +118,10 @@ fun ItemOfInterestCard(
 
 @Composable
 fun ItemDetailsTable(
-    itemDetails: ProductDetailsModel,
+    localName: String,
+    price : String,
     showLastUpdated: Boolean,
+    lastUpdated: OffsetDateTime,
     modifier: Modifier = Modifier) {
 
     // Each cell of a column must have the same weight.
@@ -118,7 +134,7 @@ fun ItemDetailsTable(
         Row(Modifier.fillMaxWidth()) {
             TableCell(text = stringResource(id = (R.string.nameLabel)), weight = column1Weight, MaterialTheme.typography.labelMedium)
             TableCell(
-                text = itemDetails.localName,
+                text = localName,
                 weight = column2Weight,
                 MaterialTheme.typography.labelLarge
             )
@@ -131,7 +147,7 @@ fun ItemDetailsTable(
                 MaterialTheme.typography.labelMedium
             )
             TableCell(
-                text = itemDetails.price.toString(),
+                text = price,
                 weight = column2Weight,
                 MaterialTheme.typography.labelLarge
             )
@@ -144,7 +160,7 @@ fun ItemDetailsTable(
                     MaterialTheme.typography.labelMedium
                 )
                 TableCell(
-                    text = itemDetails.lastUpdate.format(
+                    text = lastUpdated.format(
                         DateTimeFormatter.ofLocalizedDateTime(
                             FormatStyle.MEDIUM
                         )

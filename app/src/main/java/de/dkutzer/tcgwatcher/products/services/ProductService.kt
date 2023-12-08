@@ -9,30 +9,48 @@ class ProductService(
     private val productMapper: ProductMapper
 ) {
 
-    fun search(searchString: String, page: Int) : List<ProductModel> {
+    suspend fun search(searchString: String, page: Int) : SearchViewModel {
         val searchResults = productRepository.search(searchString, page)
         val productModels = searchResults.items.map {
-
-            val productDetails = productRepository.getProductDetails(it.cmLink)
-            productMapper.toModel(it, productDetails)
+            productMapper.toModel(it)
         }.toList()
-        return productModels
+        return SearchViewModel(productModels, searchResults.pages)
     }
 }
 
+data class SearchViewModel(
+    val products: List<ProductSearchModel>,
+    val pages: Int
+)
+
+data class ProductSearchModel(
+    override val id: String,
+    override val localName: String,
+    override val imageUrl: String,
+    override val detailsUrl: String,
+    override val intPrice: String
+) : BaseProductModel(id, imageUrl, detailsUrl, localName, intPrice)
 data class ProductModel(
-    val id : String,
-    val imageUrl : String,
-    val detailsUrl : String,
+    override val id : String,
+    override val imageUrl : String,
+    override val detailsUrl : String,
     val details: ProductDetailsModel
+): BaseProductModel(id, imageUrl, detailsUrl, details.localName, details.price)
+
+open class BaseProductModel(
+    open val id: String,
+    open val imageUrl: String,
+    open val detailsUrl: String,
+    open val localName: String,
+    open val intPrice: String
 )
 
 data class ProductDetailsModel(
     val localName: String,
     val intName: String,
-    val price: CurrencyAmount,
-    val localPrice: CurrencyAmount,
-    val localPriceTrend: CurrencyAmount,
+    val price: String,
+    val localPrice: String,
+    val localPriceTrend: String,
     val lastUpdate: OffsetDateTime
 )
 
@@ -40,7 +58,8 @@ data class SearchItem(
     val displayName : String,
     val orgName: String,
     val cmLink: String,
-    val price : CurrencyAmount
+    val imgLink: String,
+    val price : String
 )
 
 data class SearchResults(
