@@ -1,19 +1,16 @@
 package de.dkutzer.tcgwatcher
 
-import android.icu.util.Currency
-import android.icu.util.CurrencyAmount
 import de.dkutzer.tcgwatcher.products.services.ProductDetailsModel
 import de.dkutzer.tcgwatcher.products.services.ProductModel
-import de.dkutzer.tcgwatcher.products.services.ProductSearchModel
+import de.dkutzer.tcgwatcher.products.services.SearchProductModel
 import java.time.OffsetDateTime
-import java.util.Locale
 import kotlin.random.Random
 
 class Datasource {
     fun loadMockData(): MutableList<ProductModel> {
         return MutableList(Random.nextInt(3,10)) { randomItem()}
     }
-    fun loadMockSearchData(): MutableList<ProductSearchModel> {
+    fun loadMockSearchData(): MutableList<SearchProductModel> {
         return MutableList(Random.nextInt(3,10)) { randomSearchItem()}
     }
 
@@ -58,8 +55,8 @@ class Datasource {
         )
     }
 
-    private fun randomSearchItem(): ProductSearchModel {
-        return ProductSearchModel(
+    private fun randomSearchItem(): SearchProductModel {
+        return SearchProductModel(
             id = "Blastoise-ex-V1-MEW009",
             imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
             intPrice = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",

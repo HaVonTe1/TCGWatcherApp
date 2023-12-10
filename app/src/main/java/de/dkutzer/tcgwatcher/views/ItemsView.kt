@@ -18,7 +18,7 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.services.ProductModel
 
 @Composable
-fun ItemOfInterestCardView(ioiList: List<ProductModel>, modifier: Modifier = Modifier) {
+fun ItemOfInterestActivity(ioiList: List<ProductModel>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(ioiList.size) {
             ItemOfInterestCard(
@@ -52,6 +52,6 @@ fun ItemViewCardIconRow( modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun TestItemPreview() {
-    ItemOfInterestCardView(Datasource().loadMockData())
+    ItemOfInterestActivity(Datasource().loadMockData())
 
 }

@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
-import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.KeyboardArrowLeft
 import androidx.compose.material.icons.twotone.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -20,33 +19,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
+import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.compose.viewModel
 import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
-import de.dkutzer.tcgwatcher.products.services.ProductModel
-import de.dkutzer.tcgwatcher.products.services.ProductSearchModel
+import de.dkutzer.tcgwatcher.products.services.SearchProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-val searchViewModel = SearchViewModel()
 
 @Composable
-fun SearchView() {
+fun SearchActivity() {
 
-    val searchResults by searchViewModel.searchResults.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
 
+    val searchViewModel = viewModel<SearchViewModel>()
+
     SearchView(
         searchQuery = searchViewModel.searchQuery,
-        searchResults = searchResults,
+        searchResults = searchViewModel.searchResults,
         currentPage = searchViewModel.currentPage,
         totalPages = searchViewModel.totalPages,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
@@ -65,7 +63,7 @@ fun SearchView() {
 @Composable
 private fun SearchView(
     searchQuery: String,
-    searchResults: List<ProductSearchModel>,
+    searchResults: List<SearchProductModel>,
     currentPage: Int,
     totalPages: Int,
     onSearchQueryChange: (String) -> Unit,
@@ -214,33 +212,13 @@ class SearchViewModel : ViewModel() {
     val productMapper = ProductMapper(cardmarketConfig)
     val productService: ProductService = ProductService(productRepository, productMapper)
 
-    var searchResults = createStateFlowFromItemList(mutableListOf())
+    var searchResults by mutableStateOf(listOf<SearchProductModel>())
+        private set
     var searchQuery by mutableStateOf("")
     var currentPage by mutableStateOf(1)
     var totalPages by mutableStateOf(1)
 
 
-    fun createStateFlowFromItemList(items: MutableList<ProductSearchModel>): StateFlow<MutableList<ProductSearchModel>> {
-        val itemFlow = flowOf(
-            items
-        )
-
-
-        return snapshotFlow { searchQuery }
-            .combine(itemFlow) { searchQuery, items ->
-
-                when {
-                    searchQuery.isNotEmpty() -> items
-
-                    else -> items
-                }
-            }.stateIn(
-                scope = viewModelScope,
-                initialValue = mutableListOf(),
-                started = SharingStarted.WhileSubscribed(5_000)
-            )
-
-    }
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery = newQuery
@@ -248,27 +226,27 @@ class SearchViewModel : ViewModel() {
 
     suspend fun onSearchSubmit(searchString: String) {
         currentPage = 1
-        searchResults.value.clear()
-        val viewModel = productService.search(searchString, 1)
-        searchResults.value.addAll(viewModel.products)
-        totalPages = viewModel.pages
+        updateSearchResultsWithNewSearch(searchString, 1)
+    }
+
+    private suspend fun updateSearchResultsWithNewSearch(searchString: String, page: Int) {
+        val searchItemModelList = productService.search(searchString, page)
+        searchResults = searchItemModelList.products
+        totalPages = searchItemModelList.pages
     }
 
     suspend fun onForward() {
         currentPage++
-        searchResults.value.clear()
-        val viewModel = productService.search(searchQuery, currentPage)
-        searchResults.value.addAll(viewModel.products)
-        totalPages = viewModel.pages
+        updateSearchResultsWithNewSearch(searchQuery, currentPage)
+
     }
 
     suspend fun onBackward() {
         currentPage--
-        searchResults.value.clear()
-        val viewModel = productService.search(searchQuery, currentPage)
-        searchResults.value.addAll(viewModel.products)
-        totalPages = viewModel.pages
+        updateSearchResultsWithNewSearch(searchQuery, currentPage)
     }
+
+
 
 }
 
@@ -288,7 +266,7 @@ private fun NoSearchResults() {
 @Composable
 fun TestSearchPreview() {
 
-    searchViewModel.searchResults.value.addAll(Datasource().loadMockSearchData())
-    SearchView()
+  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
+    SearchActivity()
 
 }

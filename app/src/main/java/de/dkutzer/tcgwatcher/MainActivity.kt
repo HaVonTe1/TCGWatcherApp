@@ -42,11 +42,13 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.*
 import de.dkutzer.tcgwatcher.products.services.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import de.dkutzer.tcgwatcher.views.ItemOfInterestCardView
-import de.dkutzer.tcgwatcher.views.SearchView
+import de.dkutzer.tcgwatcher.views.ItemOfInterestActivity
+import de.dkutzer.tcgwatcher.views.SearchActivity
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -181,8 +183,8 @@ private fun MainScreen(items: List<ProductModel> = emptyList()) {
             startDestination = Screen.ItemsOfInterestScreen.route,
             Modifier.padding(innerPadding)
         ) {
-            composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestCardView(items) }
-            composable(Screen.SearchScreen.route) { SearchView() }
+            composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestActivity(items) }
+            composable(Screen.SearchScreen.route) { SearchActivity() }
             composable(Screen.SettingsScreen.route) { DummyView(navController) }
 
         }

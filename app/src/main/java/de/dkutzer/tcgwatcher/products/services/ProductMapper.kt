@@ -1,14 +1,6 @@
 package de.dkutzer.tcgwatcher.products.services
 
-import android.icu.util.Currency
-import android.icu.util.CurrencyAmount
-import de.dkutzer.tcgwatcher.products.adapter.api.ProductDetailsDto
-import de.dkutzer.tcgwatcher.products.adapter.api.SearchResultItemDto
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
-import java.text.DecimalFormat
-import java.text.NumberFormat
-import java.time.OffsetDateTime
-import java.util.Locale
 
 class ProductMapper(val config: BaseConfig) {
 //    fun toModel(item: SearchItem, details: ProductDetailsDto) : ProductModel {
@@ -28,8 +20,8 @@ class ProductMapper(val config: BaseConfig) {
 //        )
 //    }
 
-    fun toModel(item: SearchItem) : ProductSearchModel {
-        return ProductSearchModel(
+    fun toModel(item: SearchItem) : SearchProductModel {
+        return SearchProductModel(
             id = android.net.Uri.parse(item.cmLink).lastPathSegment!!,
             imageUrl = item.imgLink,
             localName = item.displayName,

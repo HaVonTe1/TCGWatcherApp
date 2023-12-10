@@ -1,6 +1,5 @@
 package de.dkutzer.tcgwatcher.products.services
 
-import android.icu.util.CurrencyAmount
 import de.dkutzer.tcgwatcher.products.adapter.port.ProductRepository
 import java.time.OffsetDateTime
 
@@ -9,21 +8,21 @@ class ProductService(
     private val productMapper: ProductMapper
 ) {
 
-    suspend fun search(searchString: String, page: Int) : SearchViewModel {
+    suspend fun search(searchString: String, page: Int) : SearchProductViewModel {
         val searchResults = productRepository.search(searchString, page)
         val productModels = searchResults.items.map {
             productMapper.toModel(it)
         }.toList()
-        return SearchViewModel(productModels, searchResults.pages)
+        return SearchProductViewModel(productModels, searchResults.pages)
     }
 }
 
-data class SearchViewModel(
-    val products: List<ProductSearchModel>,
+data class SearchProductViewModel(
+    val products: List<SearchProductModel>,
     val pages: Int
 )
 
-data class ProductSearchModel(
+data class SearchProductModel(
     override val id: String,
     override val localName: String,
     override val imageUrl: String,
