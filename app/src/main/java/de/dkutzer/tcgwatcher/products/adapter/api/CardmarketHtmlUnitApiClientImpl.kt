@@ -24,7 +24,7 @@ private val logger = KotlinLogging.logger {}
 
 class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : ProductApiClient {
 
-    val paginationRegex = "/^.+ \\d{1,3} .+ (\\d{1,3})/gm".toRegex()
+    val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
 
     /*
     CM is protected by CloudFlare.
@@ -137,10 +137,22 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : ProductApiClient
     private fun parsePageination(document: Document): Int {
         logger.debug { "Looking for Pagination info" }
         val paginationDiv = document.getElementById("pagination")
+        logger.debug { paginationDiv }
         val paginationSpans = paginationDiv?.getElementsByTag("span")
+        logger.debug { "Spans: $paginationSpans" }
         val paginationSpan = paginationSpans?.first { s -> s.hasClass("mx-1") }
-        val groupValues = paginationSpan?.let { paginationRegex.find(it.text())?.groupValues }
-        val totalPages = groupValues?.firstOrNull()?.toInt() ?: 0
+        logger.debug { "mxSpan: $paginationSpan" }
+
+        var groupValue:  String? = null
+        if(paginationSpan!=null) {
+            val text = paginationSpan.text()
+            logger.debug { "Text: $text" }
+            val matchResult = paginationRegex.find(text)
+            groupValue = matchResult?.groupValues?.getOrNull(1)
+            logger.debug { "$groupValue" }
+        }
+
+        val totalPages = groupValue?.toInt() ?: 0
         logger.info { "Found: $totalPages" }
         return totalPages
     }

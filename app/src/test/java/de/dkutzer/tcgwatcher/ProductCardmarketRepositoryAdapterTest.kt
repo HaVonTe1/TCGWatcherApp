@@ -39,6 +39,15 @@ class ProductCardmarketRepositoryAdapterTest {
 //    }
 
 
+    @Test
+    fun testRegex1() {
+        val t1 = " Seite 1 von 48 "
+        val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
+
+        val find = paginationRegex.find(t1)
+        println(find)
+        println(find?.groupValues?.getOrNull(1))
+    }
     data class TestConfig(override val searchUrl: String = "", override val baseUrl: String = "",
                           override val lang: String = "de") : BaseConfig(searchUrl, lang, baseUrl)
 

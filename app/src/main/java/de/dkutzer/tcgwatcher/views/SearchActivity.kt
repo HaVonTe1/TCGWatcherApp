@@ -43,10 +43,7 @@ fun SearchActivity() {
     val searchViewModel = viewModel<SearchViewModel>()
 
     SearchView(
-        searchQuery = searchViewModel.searchQuery,
-        searchResults = searchViewModel.searchResults,
-        currentPage = searchViewModel.currentPage,
-        totalPages = searchViewModel.totalPages,
+        searchViewModel = searchViewModel,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
         onSearchSubmit = {
             scope.launch(Dispatchers.IO) {
@@ -62,10 +59,7 @@ fun SearchActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchView(
-    searchQuery: String,
-    searchResults: List<SearchProductModel>,
-    currentPage: Int,
-    totalPages: Int,
+    searchViewModel: SearchViewModel,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onForward: () -> Unit,
@@ -81,7 +75,7 @@ private fun SearchView(
 
 
         SearchBar(
-            query = searchQuery,
+            query = searchViewModel.searchQuery,
             onQueryChange = onSearchQueryChange,
 
             placeholder = {
@@ -95,7 +89,7 @@ private fun SearchView(
                 )
             },
             trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
+                if (searchViewModel.searchQuery.isNotEmpty()) {
                     IconButton(onClick = { onSearchQueryChange("") }) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -107,7 +101,7 @@ private fun SearchView(
             },
             onSearch = {
                 active = false
-                onSearchSubmit(searchQuery)
+                onSearchSubmit(searchViewModel.searchQuery)
             },
             active = active,
             onActiveChange = {
@@ -119,18 +113,34 @@ private fun SearchView(
             }
         )
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            Arrangement.Center,
+            Alignment.CenterHorizontally
         ) {
 
-            if (searchResults.isEmpty()) {
+            if(searchViewModel.searching) {
+
+
+                CircularProgressIndicator(
+                    modifier = Modifier.width(64.dp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+
+                return
+            }
+
+
+
+            if (searchViewModel.searchResults.isEmpty()) {
                 NoSearchResults()
             } else {
 
                 LazyColumn(
                     modifier = Modifier.weight(0.95f)
                 ) {
-                    items(searchResults.size) {
-                        val productModel = searchResults[it]
+                    items(searchViewModel.searchResults.size) {
+                        val productModel = searchViewModel.searchResults[it]
                         ItemOfInterestCard(
                             productModel = productModel,
                             showLastUpdated = false,
@@ -154,7 +164,7 @@ private fun SearchView(
                         modifier = Modifier.weight(0.1f),
                         icon = Icons.TwoTone.KeyboardArrowLeft,
                         desc = stringResource(id = R.string.back),
-                        enabled = currentPage != 1,
+                        enabled = searchViewModel.currentPage != 1,
                         onClick = {
                             onBackward()
                         }
@@ -162,8 +172,8 @@ private fun SearchView(
                     Text(
                         modifier = Modifier.padding(1.dp),
                         text = stringResource(id = R.string.pageXofY).format(
-                            currentPage,
-                            totalPages
+                            searchViewModel.currentPage,
+                            searchViewModel.totalPages
                         ),
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -172,7 +182,7 @@ private fun SearchView(
                         modifier = Modifier.weight(0.1f),
                         icon = Icons.TwoTone.KeyboardArrowRight,
                         desc = stringResource(id = R.string.forward),
-                        enabled = currentPage != totalPages,
+                        enabled = searchViewModel.currentPage != searchViewModel.totalPages,
                         onClick = {
                             onForward()
                         })
@@ -205,18 +215,23 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 
 class SearchViewModel : ViewModel() {
 
-    //todo: look for a DI lib
-    val cardmarketConfig = CardmarketConfig()
-    val productApiClient = CardmarketHtmlUnitApiClientImpl(cardmarketConfig)
-    val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
-    val productMapper = ProductMapper(cardmarketConfig)
-    val productService: ProductService = ProductService(productRepository, productMapper)
+    //todo: look for a DI lib ... Dagger ..
+    private val cardmarketConfig = CardmarketConfig()
+    private val productApiClient = CardmarketHtmlUnitApiClientImpl(cardmarketConfig)
+    private val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
+    private val productMapper = ProductMapper(cardmarketConfig)
+    private val productService: ProductService = ProductService(productRepository, productMapper)
 
     var searchResults by mutableStateOf(listOf<SearchProductModel>())
         private set
     var searchQuery by mutableStateOf("")
-    var currentPage by mutableStateOf(1)
-    var totalPages by mutableStateOf(1)
+        private set
+    var currentPage by mutableIntStateOf(1)
+        private set
+    var totalPages by mutableIntStateOf(1)
+        private set
+
+    var searching by mutableStateOf(false)
 
 
 
@@ -230,9 +245,11 @@ class SearchViewModel : ViewModel() {
     }
 
     private suspend fun updateSearchResultsWithNewSearch(searchString: String, page: Int) {
+        searching = true
         val searchItemModelList = productService.search(searchString, page)
         searchResults = searchItemModelList.products
         totalPages = searchItemModelList.pages
+        searching = false
     }
 
     suspend fun onForward() {
