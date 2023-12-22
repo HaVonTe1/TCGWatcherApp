@@ -18,4 +18,10 @@
     <string name="pageXofY">Page %s of %s</string>
     <string name="forward">forward</string>
     <string name="back">back</string>
+    <string name="german">German</string>
+    <string name="english">English</string>
+    <string name="language">language</string>
+    <string name="engine">engine</string>
+    <string name="engine_desc">The underlying tool which makes the web requests.</string>
+    <string name="language_desc">The language printed on the cards</string>
 </resources>

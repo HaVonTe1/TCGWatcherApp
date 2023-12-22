@@ -44,6 +44,7 @@ import de.dkutzer.tcgwatcher.products.services.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestActivity
 import de.dkutzer.tcgwatcher.views.SearchActivity
+import de.dkutzer.tcgwatcher.views.SettingsActivity
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
@@ -185,7 +186,7 @@ private fun MainScreen(items: List<ProductModel> = emptyList()) {
         ) {
             composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestActivity(items) }
             composable(Screen.SearchScreen.route) { SearchActivity() }
-            composable(Screen.SettingsScreen.route) { DummyView(navController) }
+            composable(Screen.SettingsScreen.route) { SettingsActivity() }
 
         }
     }

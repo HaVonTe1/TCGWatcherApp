@@ -18,4 +18,10 @@
     <string name="pageXofY">Seite %s von %s</string>
     <string name="forward">Vor</string>
     <string name="back">Zurück</string>
+    <string name="german">Deutsch</string>
+    <string name="english">Englisch</string>
+    <string name="language">Sprache</string>
+    <string name="engine">Treiber</string>
+    <string name="engine_desc">Die Methode mit der im Hintergrund die Daten abgefragt werden.</string>
+    <string name="language_desc">Die Sprache der Karten</string>
 </resources>
