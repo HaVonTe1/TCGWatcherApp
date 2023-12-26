@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.views
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -18,9 +19,22 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.dkutzer.tcgwatcher.R
+import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
+import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
+import de.dkutzer.tcgwatcher.products.domain.Engines
+import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
+import de.dkutzer.tcgwatcher.products.services.ProductMapper
+import de.dkutzer.tcgwatcher.products.services.ProductService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object LanguagesIdKey : CreationExtras.Key<List<String>>
 object EnginesIdKey : CreationExtras.Key<List<String>>
+object SettingsRepoIdKey : CreationExtras.Key<SettingsRepository>
 @Composable
 fun SettingsActivity() {
 
@@ -28,7 +42,14 @@ fun SettingsActivity() {
     val availableLanguages = listOf(
         stringResource(id = R.string.german), stringResource(id = R.string.english))
 
-    val availableEngines = listOf("htmlunit with js", "htmlunit NO js", "ktor+okhttp")
+
+    val availableEngines = Engines.values().map { it.displayName }.toList()
+    val context = LocalContext.current
+
+    val settingsRepository: SettingsRepository by lazy {
+        SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
+    }
+
 
 
     val settingsViewModel = viewModel<SettingsViewModel>(
@@ -36,17 +57,32 @@ fun SettingsActivity() {
         extras = MutableCreationExtras().apply {
             set(LanguagesIdKey, availableLanguages)
             set(EnginesIdKey, availableEngines)
+            set(SettingsRepoIdKey, settingsRepository)
         }
     )
 
 
-    SettingsView(settingsViewModel)
+    SettingsView(
+        viewModel = settingsViewModel,
+        onLanguageChanged = {
+            scope.launch(Dispatchers.IO) {
+                settingsViewModel.onLanguageChanged(it)
+            }
+        },
+        onEngineChanged = {
+            scope.launch(Dispatchers.IO) {
+                settingsViewModel.onEngineChanged(it)
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    onLanguageChanged: (String) -> Unit,
+    onEngineChanged: (String) -> Unit
 ) {
     Column (
         modifier = Modifier.fillMaxSize(),
@@ -54,21 +90,29 @@ fun SettingsView(
     ) {
 
         //Language
-        dropdownSettingsItem(viewModel.languages, stringResource(id = R.string.language), stringResource(
-            id = R.string.language_desc
-        ))
-        dropdownSettingsItem(viewModel.fetchEngines, stringResource(id = R.string.engine), stringResource(
-            id = R.string.engine_desc
-        ))
-
+        dropdownSettingsItem(
+            viewModel.languages,
+            stringResource(id = R.string.language),
+            stringResource(id = R.string.language_desc),
+            onLanguageChanged)
         //Engine
+        dropdownSettingsItem(viewModel.fetchEngines,
+            stringResource(id = R.string.engine),
+            stringResource(id = R.string.engine_desc),
+            onEngineChanged)
 
     }
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun dropdownSettingsItem(items: List<String>, label: String, label_desc: String) {
+private fun dropdownSettingsItem(
+    items: List<String>,
+    label: String,
+    label_desc: String,
+    onChanged: (String) -> Unit
+)
+{
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,6 +150,7 @@ private fun dropdownSettingsItem(items: List<String>, label: String, label_desc:
             expanded = expanded,
             onExpandedChange = {
                 expanded = !expanded
+                onChanged(selectedText)
             }
         ) {
             TextField(
@@ -136,14 +181,23 @@ private fun dropdownSettingsItem(items: List<String>, label: String, label_desc:
 
 class SettingsViewModel(
     val languages: List<String>,
-    val fetchEngines: List<String>
+    val fetchEngines: List<String>,
+    val settingsRepository: SettingsRepository
 ): ViewModel() {
 
     var language by mutableStateOf(languages[0])
         private set
-    var engine by mutableStateOf("htmlunit+js")
+    var engine by mutableStateOf(fetchEngines[0])
         private set
 
+
+    suspend fun onLanguageChanged(lang: String) {
+        settingsRepository.updateLanguage(lang)
+    }
+
+    suspend fun onEngineChanged(engine: String) {
+        settingsRepository.updateEngine(engine)
+    }
 
     // Define ViewModel factory in a companion object
     companion object {
@@ -157,8 +211,9 @@ class SettingsViewModel(
 
                 val languages = extras[LanguagesIdKey]
                 val engines = extras[EnginesIdKey]
+                val settingsRepo = extras[SettingsRepoIdKey]
                 return SettingsViewModel(
-                    languages!!, engines!!
+                    languages!!, engines!!, settingsRepo!!
                 ) as T
             }
         }
@@ -166,15 +221,23 @@ class SettingsViewModel(
 
 }
 
-@Composable
-@Preview(showBackground = true)
-fun previewSettingsView() {
-
-    val availableLanguages = listOf(
-        "Deutsch", "Englisch")
-
-    val availableEngines = listOf("htmlunit+js", "htmlunit-js", "ktor+okhttp")
-
-
-    SettingsView(viewModel = SettingsViewModel(languages = availableLanguages, fetchEngines = availableEngines))
-}
+//@Composable
+//@Preview(showBackground = true)
+//fun previewSettingsView() {
+//
+//    val availableLanguages = listOf(
+//        "Deutsch", "Englisch")
+//
+//    val availableEngines = listOf("htmlunit+js", "htmlunit-js", "ktor+okhttp")
+//    val context = LocalContext.current
+//
+//    val settingsRepository: SettingsRepository by lazy {
+//        SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
+//    }
+//
+//    SettingsView(
+//        viewModel = SettingsViewModel(
+//            languages = availableLanguages,
+//            fetchEngines = availableEngines,
+//            settingsRepository = settingsRepository))
+//}

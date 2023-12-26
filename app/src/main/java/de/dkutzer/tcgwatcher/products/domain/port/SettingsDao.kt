@@ -13,4 +13,5 @@ interface SettingsDao {
 
     @Query(value = "SELECT * FROM SETTINGS t where  t.id = 1")
     fun load(): SettingsEntity?
+
 }

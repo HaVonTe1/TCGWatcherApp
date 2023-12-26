@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import de.dkutzer.tcgwatcher.products.domain.Converter
 import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
 
 @Database(
@@ -12,9 +14,10 @@ import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
     exportSchema = false
 
 )
+@TypeConverters(Converter::class)
 abstract class SettingsDatabase : RoomDatabase() {
 
-    abstract val dao: SettingsDao
+    abstract val settingsDao: SettingsDao
 
     //Highlander Pattern
     companion object {

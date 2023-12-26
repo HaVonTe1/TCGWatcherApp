@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 data class SettingsEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int = 1,
-    val language: String,
-    val enableJs: Boolean
+    val language: Languages,
+    val engine: Engines
+
+
 )
