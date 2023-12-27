@@ -1,6 +1,5 @@
 package de.dkutzer.tcgwatcher.views
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -9,8 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -19,28 +16,23 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
-import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
-import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
-import de.dkutzer.tcgwatcher.products.domain.Engines
-import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
+import de.dkutzer.tcgwatcher.products.domain.*
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
-import de.dkutzer.tcgwatcher.products.services.ProductMapper
-import de.dkutzer.tcgwatcher.products.services.ProductService
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+private val logger = KotlinLogging.logger {}
 
-object LanguagesIdKey : CreationExtras.Key<List<String>>
-object EnginesIdKey : CreationExtras.Key<List<String>>
-object SettingsRepoIdKey : CreationExtras.Key<SettingsRepository>
+
 @Composable
 fun SettingsActivity() {
 
     val scope = rememberCoroutineScope()
-    val availableLanguages = listOf(
-        stringResource(id = R.string.german), stringResource(id = R.string.english))
+    val availableLanguages = mapOf(
+        Languages.DE to stringResource(id = R.string.german) ,
+        Languages.EN to stringResource(id = R.string.english))
 
 
     val availableEngines = Engines.values().map { it.displayName }.toList()
@@ -61,23 +53,24 @@ fun SettingsActivity() {
         }
     )
 
-
     SettingsView(
         viewModel = settingsViewModel,
         onLanguageChanged = {
             scope.launch(Dispatchers.IO) {
-                settingsViewModel.onLanguageChanged(it)
+                val key =
+                    availableLanguages.entries.find { entry -> entry.value.compareTo(it) == 0 }?.key
+                settingsViewModel.onLanguageChanged(key!!)
             }
         },
         onEngineChanged = {
             scope.launch(Dispatchers.IO) {
-                settingsViewModel.onEngineChanged(it)
+                val key = Engines.fromDisplayName(it)
+                settingsViewModel.onEngineChanged(key!!)
             }
         }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
     viewModel: SettingsViewModel,
@@ -91,7 +84,7 @@ fun SettingsView(
 
         //Language
         dropdownSettingsItem(
-            viewModel.languages,
+            viewModel.languages.values.toList(),
             stringResource(id = R.string.language),
             stringResource(id = R.string.language_desc),
             onLanguageChanged)
@@ -109,7 +102,7 @@ fun SettingsView(
 private fun dropdownSettingsItem(
     items: List<String>,
     label: String,
-    label_desc: String,
+    labelDesc: String,
     onChanged: (String) -> Unit
 )
 {
@@ -136,7 +129,7 @@ private fun dropdownSettingsItem(
             Text(
                 modifier = Modifier
                     .padding(2.dp),
-                text = "$label_desc: ",
+                text = "$labelDesc: ",
                 style = MaterialTheme.typography.labelLarge,
                 fontSize = 10.sp
 
@@ -150,7 +143,6 @@ private fun dropdownSettingsItem(
             expanded = expanded,
             onExpandedChange = {
                 expanded = !expanded
-                onChanged(selectedText)
             }
         ) {
             TextField(
@@ -170,6 +162,7 @@ private fun dropdownSettingsItem(
                         onClick = {
                             selectedText = item
                             expanded = false
+                            onChanged(selectedText)
                             Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
                         }
                     )
@@ -180,22 +173,25 @@ private fun dropdownSettingsItem(
 }
 
 class SettingsViewModel(
-    val languages: List<String>,
+    val languages: Map<Languages,String>,
     val fetchEngines: List<String>,
     val settingsRepository: SettingsRepository
 ): ViewModel() {
 
-    var language by mutableStateOf(languages[0])
+
+    var language by mutableStateOf(languages.getValue(Languages.DE))
         private set
     var engine by mutableStateOf(fetchEngines[0])
         private set
 
+    suspend fun onLanguageChanged(lang: Languages) {
 
-    suspend fun onLanguageChanged(lang: String) {
+        logger.info { lang }
         settingsRepository.updateLanguage(lang)
     }
 
-    suspend fun onEngineChanged(engine: String) {
+    suspend fun onEngineChanged(engine: Engines) {
+        logger.info { engine }
         settingsRepository.updateEngine(engine)
     }
 

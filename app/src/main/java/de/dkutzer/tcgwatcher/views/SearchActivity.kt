@@ -20,12 +20,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.activity.viewModels
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
+import de.dkutzer.tcgwatcher.products.domain.EnginesIdKey
+import de.dkutzer.tcgwatcher.products.domain.LanguagesIdKey
+import de.dkutzer.tcgwatcher.products.domain.SettingsRepoIdKey
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
+import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
 import de.dkutzer.tcgwatcher.products.services.SearchProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductService
@@ -40,7 +50,18 @@ fun SearchActivity() {
 
     val scope = rememberCoroutineScope()
 
-    val searchViewModel = viewModel<SearchViewModel>()
+    val context = LocalContext.current
+
+    val settingsRepository: SettingsRepository by lazy {
+        SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
+    }
+
+    val searchViewModel = viewModel<SearchViewModel>(
+        factory = SearchViewModel.Factory,
+        extras = MutableCreationExtras().apply {
+            set(SettingsRepoIdKey, settingsRepository)
+        }
+    )
 
     SearchView(
         searchViewModel = searchViewModel,
@@ -213,10 +234,13 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 }
 
 
-class SearchViewModel : ViewModel() {
+class SearchViewModel(
+    val settingsRepository: SettingsRepository
+) : ViewModel() {
 
     //todo: look for a DI lib ... Dagger ..
-    private val cardmarketConfig = CardmarketConfig()
+
+    private val cardmarketConfig = CardmarketConfig(settingsRepository.load() )
     private val productApiClient = CardmarketHtmlUnitApiClientImpl(cardmarketConfig)
     private val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
     private val productMapper = ProductMapper(cardmarketConfig)
@@ -234,6 +258,22 @@ class SearchViewModel : ViewModel() {
     var searching by mutableStateOf(false)
 
 
+    // Define ViewModel factory in a companion object
+    companion object {
+
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(
+                modelClass: Class<T>,
+                extras: CreationExtras
+            ): T {
+                val settingsRepo = extras[SettingsRepoIdKey]
+                return SearchViewModel(
+                    settingsRepo!!
+                ) as T
+            }
+        }
+    }
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery = newQuery
