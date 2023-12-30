@@ -5,9 +5,9 @@ import org.jsoup.nodes.Document
 
 private val logger = KotlinLogging.logger {}
 
-abstract class BaseCardmarketApiClient {
+abstract class BaseCardmarketApiClient : ProductApiClient {
 
-    val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
+    private val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
 
 
     fun parseGallerySearchResults(document: Document, page: Int): SearchResultsPageDto {
@@ -48,14 +48,14 @@ abstract class BaseCardmarketApiClient {
             searchResultItemDtos.add(itemDto)
 
         }
-        val totalPages = parsePageination(document)
+        val totalPages = parsePagination(document)
 
 
         return SearchResultsPageDto(searchResultItemDtos, page, totalPages)
 
     }
 
-    fun parsePageination(document: Document): Int {
+    private fun parsePagination(document: Document): Int {
         logger.debug { "Looking for Pagination info" }
         val paginationDiv = document.getElementById("pagination")
         logger.debug { paginationDiv }

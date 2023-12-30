@@ -1,21 +1,17 @@
 package de.dkutzer.tcgwatcher.products.adapter
 
-import de.dkutzer.tcgwatcher.products.adapter.api.ProductApiClient
+import de.dkutzer.tcgwatcher.products.adapter.api.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.products.adapter.api.ProductDetailsDto
 import de.dkutzer.tcgwatcher.products.adapter.api.SearchResultItemDto
-import de.dkutzer.tcgwatcher.products.adapter.api.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.products.adapter.port.ProductRepository
 import de.dkutzer.tcgwatcher.products.services.SearchItem
 import de.dkutzer.tcgwatcher.products.services.SearchResults
 import io.github.oshai.kotlinlogging.KotlinLogging
-
-import kotlin.system.*
-import kotlinx.coroutines.*
-import org.htmlunit.html.HtmlPage
+import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger {}
 
-class ProductCardmarketRepositoryAdapter(val client: ProductApiClient) :
+class ProductCardmarketRepositoryAdapter(private val client: BaseCardmarketApiClient) :
     ProductRepository {
 
     override suspend fun getProductDetails(link: String): ProductDetailsDto {

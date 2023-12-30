@@ -18,8 +18,6 @@ import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.services.BaseProductModel
-import de.dkutzer.tcgwatcher.products.services.ProductDetailsModel
-import de.dkutzer.tcgwatcher.products.services.ProductModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -104,7 +102,7 @@ fun ItemOfInterestCard(
 
                 ItemDetailsTable(
                     localName = productModel.localName,
-                    price = productModel.intPrice.toString(),
+                    price = productModel.intPrice,
                     showLastUpdated = showLastUpdated,
                     lastUpdated = OffsetDateTime.now(),
                     modifier = Modifier.padding(1.dp))

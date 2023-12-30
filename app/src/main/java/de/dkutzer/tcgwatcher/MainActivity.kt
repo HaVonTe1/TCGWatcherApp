@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -89,7 +88,7 @@ private fun MainTheme() {
     TCGWatcherTheme {
 
         if (!internetPermissionState.status.isGranted) {
-            permissionsDialog(
+            PermissionsDialog(
                 onDismissRequest = {
                     activity?.finishAffinity()
                 },
@@ -100,13 +99,13 @@ private fun MainTheme() {
                 currentPermissionState = internetPermissionState
             )
         }
-        MainScreen(Datasource().loadMockData())
+        MainScreen()
     }
 }
 
 @Composable
 @OptIn(ExperimentalPermissionsApi::class)
-private fun permissionsDialog(
+private fun PermissionsDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
     currentPermissionState: PermissionState
@@ -214,10 +213,6 @@ private fun RowScope.MyBottomNavigationItem(
     )
 }
 
-@Composable
-fun DummyView(navController: NavController, modifier: Modifier = Modifier) {
-    Text(text = "Hallo")
-}
 
 @Preview(showBackground = true)
 @Composable

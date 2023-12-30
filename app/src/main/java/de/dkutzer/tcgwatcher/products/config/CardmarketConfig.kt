@@ -12,7 +12,7 @@ data class CardmarketConfig (
     override val searchUrl: String = "$baseUrl/$lang/Pokemon/Products/Search",
 
 ) : BaseConfig(baseUrl, lang, engine, searchUrl) {
-    //holy sh*t this is bad coupling
+    //holy sh*t, this is tight coupling
     constructor(settingsEntity: SettingsEntity): this(lang = settingsEntity.language, engine = settingsEntity.engine)
 }
 

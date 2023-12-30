@@ -1,13 +1,9 @@
 package de.dkutzer.tcgwatcher.products.adapter.api
 
-import android.util.Log
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
+import de.dkutzer.tcgwatcher.products.domain.Engines
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import org.apache.commons.lang3.StringUtils
 import org.htmlunit.BrowserVersion
 import org.htmlunit.NicelyResynchronizingAjaxController
 import org.htmlunit.WebClient
@@ -16,13 +12,12 @@ import org.htmlunit.html.HtmlPage
 import org.htmlunit.javascript.SilentJavaScriptErrorListener
 import org.htmlunit.util.NameValuePair
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import java.net.URL
 import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger {}
 
-class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() ,  ProductApiClient {
+class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient()  {
 
 
     /*
@@ -89,7 +84,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
     }
 
     private fun modifiyWebClient(webClient: WebClient) {
-        webClient.options.isJavaScriptEnabled = false
+        webClient.options.isJavaScriptEnabled = config.engine==Engines.HTMLUNIT_JS
         webClient.options.isCssEnabled = false
         webClient.options.isRedirectEnabled = false
         webClient.options.isAppletEnabled = false

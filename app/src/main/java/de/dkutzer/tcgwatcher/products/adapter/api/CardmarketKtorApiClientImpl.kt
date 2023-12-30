@@ -12,10 +12,9 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
-import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 
-class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient(),  ProductApiClient {
+class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() {
 
 
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {

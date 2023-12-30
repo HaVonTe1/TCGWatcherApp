@@ -83,13 +83,13 @@ fun SettingsView(
     ) {
 
         //Language
-        dropdownSettingsItem(
+        DropdownSettingsItem(
             viewModel.languages.values.toList(),
             stringResource(id = R.string.language),
             stringResource(id = R.string.language_desc),
             onLanguageChanged)
         //Engine
-        dropdownSettingsItem(viewModel.fetchEngines,
+        DropdownSettingsItem(viewModel.fetchEngines,
             stringResource(id = R.string.engine),
             stringResource(id = R.string.engine_desc),
             onEngineChanged)
@@ -99,7 +99,7 @@ fun SettingsView(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun dropdownSettingsItem(
+private fun DropdownSettingsItem(
     items: List<String>,
     label: String,
     labelDesc: String,
@@ -175,7 +175,7 @@ private fun dropdownSettingsItem(
 class SettingsViewModel(
     val languages: Map<Languages,String>,
     val fetchEngines: List<String>,
-    val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository
 ): ViewModel() {
 
 

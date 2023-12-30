@@ -15,34 +15,34 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import androidx.activity.viewModels
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
-import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
-import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketHtmlUnitApiClientImpl
+import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientFactory
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
-import de.dkutzer.tcgwatcher.products.domain.EnginesIdKey
-import de.dkutzer.tcgwatcher.products.domain.LanguagesIdKey
+import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
 import de.dkutzer.tcgwatcher.products.domain.SettingsRepoIdKey
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
-import de.dkutzer.tcgwatcher.products.services.SearchProductModel
 import de.dkutzer.tcgwatcher.products.services.ProductService
+import de.dkutzer.tcgwatcher.products.services.SearchProductModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+private val logger = KotlinLogging.logger {}
 
 @Composable
 fun SearchActivity() {
@@ -55,6 +55,8 @@ fun SearchActivity() {
     val settingsRepository: SettingsRepository by lazy {
         SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
     }
+
+
 
     val searchViewModel = viewModel<SearchViewModel>(
         factory = SearchViewModel.Factory,
@@ -136,7 +138,7 @@ private fun SearchView(
         Column(
             modifier = Modifier.fillMaxSize(),
             Arrangement.Center,
-            Alignment.CenterHorizontally
+            CenterHorizontally
         ) {
 
             if(searchViewModel.searching) {
@@ -235,16 +237,25 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 
 
 class SearchViewModel(
-    val settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    //todo: look for a DI lib ... Dagger ..
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
 
-    private val cardmarketConfig = CardmarketConfig(settingsRepository.load() )
-    private val productApiClient = CardmarketHtmlUnitApiClientImpl(cardmarketConfig)
-    private val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
-    private val productMapper = ProductMapper(cardmarketConfig)
-    private val productService: ProductService = ProductService(productRepository, productMapper)
+            logger.info { "Init SearchViewModel" }
+             val config = CardmarketConfig(settingsRepository.load() )
+             val productApiClient = CardmarketApiClientFactory(config).create()
+             val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
+             val productMapper = ProductMapper(config)
+
+            productService = ProductService(productRepository, productMapper)
+        }
+    }
+
+
+
+    private lateinit var productService: ProductService;
 
     var searchResults by mutableStateOf(listOf<SearchProductModel>())
         private set
@@ -267,7 +278,10 @@ class SearchViewModel(
                 modelClass: Class<T>,
                 extras: CreationExtras
             ): T {
+                logger.info { "Creating SearchViewModel" }
                 val settingsRepo = extras[SettingsRepoIdKey]
+
+
                 return SearchViewModel(
                     settingsRepo!!
                 ) as T
