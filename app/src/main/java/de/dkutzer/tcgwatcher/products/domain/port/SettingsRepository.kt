@@ -29,42 +29,11 @@ class SettingsRepositoryImpl(private val settingsDao: SettingsDao) : SettingsRep
     }
 
     override suspend fun updateLanguage(lang: Languages) {
-
-        var settingsEntity = settingsDao.load()
-        settingsEntity = if (settingsEntity == null) {
-            SettingsEntity(
-                language = lang,
-                engine = Engines.HTMLUNIT_JS
-            )
-        } else {
-            SettingsEntity(
-                language = lang,
-                engine = settingsEntity.engine
-            )
-        }
-        settingsDao.save(settingsEntity)
-
+        settingsDao.updateLanguage(lang)
     }
-
-
 
     override suspend fun updateEngine(eng: Engines) {
-
-        var settingsEntity = settingsDao.load()
-        settingsEntity = if(settingsEntity==null) {
-            SettingsEntity(
-                language = Languages.DE,
-                engine = eng,
-            )
-        } else {
-            SettingsEntity(
-                language = settingsEntity.language,
-                engine =  eng,
-            )
-        }
-        settingsDao.save(settingsEntity)
-
+        settingsDao.updateEngine(eng)
     }
-
 
 }

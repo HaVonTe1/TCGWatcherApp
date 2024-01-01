@@ -10,8 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,14 +21,15 @@ import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
 private val logger = KotlinLogging.logger {}
 
 
 @Composable
 fun SettingsActivity() {
 
-    val scope = rememberCoroutineScope()
     val availableLanguages = mapOf(
         Languages.DE to stringResource(id = R.string.german) ,
         Languages.EN to stringResource(id = R.string.english))
@@ -41,7 +41,7 @@ fun SettingsActivity() {
     val settingsRepository: SettingsRepository by lazy {
         SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
     }
-
+    
 
 
     val settingsViewModel = viewModel<SettingsViewModel>(
@@ -56,17 +56,15 @@ fun SettingsActivity() {
     SettingsView(
         viewModel = settingsViewModel,
         onLanguageChanged = {
-            scope.launch(Dispatchers.IO) {
                 val key =
                     availableLanguages.entries.find { entry -> entry.value.compareTo(it) == 0 }?.key
                 settingsViewModel.onLanguageChanged(key!!)
-            }
+
         },
         onEngineChanged = {
-            scope.launch(Dispatchers.IO) {
                 val key = Engines.fromDisplayName(it)
                 settingsViewModel.onEngineChanged(key!!)
-            }
+
         }
     )
 }
@@ -77,19 +75,27 @@ fun SettingsView(
     onLanguageChanged: (String) -> Unit,
     onEngineChanged: (String) -> Unit
 ) {
+    LaunchedEffect(key1 = Unit) {
+        logger.debug { "Launched SettingView" }
+        viewModel.fetchSettings()
+    }
+
     Column (
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.Start
     ) {
 
+        val settingsState by viewModel.uiState.collectAsState()
         //Language
         DropdownSettingsItem(
             viewModel.languages.values.toList(),
+            settingsState.currentLanguage,
             stringResource(id = R.string.language),
             stringResource(id = R.string.language_desc),
             onLanguageChanged)
         //Engine
-        DropdownSettingsItem(viewModel.fetchEngines,
+        DropdownSettingsItem(viewModel.engines,
+            settingsState.currentEngine,
             stringResource(id = R.string.engine),
             stringResource(id = R.string.engine_desc),
             onEngineChanged)
@@ -101,6 +107,7 @@ fun SettingsView(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun DropdownSettingsItem(
     items: List<String>,
+    selectedItem: String,
     label: String,
     labelDesc: String,
     onChanged: (String) -> Unit
@@ -113,7 +120,8 @@ private fun DropdownSettingsItem(
     ) {
         val context = LocalContext.current
         var expanded by remember { mutableStateOf(false) }
-        var selectedText by remember { mutableStateOf(items[0]) }
+        var selectedText by remember { mutableStateOf(selectedItem) }
+        selectedText = selectedItem
 
         Column(
             modifier = Modifier.weight(0.3f)
@@ -162,7 +170,7 @@ private fun DropdownSettingsItem(
                         onClick = {
                             selectedText = item
                             expanded = false
-                            onChanged(selectedText)
+                            onChanged(item)
                             Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
                         }
                     )
@@ -172,27 +180,48 @@ private fun DropdownSettingsItem(
     }
 }
 
+data class SettingsState(val currentLanguage: String = "", val currentEngine: String = "")
+
 class SettingsViewModel(
     val languages: Map<Languages,String>,
-    val fetchEngines: List<String>,
+    val engines: List<String>,
     private val settingsRepository: SettingsRepository
 ): ViewModel() {
 
+    private val _uiState = MutableStateFlow(SettingsState())
+    val uiState: StateFlow<SettingsState> = _uiState.asStateFlow()
 
-    var language by mutableStateOf(languages.getValue(Languages.DE))
-        private set
-    var engine by mutableStateOf(fetchEngines[0])
-        private set
-
-    suspend fun onLanguageChanged(lang: Languages) {
-
-        logger.info { lang }
-        settingsRepository.updateLanguage(lang)
+    init {
+        fetchSettings()
     }
 
-    suspend fun onEngineChanged(engine: Engines) {
-        logger.info { engine }
-        settingsRepository.updateEngine(engine)
+    fun fetchSettings() {
+        logger.info { "Init SettingsViewModel" }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val settingsEntity = settingsRepository.load()
+            logger.debug { "Current Settings: $settingsEntity" }
+
+            _uiState.value = SettingsState(
+               currentEngine = settingsEntity.engine.displayName,
+                currentLanguage = languages.getValue(settingsEntity.language)
+            )
+        }
+
+    }
+
+    fun onLanguageChanged(lang: Languages) {
+        logger.info { "Updating settings Language with: $lang" }
+        viewModelScope.launch(Dispatchers.IO) {
+            settingsRepository.updateLanguage(lang)
+        }
+    }
+
+    fun onEngineChanged(engine: Engines) {
+        logger.info { "Updating settings engine with $engine" }
+        viewModelScope.launch(Dispatchers.IO) {
+            settingsRepository.updateEngine(engine)
+        }
     }
 
     // Define ViewModel factory in a companion object

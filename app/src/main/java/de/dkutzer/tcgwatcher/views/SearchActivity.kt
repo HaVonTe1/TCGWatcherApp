@@ -47,9 +47,6 @@ private val logger = KotlinLogging.logger {}
 @Composable
 fun SearchActivity() {
 
-
-    val scope = rememberCoroutineScope()
-
     val context = LocalContext.current
 
     val settingsRepository: SettingsRepository by lazy {
@@ -68,13 +65,9 @@ fun SearchActivity() {
     SearchView(
         searchViewModel = searchViewModel,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
-        onSearchSubmit = {
-            scope.launch(Dispatchers.IO) {
-                searchViewModel.onSearchSubmit(it)
-            }
-        },
-        onForward = { scope.launch(Dispatchers.IO) { searchViewModel.onForward() } },
-        onBackward = { scope.launch(Dispatchers.IO) { searchViewModel.onBackward() } }
+        onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
+        onForward = { searchViewModel.onForward()  },
+        onBackward = {  searchViewModel.onBackward()  }
     )
 }
 
@@ -293,9 +286,11 @@ class SearchViewModel(
         searchQuery = newQuery
     }
 
-    suspend fun onSearchSubmit(searchString: String) {
-        currentPage = 1
-        updateSearchResultsWithNewSearch(searchString, 1)
+    fun onSearchSubmit(searchString: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            currentPage = 1
+            updateSearchResultsWithNewSearch(searchString, 1)
+        }
     }
 
     private suspend fun updateSearchResultsWithNewSearch(searchString: String, page: Int) {
@@ -306,15 +301,19 @@ class SearchViewModel(
         searching = false
     }
 
-    suspend fun onForward() {
-        currentPage++
-        updateSearchResultsWithNewSearch(searchQuery, currentPage)
+    fun onForward() {
+        viewModelScope.launch(Dispatchers.IO) {
+            currentPage++
+            updateSearchResultsWithNewSearch(searchQuery, currentPage)
 
+        }
     }
 
-    suspend fun onBackward() {
-        currentPage--
-        updateSearchResultsWithNewSearch(searchQuery, currentPage)
+    fun onBackward() {
+        viewModelScope.launch(Dispatchers.IO) {
+            currentPage--
+            updateSearchResultsWithNewSearch(searchQuery, currentPage)
+        }
     }
 
 
