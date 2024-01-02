@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -78,6 +79,8 @@ fun SettingsView(
     LaunchedEffect(key1 = Unit) {
         logger.debug { "Launched SettingView" }
         viewModel.fetchSettings()
+        logger.debug { "Done Launched SettingView" }
+
     }
 
     Column (
@@ -120,8 +123,8 @@ private fun DropdownSettingsItem(
     ) {
         val context = LocalContext.current
         var expanded by remember { mutableStateOf(false) }
-        var selectedText by remember { mutableStateOf(selectedItem) }
-        selectedText = selectedItem
+        val selectedText = remember(selectedItem) { mutableStateOf(selectedItem) }
+
 
         Column(
             modifier = Modifier.weight(0.3f)
@@ -154,7 +157,7 @@ private fun DropdownSettingsItem(
             }
         ) {
             TextField(
-                value = selectedText,
+                value = selectedText.value,
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -168,10 +171,11 @@ private fun DropdownSettingsItem(
                     DropdownMenuItem(
                         text = { Text(text = item) },
                         onClick = {
-                            selectedText = item
+                            logger.debug { "DropDown OnClick: $item" }
+                            selectedText.value = item
                             expanded = false
                             onChanged(item)
-                            Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "$label changed to: $item", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -191,9 +195,6 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(SettingsState())
     val uiState: StateFlow<SettingsState> = _uiState.asStateFlow()
 
-    init {
-        fetchSettings()
-    }
 
     fun fetchSettings() {
         logger.info { "Init SettingsViewModel" }
@@ -203,10 +204,13 @@ class SettingsViewModel(
             logger.debug { "Current Settings: $settingsEntity" }
 
             _uiState.value = SettingsState(
-               currentEngine = settingsEntity.engine.displayName,
+                currentEngine = settingsEntity.engine.displayName,
                 currentLanguage = languages.getValue(settingsEntity.language)
             )
+            logger.debug { "Current State: ${uiState.value}" }
+
         }
+        logger.debug { "Finished Init SettingsViewModel" }
 
     }
 

@@ -82,6 +82,10 @@ private fun SearchView(
     onBackward: () -> Unit
 ) {
 
+    LaunchedEffect(key1 = Unit ) {
+        searchViewModel.initService()
+    }
+
 
     var active by rememberSaveable { mutableStateOf(false) } //needed to indicate if a searchResultItem is clickable
 
@@ -230,10 +234,10 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 
 
 class SearchViewModel(
-    settingsRepository: SettingsRepository
+   private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    init {
+    fun initService() {
         viewModelScope.launch(Dispatchers.IO) {
 
             logger.info { "Init SearchViewModel" }

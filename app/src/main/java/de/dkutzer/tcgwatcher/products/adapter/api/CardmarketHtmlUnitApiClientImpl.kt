@@ -75,6 +75,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             logger.info { "Status: ${htmlPage.webResponse.statusCode}" }
 
             val document = Jsoup.parse(htmlPage.asXml())
+            logger.debug { document }
 
             return parseGallerySearchResults(document, page)
 
@@ -86,7 +87,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
     private fun modifiyWebClient(webClient: WebClient) {
         webClient.options.isJavaScriptEnabled = config.engine==Engines.HTMLUNIT_JS
         webClient.options.isCssEnabled = false
-        webClient.options.isRedirectEnabled = false
+        webClient.options.isRedirectEnabled = true
         webClient.options.isAppletEnabled = false
         webClient.options.isDownloadImages = false
         webClient.options.isWebSocketEnabled = false
