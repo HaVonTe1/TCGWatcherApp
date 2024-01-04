@@ -2,6 +2,8 @@ package de.dkutzer.tcgwatcher.products.adapter.api
 
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
 import de.dkutzer.tcgwatcher.products.domain.Engines
+import de.dkutzer.tcgwatcher.products.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.products.domain.SearchResultsPageDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
 import org.htmlunit.BrowserVersion
@@ -48,7 +50,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             val params = mapOf(
                 "searchString" to searchString,
                 /* "sortBy" to "price_asc",*/
-                "perSite" to "5",
+                "perSite" to "100", // 100 is max
                 "mode" to "gallery",
 //                "language" to "3", //german -- TODO: the language is set via the path
                 "site" to "$page"

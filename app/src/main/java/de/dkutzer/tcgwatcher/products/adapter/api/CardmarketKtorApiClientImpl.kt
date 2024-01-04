@@ -3,6 +3,8 @@ package de.dkutzer.tcgwatcher.products.adapter.api
 
 
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
+import de.dkutzer.tcgwatcher.products.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.products.domain.SearchResultsPageDto
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.BrowserUserAgent
@@ -20,9 +22,7 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
 
         HttpClient(OkHttp) {
-            //OkHttp seems to be the only enigne which can handle multiply set-cookie header
-            followRedirects = false
-
+            followRedirects = true
             install(Logging)
             {
                 level = LogLevel.ALL
@@ -35,7 +35,7 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
                     //This should take care of url encoding
                     parameters.append("searchString", searchString)
                     //parameters.append("sortBy", "price_asc")
-                    parameters.append("perSite", "5")
+                    parameters.append("perSite", "100") //FIXME : this was a dump idea
                     parameters.append("mode", "gallery")
                     parameters.append("site", "$page")
 
@@ -52,15 +52,11 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
 
             return parseGallerySearchResults(document, page)
         }
-
-
-
     }
 
     override suspend fun getProductDetails(link: String): ProductDetailsDto {
         HttpClient(OkHttp) {
-            //OkHttp seems to be the only enigne which can handle multiply set-cookie header
-            followRedirects = false
+            followRedirects = true
 
             install(Logging)
             {

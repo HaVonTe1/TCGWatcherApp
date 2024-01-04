@@ -1,5 +1,8 @@
 package de.dkutzer.tcgwatcher.products.adapter.api
 
+import de.dkutzer.tcgwatcher.products.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.products.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.products.domain.SearchResultsPageDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Document
 

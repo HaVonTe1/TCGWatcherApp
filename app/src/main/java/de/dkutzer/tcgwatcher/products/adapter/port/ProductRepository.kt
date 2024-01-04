@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.products.adapter.port
 
-import de.dkutzer.tcgwatcher.products.adapter.api.ProductDetailsDto
-import de.dkutzer.tcgwatcher.products.services.SearchResults
+import de.dkutzer.tcgwatcher.products.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.products.domain.SearchResults
 
 interface ProductRepository {
 

@@ -29,6 +29,7 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientFactory
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
+import de.dkutzer.tcgwatcher.products.domain.SearchProductModel
 import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
 import de.dkutzer.tcgwatcher.products.domain.SettingsRepoIdKey
 import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
@@ -236,6 +237,8 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 class SearchViewModel(
    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
+
+    //TODO: the whole Pagination thing needs to be reworked
 
     fun initService() {
         viewModelScope.launch(Dispatchers.IO) {
