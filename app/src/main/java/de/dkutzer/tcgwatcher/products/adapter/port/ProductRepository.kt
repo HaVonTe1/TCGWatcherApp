@@ -7,5 +7,5 @@ interface ProductRepository {
 
     suspend fun getProductDetails(link: String) : ProductDetailsDto
 
-    suspend fun search(searchString : String, page: Int = 1) : SearchResults
+    suspend fun search(searchString : String, page: Int = 1, limit: Int = 5) : SearchResults
 }

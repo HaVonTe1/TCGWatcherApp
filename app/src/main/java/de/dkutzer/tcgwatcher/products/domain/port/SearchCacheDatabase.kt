@@ -6,10 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.dkutzer.tcgwatcher.products.domain.Converter
+import de.dkutzer.tcgwatcher.products.domain.SearchEntity
+import de.dkutzer.tcgwatcher.products.domain.SearchResultItemEntity
 import de.dkutzer.tcgwatcher.products.domain.SearchWithResultsEntity
 
 @Database(
-    entities = [SearchWithResultsEntity::class],
+    entities = [SearchEntity::class, SearchResultItemEntity::class],
     version = 1,
     exportSchema = false
 

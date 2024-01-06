@@ -22,38 +22,71 @@ class ProductCardmarketRepositoryAdapter(
     }
 
 
-    override suspend fun search(searchString: String, page: Int): SearchResults {
+    override suspend fun search(searchString: String, page: Int, limit: Int): SearchResults {
 
         lateinit var result: SearchResults
         logger.debug { "Looking in the Cache for: $searchString" }
 
 
-        val searchWithResults = cache.findBySearchTerm(searchString)
+        val searchWithResults = cache.findBySearchTerm(searchString, page)
+        logger.trace { "Found: ${searchWithResults?.results?.size}" }
         if(searchWithResults!=null) {
             //TODO: handle lastUpdated for refreshing
             val searchItems = searchWithResults.results.map { it.toSearchItem() }.toList()
-            result = SearchResults(searchItems, page, 1) //FIXME
+            result = SearchResults(searchItems, page, searchWithResults.search.size.floorDiv(limit).plus(1))
+            logger.trace { "Returning cached results: $result" }
+
         }
         else {
             logger.debug { "Start a new Search: $searchString" }
             val duration = measureTimeMillis {
-                val searchResults = client.search(searchString, page)
+
+                logger.trace { "Requesting the Api with $searchString for page: 1" }
+                var searchResults = client.search(searchString, 1)
+                var mergedResults = SearchResultsPageDto(
+                    searchResults.results,
+                    1,
+                    searchResults.totalPages)
+                logger.trace { "Results so far: $mergedResults" }
+                while(searchResults.page<searchResults.totalPages) {
+                    logger.debug { "traversing pagination with total pages: ${searchResults.totalPages}" }
+                    val newPage = searchResults.page +1
+                    logger.trace { "Requesting the Api with $searchString for page: $newPage" }
+
+                    searchResults = client.search(searchString, newPage)
+
+                    mergedResults = SearchResultsPageDto(
+                        mergedResults.results.plus(searchResults.results),
+                        newPage,
+                        searchResults.totalPages)
+                    logger.trace { "Results so far: $mergedResults" }
+
+                }
+
+
                 val searchWithResultsEntity = SearchWithResultsEntity(
                     search = SearchEntity(
                         searchTerm = searchString,
+                        size = mergedResults.results.size,
                         lastUpdated = OffsetDateTime.now()
                     ),
-                    results = searchResults.results.map { it.toSearchItemEntity() }.toList()
+                    results = mergedResults.results.map { it.toSearchItemEntity() }.toList()
                 )
+                logger.debug { "Persisting cache: $searchWithResultsEntity" }
                 cache.persistsSearch(searchWithResultsEntity)
 
-                val searchItems = searchResults.results.map { it.toSearchItem() }.toList()
-                result = SearchResults(searchItems, page, searchResults.totalPages)
+                logger.debug { "Now fetching paged results from newly cache" }
+                val updatedSearchResult = cache.findBySearchTerm(searchString, page)
+
+
+                val searchItems = updatedSearchResult?.results?.map { it.toSearchItem() }?.toList()
+                result = SearchResults(searchItems?: listOf(), page, updatedSearchResult?.search?.size?.floorDiv(limit)?.plus(1)?:0)
             }
             logger.debug { "Duration: $duration" }
 
 
         }
+        logger.debug { "Final result: $result" }
         return result
 
     }

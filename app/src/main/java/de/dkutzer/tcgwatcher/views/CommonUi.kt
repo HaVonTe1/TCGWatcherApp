@@ -17,7 +17,7 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.services.BaseProductModel
+import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle

@@ -1,8 +1,7 @@
 package de.dkutzer.tcgwatcher
 
-import de.dkutzer.tcgwatcher.products.services.ProductDetailsModel
-import de.dkutzer.tcgwatcher.products.services.ProductModel
-import de.dkutzer.tcgwatcher.products.services.SearchProductModel
+
+import de.dkutzer.tcgwatcher.products.domain.*
 import java.time.OffsetDateTime
 import kotlin.random.Random
 

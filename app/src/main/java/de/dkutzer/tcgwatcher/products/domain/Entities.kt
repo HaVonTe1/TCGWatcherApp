@@ -18,7 +18,8 @@ data class SearchEntity(
     val searchId: Int = 0,
     @ColumnInfo(index = true)
     val searchTerm: String,
-    val lastUpdated: OffsetDateTime
+    val size: Int,
+    val lastUpdated: Long
 
 )
 
@@ -33,6 +34,7 @@ data class SearchResultItemEntity(
     val imgLink: String,
     val price: String
 )
+
 
 data class SearchWithResultsEntity(
     @Embedded val search: SearchEntity,

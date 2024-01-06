@@ -29,15 +29,12 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientFactory
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
+import de.dkutzer.tcgwatcher.products.domain.SearchCacheRepoIdKey
 import de.dkutzer.tcgwatcher.products.domain.SearchProductModel
-import de.dkutzer.tcgwatcher.products.domain.SettingsEntity
 import de.dkutzer.tcgwatcher.products.domain.SettingsRepoIdKey
-import de.dkutzer.tcgwatcher.products.domain.port.SettingsDatabase
-import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepository
-import de.dkutzer.tcgwatcher.products.domain.port.SettingsRepositoryImpl
+import de.dkutzer.tcgwatcher.products.domain.port.*
 import de.dkutzer.tcgwatcher.products.services.ProductMapper
 import de.dkutzer.tcgwatcher.products.services.ProductService
-import de.dkutzer.tcgwatcher.products.services.SearchProductModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -53,6 +50,9 @@ fun SearchActivity() {
     val settingsRepository: SettingsRepository by lazy {
         SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
     }
+    val searchCacheRepository: SearchCacheRepository by lazy {
+        SearchCacheRepositoryImpl(SearchCacheDatabase.getDatabase(context).searchCacheDaoDa)
+    }
 
 
 
@@ -60,6 +60,7 @@ fun SearchActivity() {
         factory = SearchViewModel.Factory,
         extras = MutableCreationExtras().apply {
             set(SettingsRepoIdKey, settingsRepository)
+            set(SearchCacheRepoIdKey, searchCacheRepository)
         }
     )
 
@@ -170,6 +171,7 @@ private fun SearchView(
                     }
                 }
 
+                //Pagination
                 Row(
                     modifier = Modifier
                         .padding(1.dp)
@@ -235,7 +237,8 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 
 
 class SearchViewModel(
-   private val settingsRepository: SettingsRepository
+   private val settingsRepository: SettingsRepository,
+    private val searchCacheRepository: SearchCacheRepository
 ) : ViewModel() {
 
     //TODO: the whole Pagination thing needs to be reworked
@@ -246,7 +249,7 @@ class SearchViewModel(
             logger.info { "Init SearchViewModel" }
              val config = CardmarketConfig(settingsRepository.load() )
              val productApiClient = CardmarketApiClientFactory(config).create()
-             val productRepository = ProductCardmarketRepositoryAdapter(productApiClient)
+             val productRepository = ProductCardmarketRepositoryAdapter(productApiClient, searchCacheRepository)
              val productMapper = ProductMapper(config)
 
             productService = ProductService(productRepository, productMapper)
@@ -280,10 +283,12 @@ class SearchViewModel(
             ): T {
                 logger.info { "Creating SearchViewModel" }
                 val settingsRepo = extras[SettingsRepoIdKey]
+                val searchCacheRepository = extras[SearchCacheRepoIdKey]
 
 
                 return SearchViewModel(
-                    settingsRepo!!
+                    settingsRepo!!,
+                    searchCacheRepository!!
                 ) as T
             }
         }
