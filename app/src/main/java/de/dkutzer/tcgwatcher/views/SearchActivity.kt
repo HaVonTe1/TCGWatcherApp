@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -39,6 +40,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 private val logger = KotlinLogging.logger {}
 
@@ -306,8 +308,16 @@ class SearchViewModel(
     }
 
     private suspend fun updateSearchResultsWithNewSearch(searchString: String, page: Int) {
+        if(searching) {
+            logger.debug { "Already searching" }
+            return
+        }
+        if(searchString.isEmpty()) {
+            logger.debug { "Empty search" }
+            return
+        }
         searching = true
-        val searchItemModelList = productService.search(searchString, page)
+        val searchItemModelList = productService.search(searchString.uppercase(Locale.getDefault()), page)
         searchResults = searchItemModelList.products
         totalPages = searchItemModelList.pages
         searching = false

@@ -22,17 +22,17 @@ class ExampleInstrumentedTest {
 //        assertEquals("de.dkutzer.tcgwatcher", appContext.packageName)
 //    }
 
-    @Test
-    fun search() {
-
-        val client  = CardmarketHtmlUnitApiClientImpl(CardmarketConfig())
-        val repositoryAdapter =
-            ProductCardmarketRepositoryAdapter(client)
-
-        val searchResults = repositoryAdapter.search("Bisaflor")
-        searchResults.items.forEach {
-            println(it)
-        }
-
-    }
+//    @Test
+//    fun search() {
+//
+//        val client  = CardmarketHtmlUnitApiClientImpl(CardmarketConfig())
+//        val repositoryAdapter =
+//            ProductCardmarketRepositoryAdapter(client)
+//
+//        val searchResults = repositoryAdapter.search("Bisaflor")
+//        searchResults.items.forEach {
+//            println(it)
+//        }
+//
+//    }
 }

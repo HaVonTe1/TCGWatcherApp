@@ -15,10 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.Datasource
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.services.ProductModel
+import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
 
 @Composable
-fun ItemOfInterestActivity(ioiList: List<ProductModel>, modifier: Modifier = Modifier) {
+fun ItemOfInterestActivity(ioiList: List<BaseProductModel>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(ioiList.size) {
             ItemOfInterestCard(
@@ -49,9 +49,9 @@ fun ItemViewCardIconRow( modifier: Modifier = Modifier) {
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun TestItemPreview() {
-    ItemOfInterestActivity(Datasource().loadMockData())
-
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun TestItemPreview() {
+//    ItemOfInterestActivity(Datasource().loadMockData())
+//
+//}

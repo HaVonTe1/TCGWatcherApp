@@ -27,7 +27,7 @@ data class SearchEntity(
 data class SearchResultItemEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val searchId: Int,
+    var searchId: Int,
     val displayName: String,
     val orgName: String,
     val cmLink: String,

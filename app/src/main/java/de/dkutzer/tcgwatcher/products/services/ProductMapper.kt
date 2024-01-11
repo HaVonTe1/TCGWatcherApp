@@ -1,6 +1,8 @@
 package de.dkutzer.tcgwatcher.products.services
 
 import de.dkutzer.tcgwatcher.products.config.BaseConfig
+import de.dkutzer.tcgwatcher.products.domain.SearchItem
+import de.dkutzer.tcgwatcher.products.domain.SearchProductModel
 
 class ProductMapper(val config: BaseConfig) {
 //    fun toModel(item: SearchItem, details: ProductDetailsDto) : ProductModel {

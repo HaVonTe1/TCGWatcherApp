@@ -68,7 +68,7 @@ class ProductCardmarketRepositoryAdapter(
                     search = SearchEntity(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
-                        lastUpdated = OffsetDateTime.now()
+                        lastUpdated = OffsetDateTime.now().toEpochSecond()
                     ),
                     results = mergedResults.results.map { it.toSearchItemEntity() }.toList()
                 )

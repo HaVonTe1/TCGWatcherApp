@@ -39,7 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.*
-import de.dkutzer.tcgwatcher.products.services.ProductModel
+import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.views.ItemOfInterestActivity
 import de.dkutzer.tcgwatcher.views.SearchActivity
@@ -153,7 +153,7 @@ private fun PermissionsDialog(
 
 
 @Composable
-private fun MainScreen(items: List<ProductModel> = emptyList()) {
+private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
     val navController = rememberNavController()
 
 
@@ -213,10 +213,10 @@ private fun RowScope.MyBottomNavigationItem(
     )
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun TestMainPreview() {
-    MainScreen(Datasource().loadMockData())
-
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun TestMainPreview() {
+//    MainScreen(Datasource().loadMockData())
+//
+//}

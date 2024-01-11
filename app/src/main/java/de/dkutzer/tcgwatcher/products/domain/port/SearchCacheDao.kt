@@ -11,12 +11,18 @@ import de.dkutzer.tcgwatcher.products.domain.SearchWithResultsEntity
 @Dao
 interface SearchCacheDao {
 
-    @Transaction
-    @Query("SELECT * FROM search WHERE searchTerm = :searchTerm LIMIT :pageSize OFFSET :offset" )
-    fun findBySearchTerm(searchTerm: String, pageSize: Int, offset: Int): SearchWithResultsEntity?
 
-//    @Upsert(entity = SearchEntity::class)
-//    fun persistResults(search: SearchWithResultsEntity)
-//
+    @Query("SELECT * FROM search WHERE searchTerm = :searchTerm")
+    fun findSearch(searchTerm: String) : SearchEntity?
+
+    @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
+    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<SearchResultItemEntity>
+
+    @Upsert()
+    fun persistResults( results: List<SearchResultItemEntity>): List<Long>
+
+    @Upsert
+    fun persistSearch( search: SearchEntity) : Long
+
 
 }

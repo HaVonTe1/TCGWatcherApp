@@ -6,12 +6,12 @@ import java.time.OffsetDateTime
 import kotlin.random.Random
 
 class Datasource {
-    fun loadMockData(): MutableList<ProductModel> {
-        return MutableList(Random.nextInt(3,10)) { randomItem()}
-    }
-    fun loadMockSearchData(): MutableList<SearchProductModel> {
-        return MutableList(Random.nextInt(3,10)) { randomSearchItem()}
-    }
+//    fun loadMockData(): MutableList<BaseProductModel> {
+//        return MutableList(Random.nextInt(3,10)) { randomItem()}
+//    }
+//    fun loadMockSearchData(): MutableList<SearchProductModel> {
+//        return MutableList(Random.nextInt(3,10)) { randomSearchItem()}
+//    }
 
 //    fun loadRealTestData(searchString: String) : MutableList<ProductModel> {
 //        val config = CardmarketConfig()
@@ -37,33 +37,33 @@ class Datasource {
 
     private val charPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
     private fun randomStringByKotlinRandom() = List(10) { charPool.random() }.joinToString("")
-    private fun randomItem(): ProductModel {
-        return ProductModel(
-            id = "Blastoise-ex-V1-MEW009",
-            imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
-            detailsUrl = "https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009",
-            details =
-            ProductDetailsModel(
-                localName = randomStringByKotlinRandom(),
-                intName = randomStringByKotlinRandom(),
-                price = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
-                localPrice = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
-                localPriceTrend = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
-                lastUpdate = OffsetDateTime.now()
-            )
-        )
-    }
+//    private fun randomItem(): BaseProductModel {
+//        return BaseProductModel(
+//            id = "Blastoise-ex-V1-MEW009",
+//            imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
+//            detailsUrl = "https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009",
+//            details =
+//            ProductDetailsModel(
+//                localName = randomStringByKotlinRandom(),
+//                intName = randomStringByKotlinRandom(),
+//                price = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
+//                localPrice = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
+//                localPriceTrend = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
+//                lastUpdate = OffsetDateTime.now()
+//            )
+//        )
+//    }
 
-    private fun randomSearchItem(): SearchProductModel {
-        return SearchProductModel(
-            id = "Blastoise-ex-V1-MEW009",
-            imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
-            intPrice = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
-            detailsUrl = "https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009",
-            localName = "Turtok"
-
-        )
-    }
+//    private fun randomSearchItem(): SearchProductModel {
+//        return SearchProductModel(
+//            id = "Blastoise-ex-V1-MEW009",
+//            imageUrl = "https://product-images.s3.cardmarket.com/51/MEW/733633/733633.jpg",
+//            intPrice = "${Random.nextInt(0,9)},${Random.nextInt(0,99)} €",
+//            detailsUrl = "https://www.cardmarket.com/de/Pokemon/Products/Singles/151/Blastoise-ex-V1-MEW009",
+//            localName = "Turtok"
+//
+//        )
+//    }
 
 
 
