@@ -60,10 +60,13 @@ android {
 
     buildToolsVersion = "33.0.1"
 
+
+
     testOptions {
 
         unitTests {
             isReturnDefaultValues = true
+            isIncludeAndroidResources = true
 
         }
 
@@ -87,13 +90,19 @@ android {
     }
 }
 
+
+val roomVersion: String by rootProject.extra
+val ktorVersion: String by rootProject.extra
+val lifecycleVersion: String by rootProject.extra
+val pagingVersion: String by rootProject.extra
+
 dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
@@ -110,10 +119,10 @@ dependencies {
     //image download and caching
     implementation("io.coil-kt:coil-compose:2.5.0")
     //REST
-    implementation("io.ktor:ktor-client-core:2.3.6")
-    implementation("io.ktor:ktor-client-okhttp:2.3.6")
-    implementation("io.ktor:ktor-client-logging:2.3.6")
-    implementation("io.ktor:ktor-client-encoding:2.3.6")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-encoding:$ktorVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     //Parsing HTML
@@ -126,16 +135,21 @@ dependencies {
     implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.4")
 
     //DB
-    implementation("androidx.room:room-ktx:2.6.1")
+    implementation("androidx.room:room-ktx:$roomVersion")
 //    kapt("androidx.room:room-compiler:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-paging:$roomVersion")
 
-
-
+    //Paging3
+    implementation("androidx.paging:paging-common:$pagingVersion")
+    implementation("androidx.paging:paging-runtime-ktx:$pagingVersion")
+    implementation("androidx.paging:paging-compose:$pagingVersion")
     //Testing
 
     testImplementation ("junit:junit:4.13.2")
-
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

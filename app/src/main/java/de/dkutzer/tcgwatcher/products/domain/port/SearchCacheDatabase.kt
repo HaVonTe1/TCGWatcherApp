@@ -5,13 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import de.dkutzer.tcgwatcher.products.domain.Converter
-import de.dkutzer.tcgwatcher.products.domain.SearchEntity
-import de.dkutzer.tcgwatcher.products.domain.SearchResultItemEntity
-import de.dkutzer.tcgwatcher.products.domain.SearchWithResultsEntity
+import de.dkutzer.tcgwatcher.products.domain.*
 
 @Database(
-    entities = [SearchEntity::class, SearchResultItemEntity::class],
+    entities = [SearchEntity::class, SearchResultItemEntity::class,  RemoteKeyEntity::class],
     version = 1,
     exportSchema = false
 
@@ -20,6 +17,7 @@ import de.dkutzer.tcgwatcher.products.domain.SearchWithResultsEntity
 abstract class SearchCacheDatabase : RoomDatabase() {
 
     abstract val searchCacheDaoDa: SearchCacheDao
+    abstract val remoteKeyDao: RemoteKeyDao
 
     //Highlander Pattern
     companion object {

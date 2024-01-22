@@ -7,18 +7,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
-import androidx.compose.material.icons.twotone.KeyboardArrowLeft
-import androidx.compose.material.icons.twotone.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.toUpperCase
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -26,18 +21,25 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.products.adapter.ProductCardmarketRepositoryAdapter
+import de.dkutzer.tcgwatcher.products.adapter.PokemonPager
+import de.dkutzer.tcgwatcher.products.adapter.api.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.products.adapter.api.CardmarketApiClientFactory
+import de.dkutzer.tcgwatcher.products.adapter.api.DummyApiClient
+import de.dkutzer.tcgwatcher.products.adapter.port.GetPokemonList
 import de.dkutzer.tcgwatcher.products.config.CardmarketConfig
-import de.dkutzer.tcgwatcher.products.domain.SearchCacheRepoIdKey
-import de.dkutzer.tcgwatcher.products.domain.SearchProductModel
-import de.dkutzer.tcgwatcher.products.domain.SettingsRepoIdKey
+import de.dkutzer.tcgwatcher.products.domain.*
 import de.dkutzer.tcgwatcher.products.domain.port.*
-import de.dkutzer.tcgwatcher.products.services.ProductMapper
-import de.dkutzer.tcgwatcher.products.services.ProductService
+import de.dkutzer.tcgwatcher.products.services.CardmarketPokemonRepositoryImpl
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -45,33 +47,42 @@ import java.util.Locale
 private val logger = KotlinLogging.logger {}
 
 @Composable
-fun SearchActivity() {
+fun SearchActivity(
+    snackbarHostState: SnackbarHostState
+) {
 
     val context = LocalContext.current
 
-    val settingsRepository: SettingsRepository by lazy {
-        SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
+    val settingsDatabase : SettingsDatabase by lazy {
+        SettingsDatabase.getDatabase(context)
     }
-    val searchCacheRepository: SearchCacheRepository by lazy {
-        SearchCacheRepositoryImpl(SearchCacheDatabase.getDatabase(context).searchCacheDaoDa)
+    val searchCacheDatabase : SearchCacheDatabase by lazy {
+        SearchCacheDatabase.getDatabase(context)
     }
-
 
 
     val searchViewModel = viewModel<SearchViewModel>(
         factory = SearchViewModel.Factory,
         extras = MutableCreationExtras().apply {
-            set(SettingsRepoIdKey, settingsRepository)
-            set(SearchCacheRepoIdKey, searchCacheRepository)
+            set(SettingsDbIdKey, settingsDatabase)
+            set(SearchCacheRepoIdKey, searchCacheDatabase)
         }
     )
 
+    val pokemonPagingItems = searchViewModel.pokemonPagingDataFlow.collectAsLazyPagingItems()
+
+    if (pokemonPagingItems.loadState.refresh is LoadState.Error) {
+        LaunchedEffect(key1 = snackbarHostState) {
+            snackbarHostState.showSnackbar(
+                (pokemonPagingItems.loadState.refresh as LoadState.Error).error.message ?: ""
+            )
+        }
+    }
+
     SearchView(
-        searchViewModel = searchViewModel,
+        pokemonPagingItems = pokemonPagingItems,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
-        onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
-        onForward = { searchViewModel.onForward()  },
-        onBackward = {  searchViewModel.onBackward()  }
+        onSearchSubmit = { searchViewModel.onSearchSubmit(it) }
     )
 }
 
@@ -79,29 +90,24 @@ fun SearchActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchView(
-    searchViewModel: SearchViewModel,
+    pokemonPagingItems: LazyPagingItems<SearchProductModel>,
     onSearchQueryChange: (String) -> Unit,
-    onSearchSubmit: (String) -> Unit,
-    onForward: () -> Unit,
-    onBackward: () -> Unit
+    onSearchSubmit: (String) -> Unit
 ) {
 
-    LaunchedEffect(key1 = Unit ) {
-        searchViewModel.initService()
-    }
-
-
+    var query: String by rememberSaveable { mutableStateOf("") }
     var active by rememberSaveable { mutableStateOf(false) } //needed to indicate if a searchResultItem is clickable
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
 
-
         SearchBar(
-            query = searchViewModel.searchQuery,
-            onQueryChange = onSearchQueryChange,
-
+            query = query,
+            onQueryChange = { text ->
+                logger.debug { "OnQueryChange: $text" }
+                query = text
+            },
             placeholder = {
                 Text(text = stringResource(id = R.string.searchPlaceHolder))
             },
@@ -113,7 +119,7 @@ private fun SearchView(
                 )
             },
             trailingIcon = {
-                if (searchViewModel.searchQuery.isNotEmpty()) {
+                if (query.isNotEmpty()) {
                     IconButton(onClick = { onSearchQueryChange("") }) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -124,8 +130,9 @@ private fun SearchView(
                 }
             },
             onSearch = {
+                logger.debug { "onSearch: $it" }
                 active = false
-                onSearchSubmit(searchViewModel.searchQuery)
+                onSearchSubmit(query.uppercase())
             },
             active = active,
             onActiveChange = {
@@ -142,7 +149,7 @@ private fun SearchView(
             CenterHorizontally
         ) {
 
-            if(searchViewModel.searching) {
+            if (pokemonPagingItems.loadState.refresh is LoadState.Loading) {
 
 
                 CircularProgressIndicator(
@@ -154,70 +161,26 @@ private fun SearchView(
                 return
             }
 
-
-
-            if (searchViewModel.searchResults.isEmpty()) {
+            if (pokemonPagingItems.itemCount == 0) {
                 NoSearchResults()
             } else {
 
                 LazyColumn(
                     modifier = Modifier.weight(0.95f)
                 ) {
-                    items(searchViewModel.searchResults.size) {
-                        val productModel = searchViewModel.searchResults[it]
+                    items(
+                        count = pokemonPagingItems.itemCount,
+                        key = pokemonPagingItems.itemKey { it.id } ){ index ->
+                        val productModel = pokemonPagingItems[index]
                         ItemOfInterestCard(
-                            productModel = productModel,
+                            productModel = productModel as BaseProductModel,
                             showLastUpdated = false,
                             iconRowContent = { SearchViewCardIconRow() },
                         )
                     }
                 }
-
-                //Pagination
-                Row(
-                    modifier = Modifier
-                        .padding(1.dp)
-                        .weight(0.05f),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-
-
-                ) {
-
-                    Spacer(modifier = Modifier.weight(0.5f))
-                    ClickableIconButton(
-                        modifier = Modifier.weight(0.1f),
-                        icon = Icons.TwoTone.KeyboardArrowLeft,
-                        desc = stringResource(id = R.string.back),
-                        enabled = searchViewModel.currentPage != 1,
-                        onClick = {
-                            onBackward()
-                        }
-                    )
-                    Text(
-                        modifier = Modifier.padding(1.dp),
-                        text = stringResource(id = R.string.pageXofY).format(
-                            searchViewModel.currentPage,
-                            searchViewModel.totalPages
-                        ),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-
-                    ClickableIconButton(
-                        modifier = Modifier.weight(0.1f),
-                        icon = Icons.TwoTone.KeyboardArrowRight,
-                        desc = stringResource(id = R.string.forward),
-                        enabled = searchViewModel.currentPage != searchViewModel.totalPages,
-                        onClick = {
-                            onForward()
-                        })
-                    Spacer(modifier = Modifier.weight(0.5f))
-
-                }
             }
-
         }
-
     }
 }
 
@@ -239,39 +202,48 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 
 
 class SearchViewModel(
-   private val settingsRepository: SettingsRepository,
-    private val searchCacheRepository: SearchCacheRepository
+   private val settingsDatabase: SettingsDatabase,
+    private val searchCacheDatabase: SearchCacheDatabase,
 ) : ViewModel() {
 
-    //TODO: the whole Pagination thing needs to be reworked
 
-    fun initService() {
+    private val _settings: MutableStateFlow<SettingsEntity> = MutableStateFlow(
+        SettingsEntity(id = 1,
+            language = Languages.EN,
+            engine = Engines.KTOR )
+    )
+    private val settings: StateFlow<SettingsEntity> = _settings.asStateFlow()
+
+
+    private val _query: MutableStateFlow<String> = MutableStateFlow("")
+    private val query: StateFlow<String> = _query.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val pokemonPagingDataFlow: Flow<PagingData<SearchProductModel>> =
+        query.flatMapLatest { sq ->
+
+            val config = CardmarketConfig(settings.value)
+
+            val productApiClient = CardmarketApiClientFactory(config).create()
+            val pokemonPager =
+                PokemonPager.providePokemonPager(
+                    sq,
+                    searchCacheDatabase,
+                    productApiClient
+                )
+            val pokemonRepositoryImpl = CardmarketPokemonRepositoryImpl(pokemonPager)
+
+            val getPokemonList = GetPokemonList(pokemonRepositoryImpl)
+            getPokemonList().cachedIn(viewModelScope)
+        }
+
+    init {
+        logger.debug { "SearchViewModel init" }
         viewModelScope.launch(Dispatchers.IO) {
-
-            logger.info { "Init SearchViewModel" }
-             val config = CardmarketConfig(settingsRepository.load() )
-             val productApiClient = CardmarketApiClientFactory(config).create()
-             val productRepository = ProductCardmarketRepositoryAdapter(productApiClient, searchCacheRepository)
-             val productMapper = ProductMapper(config)
-
-            productService = ProductService(productRepository, productMapper)
+            _settings.value =  SettingsRepositoryImpl(settingsDatabase.settingsDao).load()
         }
     }
 
-
-
-    private lateinit var productService: ProductService;
-
-    var searchResults by mutableStateOf(listOf<SearchProductModel>())
-        private set
-    var searchQuery by mutableStateOf("")
-        private set
-    var currentPage by mutableIntStateOf(1)
-        private set
-    var totalPages by mutableIntStateOf(1)
-        private set
-
-    var searching by mutableStateOf(false)
 
 
     // Define ViewModel factory in a companion object
@@ -284,61 +256,36 @@ class SearchViewModel(
                 extras: CreationExtras
             ): T {
                 logger.info { "Creating SearchViewModel" }
-                val settingsRepo = extras[SettingsRepoIdKey]
+                val settingsRepo = extras[SettingsDbIdKey]
                 val searchCacheRepository = extras[SearchCacheRepoIdKey]
-
 
                 return SearchViewModel(
                     settingsRepo!!,
-                    searchCacheRepository!!
+                    searchCacheRepository!!,
                 ) as T
             }
         }
     }
 
     fun onSearchQueryChange(newQuery: String) {
-        searchQuery = newQuery
+        logger.debug { "onSearchQueryChange: $newQuery" }
+        if(newQuery.isEmpty()) {
+            logger.debug { "Empty search" }
+            return
+        }
+        _query.value = newQuery
     }
 
     fun onSearchSubmit(searchString: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            currentPage = 1
-            updateSearchResultsWithNewSearch(searchString, 1)
-        }
-    }
 
-    private suspend fun updateSearchResultsWithNewSearch(searchString: String, page: Int) {
-        if(searching) {
-            logger.debug { "Already searching" }
-            return
-        }
+        logger.debug { "onSearchSubmit: $searchString" }
         if(searchString.isEmpty()) {
             logger.debug { "Empty search" }
             return
         }
-        searching = true
-        val searchItemModelList = productService.search(searchString.uppercase(Locale.getDefault()), page)
-        searchResults = searchItemModelList.products
-        totalPages = searchItemModelList.pages
-        searching = false
+        _query.value = searchString
+
     }
-
-    fun onForward() {
-        viewModelScope.launch(Dispatchers.IO) {
-            currentPage++
-            updateSearchResultsWithNewSearch(searchQuery, currentPage)
-
-        }
-    }
-
-    fun onBackward() {
-        viewModelScope.launch(Dispatchers.IO) {
-            currentPage--
-            updateSearchResultsWithNewSearch(searchQuery, currentPage)
-        }
-    }
-
-
 
 }
 
@@ -353,12 +300,12 @@ private fun NoSearchResults() {
         Text(stringResource(id = R.string.emptySearch))
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun TestSearchPreview() {
-
-  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
-    SearchActivity()
-
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun TestSearchPreview() {
+//
+//  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
+//    SearchActivity()
+//
+//}

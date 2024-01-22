@@ -5,3 +5,8 @@ plugins {
     id("com.google.devtools.ksp") version "1.9.10-1.0.13" apply false
 
 }
+
+val roomVersion by extra { "2.6.1" }
+val ktorVersion by extra { "2.3.6" }
+val lifecycleVersion by extra { "2.7.0" }
+val pagingVersion by extra { "3.2.1" }

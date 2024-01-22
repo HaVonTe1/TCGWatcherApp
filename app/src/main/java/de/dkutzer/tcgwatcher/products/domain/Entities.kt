@@ -27,6 +27,7 @@ data class SearchEntity(
 data class SearchResultItemEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    @ColumnInfo(index = true)
     var searchId: Int,
     val displayName: String,
     val orgName: String,
@@ -35,6 +36,11 @@ data class SearchResultItemEntity(
     val price: String
 )
 
+@Entity("remote_key")
+data class RemoteKeyEntity(
+    @PrimaryKey val id: String,
+    val nextOffset: Int,
+)
 
 data class SearchWithResultsEntity(
     @Embedded val search: SearchEntity,

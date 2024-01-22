@@ -22,8 +22,11 @@ class ProductCardmarketRepositoryAdapter(
     }
 
 
-    override suspend fun search(searchString: String, page: Int, limit: Int): SearchResults {
+    override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResults {
 
+        logger.debug { "New Search in Adapter" }
+        if(searchString.isEmpty())
+            return SearchResults(emptyList(),1,1)
         lateinit var result: SearchResults
         logger.debug { "Looking in the Cache for: $searchString" }
 
@@ -32,7 +35,7 @@ class ProductCardmarketRepositoryAdapter(
         logger.trace { "Found: ${searchWithResults?.results?.size}" }
         if(searchWithResults!=null) {
             //TODO: handle lastUpdated for refreshing
-            val searchItems = searchWithResults.results.map { it.toSearchItem() }.toList()
+            val searchItems = searchWithResults.results.map { it.toSearchItem() }
             result = SearchResults(searchItems, page, searchWithResults.search.size.floorDiv(limit).plus(1))
             logger.trace { "Returning cached results: $result" }
 
@@ -79,7 +82,7 @@ class ProductCardmarketRepositoryAdapter(
                 val updatedSearchResult = cache.findBySearchTerm(searchString, page)
 
 
-                val searchItems = updatedSearchResult?.results?.map { it.toSearchItem() }?.toList()
+                val searchItems = updatedSearchResult?.results?.map { it.toSearchItem() }
                 result = SearchResults(searchItems?: listOf(), page, updatedSearchResult?.search?.size?.floorDiv(limit)?.plus(1)?:0)
             }
             logger.debug { "Duration: $duration" }
@@ -90,37 +93,6 @@ class ProductCardmarketRepositoryAdapter(
         return result
 
     }
-    private fun SearchResultItemDto.toSearchItem( ) : SearchItem {
-        return SearchItem(
-            this.displayName,
-            this.orgName,
-            this.cmLink,
-            this.imgLink,
-            this.price)
-    }
-
-    private fun SearchResultItemDto.toSearchItemEntity() : SearchResultItemEntity {
-        return SearchResultItemEntity(
-            displayName = this.displayName,
-            imgLink = this.imgLink,
-            orgName = this.orgName,
-            price = this.price,
-            cmLink = this.cmLink,
-            searchId = 0 //this wont work, will it?
-        )
-    }
-
-    private fun SearchResultItemEntity.toSearchItem() : SearchItem {
-        return SearchItem(
-            displayName = this.displayName,
-            orgName = this.orgName,
-            cmLink = this.cmLink,
-            imgLink = this.imgLink,
-            price = this.price
-
-        )
-    }
-
 
 }
 

@@ -50,7 +50,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             val params = mapOf(
                 "searchString" to searchString,
                 /* "sortBy" to "price_asc",*/
-                "perSite" to "100", // 100 is max
+                "perSite" to config.limit.toString(), // 100 is max
                 "mode" to "gallery",
 //                "language" to "3", //german -- TODO: the language is set via the path
                 "site" to "$page"
@@ -77,7 +77,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             logger.info { "Status: ${htmlPage.webResponse.statusCode}" }
 
             val document = Jsoup.parse(htmlPage.asXml())
-            logger.debug { document }
+          //  logger.debug { document }
 
             return parseGallerySearchResults(document, page)
 

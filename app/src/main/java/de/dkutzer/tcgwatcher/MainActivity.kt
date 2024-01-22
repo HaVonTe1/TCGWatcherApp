@@ -17,12 +17,10 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -156,7 +154,7 @@ private fun PermissionsDialog(
 private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
     val navController = rememberNavController()
 
-
+    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         bottomBar = {
 
@@ -184,7 +182,7 @@ private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
             Modifier.padding(innerPadding)
         ) {
             composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestActivity(items) }
-            composable(Screen.SearchScreen.route) { SearchActivity() }
+            composable(Screen.SearchScreen.route) { SearchActivity(snackbarHostState) }
             composable(Screen.SettingsScreen.route) { SettingsActivity() }
 
         }

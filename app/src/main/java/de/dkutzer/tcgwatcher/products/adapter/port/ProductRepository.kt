@@ -7,5 +7,9 @@ interface ProductRepository {
 
     suspend fun getProductDetails(link: String) : ProductDetailsDto
 
-    suspend fun search(searchString : String, page: Int = 1, limit: Int = 5) : SearchResults
+    suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResults
+
+    suspend fun searchByOffset(searchString: String, limit: Int, offset: Int): SearchResults {
+        return searchByPage(searchString, page =  (limit+offset).div(limit), limit = limit)
+    }
 }

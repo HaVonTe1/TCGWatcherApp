@@ -19,13 +19,14 @@ import org.jsoup.Jsoup
 class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() {
 
 
+
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
 
         HttpClient(OkHttp) {
             followRedirects = true
             install(Logging)
             {
-                level = LogLevel.ALL
+                level = LogLevel.HEADERS
             }
             BrowserUserAgent() //ihnalt egal, dard nur nich leer sein
 
@@ -35,9 +36,9 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
                     //This should take care of url encoding
                     parameters.append("searchString", searchString)
                     //parameters.append("sortBy", "price_asc")
-                    parameters.append("perSite", "100") //FIXME : this was a dump idea
+                    parameters.append("perSite", config.limit.toString()) // limit
                     parameters.append("mode", "gallery")
-                    parameters.append("site", "$page")
+                    parameters.append("site", "$page") //offset = limit * page
 
                 }
                 headers {
