@@ -20,11 +20,8 @@ interface SearchCacheDao {
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.searchId = sri.searchId WHERE s.searchTerm = :searchTerm")
     fun pagingSource(searchTerm: String): PagingSource<Int, SearchResultItemEntity>
 
-    @Query("DELETE FROM search_result_item")
-    suspend fun clearResults()
-
-    @Query("DELETE FROM search")
-    suspend fun clearSearch()
+    @Query("SELECT searchTerm FROM search ORDER BY lastUpdated DESC")
+    fun getSearchHistory() : List<String>
 
     @Upsert()
     fun persistResults( results: List<SearchResultItemEntity>): List<Long>

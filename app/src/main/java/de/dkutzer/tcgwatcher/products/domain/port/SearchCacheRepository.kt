@@ -8,6 +8,7 @@ interface SearchCacheRepository {
 
     suspend fun findBySearchTerm(searchTerm: String, page: Int , limit : Int = 5) : SearchWithResultsEntity?
     suspend fun persistsSearch(results: SearchWithResultsEntity)
+    suspend fun getSearchHistory(): List<String>
 }
 
 class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) : SearchCacheRepository {
@@ -35,4 +36,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) : Se
         searchCacheDao.persistResults(results.results)
     }
 
+    override suspend fun getSearchHistory(): List<String> {
+        return searchCacheDao.getSearchHistory()
+    }
 }
