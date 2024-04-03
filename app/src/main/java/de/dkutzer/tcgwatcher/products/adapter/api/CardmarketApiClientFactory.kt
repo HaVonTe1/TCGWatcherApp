@@ -14,9 +14,8 @@ class CardmarketApiClientFactory(val config: BaseConfig) {
             Engines.HTMLUNIT_JS -> CardmarketHtmlUnitApiClientImpl(config)
             Engines.HTMLUNIT_NOJS -> CardmarketHtmlUnitApiClientImpl(config)
             Engines.KTOR -> CardmarketKtorApiClientImpl(config)
+            Engines.TESTING -> TestingApiClientImpl(config)
 
         }
     }
-
-
 }

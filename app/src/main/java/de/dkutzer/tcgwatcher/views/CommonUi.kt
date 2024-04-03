@@ -12,15 +12,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
+import okhttp3.OkHttpClient
+import java.security.SecureRandom
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
 
 
 @Composable
@@ -78,6 +87,7 @@ fun ItemOfInterestCard(
         ) {
             val userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
             AsyncImage(
+
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(productModel.imageUrl)
                     .setHeader("User-Agent", userAgent)
@@ -90,7 +100,6 @@ fun ItemOfInterestCard(
                     .width(100.dp),
                 contentScale = ContentScale.Fit,
                 imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger()).build()
-
             )
             Column(
                 modifier = Modifier

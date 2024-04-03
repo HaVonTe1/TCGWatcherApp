@@ -77,7 +77,7 @@ class ProductCardmarketRepositoryAdapterTest {
         val repositoryAdapter =
             ProductCardmarketRepositoryAdapter(apiClientMock, cacheRepoMock)
 
-        val searchResults = repositoryAdapter.search("Ramalama")
+        val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5)
 
         Assert.assertEquals(1, searchResults.items.size)
 

@@ -1,10 +1,6 @@
 package de.dkutzer.tcgwatcher.products.domain
 
-//FIXME: rename this or move it into the real ViewModel
-data class SearchProductViewModel(
-    val products: List<SearchProductModel>,
-    val pages: Int
-)
+
 
 data class SearchProductModel(
     override val id: String,
@@ -22,7 +18,6 @@ open class BaseProductModel(
     open val localName: String,
     open val intPrice: String
 )
-
 
 
 data class SearchItem(
