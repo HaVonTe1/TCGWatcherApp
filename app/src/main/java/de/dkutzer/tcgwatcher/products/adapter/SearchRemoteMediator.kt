@@ -61,11 +61,6 @@ class SearchRemoteMediator (
         logger.debug { "Next Offset: $nextOffset" }
         // SAVE RESULTS AND NEXT OFFSET TO DATABASE
         pokemonDatabase.withTransaction {
-//                if (loadType == LoadType.REFRESH) {
-//                    // IF REFRESHING, CLEAR DATABASE FIRST
-//                    pokemonDatabase.pokemonDao.clearAll()
-//                    pokemonDatabase.remoteKeyDao.deleteById(REMOTE_KEY_ID)
-//                }
 
             logger.debug { "Upsert remotekey" }
 

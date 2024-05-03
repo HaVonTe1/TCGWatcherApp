@@ -249,23 +249,3 @@ class SettingsViewModel(
 
 }
 
-//@Composable
-//@Preview(showBackground = true)
-//fun previewSettingsView() {
-//
-//    val availableLanguages = listOf(
-//        "Deutsch", "Englisch")
-//
-//    val availableEngines = listOf("htmlunit+js", "htmlunit-js", "ktor+okhttp")
-//    val context = LocalContext.current
-//
-//    val settingsRepository: SettingsRepository by lazy {
-//        SettingsRepositoryImpl(SettingsDatabase.getDatabase(context).settingsDao)
-//    }
-//
-//    SettingsView(
-//        viewModel = SettingsViewModel(
-//            languages = availableLanguages,
-//            fetchEngines = availableEngines,
-//            settingsRepository = settingsRepository))
-//}

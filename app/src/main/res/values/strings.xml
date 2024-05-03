@@ -24,4 +24,5 @@
     <string name="engine">engine</string>
     <string name="engine_desc">The underlying tool which makes the web requests.</string>
     <string name="language_desc">The language printed on the cards</string>
+    <string name="home">Home</string>
 </resources>

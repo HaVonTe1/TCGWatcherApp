@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
+import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.*
 import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import de.dkutzer.tcgwatcher.views.HomeScreenActivity
 import de.dkutzer.tcgwatcher.views.ItemOfInterestActivity
 import de.dkutzer.tcgwatcher.views.SearchActivity
 import de.dkutzer.tcgwatcher.views.SettingsActivity
@@ -64,6 +66,8 @@ sealed class Screen(
     @StringRes val resourceId: Int,
     val icon: ImageVector
 ) {
+    object HomeScreen : Screen("home", R.string.home, icon = Icons.TwoTone.Star)
+
     object ItemsOfInterestScreen :
         Screen("itemsOfInterest", R.string.items, icon = Icons.TwoTone.Menu)
 
@@ -165,6 +169,12 @@ private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
+
+                MyBottomNavigationItem(
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    screen = Screen.HomeScreen
+                )
                 MyBottomNavigationItem(
                     currentDestination,
                     navController,
@@ -178,9 +188,11 @@ private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
     ) { innerPadding ->
         NavHost(
             navController,
-            startDestination = Screen.ItemsOfInterestScreen.route,
+            startDestination = Screen.HomeScreen.route,
             Modifier.padding(innerPadding)
         ) {
+
+            composable(Screen.HomeScreen.route) { HomeScreenActivity(snackbarHostState) }
             composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestActivity(items) }
             composable(Screen.SearchScreen.route) { SearchActivity(snackbarHostState) }
             composable(Screen.SettingsScreen.route) { SettingsActivity() }

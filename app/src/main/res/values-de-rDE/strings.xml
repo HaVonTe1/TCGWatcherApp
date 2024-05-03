@@ -24,4 +24,5 @@
     <string name="engine">Treiber</string>
     <string name="engine_desc">Die Methode mit der im Hintergrund die Daten abgefragt werden.</string>
     <string name="language_desc">Die Sprache der Karten</string>
+    <string name="home">Home</string>
 </resources>
