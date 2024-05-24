@@ -13,8 +13,16 @@ image::docs/search1.png[alt=screen1,height=480,float="center",align="center"]
 * **Search:** Quickly find specific Pokemon cards by name. The results are cached and a search history is available.
 * **User-Friendly Interface:** Enjoy a clean and intuitive interface designed for easy navigation and seamless user experience.
 
+== Benefits
+* **No-Account** No need to create an account or register anything. Just use the app.
+* **Ad-Free** This app is free of any kind of Ads or other commercial interests.
+* **No-Tracking / No-Logs** This app does not contain any user or traffic tracking. No statistics or anything like that. The app does not have a backend.
+* **OSS** Its free like free speech. Completely http://github.com/HaVonTe1[open source].
+
+
 == Planed Features
 * **Search:** Quickly find specific all kind of collectable cards (Magic the Gathering, Yugioh, One Piece etc...) by name, type, rarity, or any other relevant criteria.
+* **Quicksearch** While typing a fuzzy search is made to guess the desired card name.
 * **View Details:** Get detailed information about each Pokemon card, including its attributes, abilities, and rarity.
 * **Save Favorites:** Save your favorite Pokemon cards to a personalized collection for easy access later.
 * **Offline Mode:** Access your saved favorite cards even when you're offline.
@@ -36,6 +44,33 @@ We welcome contributions to improve and enhance the  App. If you'd like to contr
 3. Submit a pull request outlining the changes you've made and the problem or feature your changes address.
 4. Your contribution will be reviewed, and if accepted, merged into the main codebase.
 
+== Architecture Notes
+
+=== ECB Pattern
+
+
+The Entity-Control-Boundary (ECB) pattern is a design pattern that aids in organizing code by separating it into three distinct types of classes: Entities, Controls, and Boundaries. This separation helps to clarify the roles and responsibilities of different parts of the code, making it easier to manage, understand, and maintain. Originating from the field of object-oriented design, the ECB pattern can be particularly effective in the context of Android app development, where the complexity of applications can quickly grow.
+
+==== Components of the ECB Pattern
+
+*Entities:*
+- Represent the core business logic and data.
+- Encapsulate the data and the rules that govern access to and updates of this data.
+- In an Android context, these are often model classes representing the data structure of the app.
+
+*Control:*
+- Orchestrate the flow of the application.
+- Manage the sequences of interactions between the Entities and Boundaries.
+- Typically implemented as ViewModels, Presenters, or Controllers in Android apps.
+
+*Boundary:*
+- Define the interfaces through which the system interacts with the outside world (e.g., user interfaces, network services).
+- Handle input and output operations.
+- In Android apps, these are often Activities, Fragments, or Services that deal with the user interface and user interactions.
+
+=== NO clean architecture
+
+It is my very own personal opionion but I simply don't like the so called "clean architecture" package structure which is commonly used in most android apps. I think the ECB pattern is much _cleaner_ and fits the Keep-it-simple-stupid paradigmatic.
 
 == License
 This project is licensed under the MIT License - see the LICENSE.md file for details.
