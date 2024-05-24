@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -38,12 +37,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.*
-import de.dkutzer.tcgwatcher.products.domain.BaseProductModel
+import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import de.dkutzer.tcgwatcher.views.HomeScreenActivity
-import de.dkutzer.tcgwatcher.views.ItemOfInterestActivity
-import de.dkutzer.tcgwatcher.views.SearchActivity
-import de.dkutzer.tcgwatcher.views.SettingsActivity
+import de.dkutzer.tcgwatcher.ui.HomeScreenActivity
+import de.dkutzer.tcgwatcher.ui.ItemOfInterestActivity
+import de.dkutzer.tcgwatcher.ui.SearchActivity
+import de.dkutzer.tcgwatcher.ui.SettingsActivity
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {

@@ -2,11 +2,10 @@ package de.dkutzer.tcgwatcher
 
 
 
-import de.dkutzer.tcgwatcher.products.domain.SearchResultItemDto
-import de.dkutzer.tcgwatcher.products.domain.SearchResultItemEntity
-import de.dkutzer.tcgwatcher.products.domain.toSearchItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
+import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
+import de.dkutzer.tcgwatcher.cards.control.toSearchItemEntity
 import junit.framework.TestCase.assertEquals
-import org.junit.Assert.assertThrows
 import org.junit.Test
 import kotlin.test.assertFailsWith
 
