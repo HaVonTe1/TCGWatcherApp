@@ -41,8 +41,8 @@ import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.ui.HomeScreenActivity
 import de.dkutzer.tcgwatcher.ui.ItemOfInterestActivity
-import de.dkutzer.tcgwatcher.ui.SearchActivity
-import de.dkutzer.tcgwatcher.ui.SettingsActivity
+import de.dkutzer.tcgwatcher.cards.boundary.SearchActivity
+import de.dkutzer.tcgwatcher.settings.boundary.SettingsActivity
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {

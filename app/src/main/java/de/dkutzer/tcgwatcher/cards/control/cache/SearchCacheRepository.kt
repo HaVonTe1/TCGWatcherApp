@@ -1,4 +1,4 @@
-package de.dkutzer.tcgwatcher.cards.control
+package de.dkutzer.tcgwatcher.cards.control.cache
 
 import de.dkutzer.tcgwatcher.cards.entity.SearchWithResultsEntity
 

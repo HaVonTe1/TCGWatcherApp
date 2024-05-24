@@ -2,7 +2,7 @@ package de.dkutzer.tcgwatcher
 
 import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.cards.control.SearchCacheRepository
+import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity

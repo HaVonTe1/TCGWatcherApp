@@ -1,7 +1,11 @@
-package de.dkutzer.tcgwatcher.cards.control
+package de.dkutzer.tcgwatcher.cards.control.cache
 
 import androidx.paging.PagingSource
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity

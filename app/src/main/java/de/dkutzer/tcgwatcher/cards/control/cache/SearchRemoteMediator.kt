@@ -1,4 +1,4 @@
-package de.dkutzer.tcgwatcher.cards.control
+package de.dkutzer.tcgwatcher.cards.control.cache
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
@@ -6,6 +6,7 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
+import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -21,7 +22,7 @@ class SearchRemoteMediator (
 ) : RemoteMediator<Int, SearchResultItemEntity>() {
 
     private val REMOTE_KEY_ID = "cm"
-    private val searchCacheRepository = SearchCacheRepositoryImpl(pokemonDatabase.searchCacheDaoDa)
+    private val searchCacheRepository = SearchCacheRepositoryImpl(pokemonDatabase.searchCacheDao)
     private val adapter = CardmarketCardsRepositoryAdapter(pokemonApi,searchCacheRepository )
 
     override suspend fun load(

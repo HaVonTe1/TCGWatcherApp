@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher.cards.control
 
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
+import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
 import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResults
