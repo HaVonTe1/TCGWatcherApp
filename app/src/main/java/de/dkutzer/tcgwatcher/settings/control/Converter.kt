@@ -1,4 +1,4 @@
-package de.dkutzer.tcgwatcher.cards.control
+package de.dkutzer.tcgwatcher.settings.control
 
 import androidx.room.TypeConverter
 import de.dkutzer.tcgwatcher.settings.entity.Engines

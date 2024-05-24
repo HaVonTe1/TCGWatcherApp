@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.settings.entity
 
 import androidx.lifecycle.viewmodel.CreationExtras
-import de.dkutzer.tcgwatcher.cards.control.SearchCacheDatabase
+import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepository
 

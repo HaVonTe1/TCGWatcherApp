@@ -1,4 +1,4 @@
-package de.dkutzer.tcgwatcher.cards.control
+package de.dkutzer.tcgwatcher.cards.control.cache
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
@@ -33,7 +33,7 @@ abstract class PokemonPager {
                         pokemonApi = pokemonApi,
                     ),
                     pagingSourceFactory = {
-                        pokemonDatabase.searchCacheDaoDa.pagingSource(searchTerm)
+                        pokemonDatabase.searchCacheDao.pagingSource(searchTerm)
                     },
                 )
             }

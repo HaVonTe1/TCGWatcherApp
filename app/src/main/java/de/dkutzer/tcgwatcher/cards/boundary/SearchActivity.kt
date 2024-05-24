@@ -1,5 +1,6 @@
-package de.dkutzer.tcgwatcher.ui
+package de.dkutzer.tcgwatcher.cards.boundary
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -27,11 +29,10 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.control.PokemonPager
-import de.dkutzer.tcgwatcher.cards.boundary.CardmarketApiClientFactory
+import de.dkutzer.tcgwatcher.cards.control.cache.PokemonPager
 import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
-import de.dkutzer.tcgwatcher.cards.control.SearchCacheDatabase
-import de.dkutzer.tcgwatcher.cards.control.SearchCacheRepositoryImpl
+import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
+import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
@@ -43,6 +44,8 @@ import de.dkutzer.tcgwatcher.cards.entity.SearchProductModel
 import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
 import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
+import de.dkutzer.tcgwatcher.ui.ClickableIconButton
+import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -117,6 +120,14 @@ private fun SearchView(
 
     Column(
         modifier = Modifier.fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        androidx.compose.material.MaterialTheme.colors.primary,
+                        androidx.compose.material.MaterialTheme.colors.secondary
+                    )
+                )
+            )
     ) {
 
         SearchBar(
@@ -334,7 +345,7 @@ class SearchViewModel(
             _settings.value = settingsEntity
 
             val searchHistory =
-                SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDaoDa).getSearchHistory()
+                SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao).getSearchHistory()
 
             logger.debug { "searchHistory: $searchHistory" }
             unfilteredHistoryItems.addAll(searchHistory)
