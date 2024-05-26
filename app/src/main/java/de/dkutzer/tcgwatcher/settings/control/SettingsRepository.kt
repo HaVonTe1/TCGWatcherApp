@@ -32,8 +32,8 @@ class SettingsRepositoryImpl(private val settingsDao: SettingsDao) : SettingsRep
         settingsDao.updateLanguage(lang)
     }
 
-    override suspend fun updateEngine(eng: Engines) {
-        settingsDao.updateEngine(eng)
+    override suspend fun updateEngine(engine: Engines) {
+        settingsDao.updateEngine(engine)
     }
 
 }
