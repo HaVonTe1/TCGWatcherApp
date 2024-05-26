@@ -4,8 +4,7 @@ import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
 import org.jsoup.Jsoup
-import org.junit.Assert.*
-
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -41,7 +40,7 @@ class BaseCardmarketApiClientTest {
 
         val searchResults = apiClientMock.parseGallerySearchResults(document, 1)
 
-        assertEquals(1, searchResults.results.size)
+        assertEquals(29, searchResults.results.size)
 
     }
 
