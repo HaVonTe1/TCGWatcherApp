@@ -15,9 +15,6 @@
     <string name="addDesc">Hinzufügen</string>
     <string name="deleteDesc">Löschen</string>
     <string name="editDesc">Bearbeiten</string>
-    <string name="pageXofY">Seite %s von %s</string>
-    <string name="forward">Vor</string>
-    <string name="back">Zurück</string>
     <string name="german">Deutsch</string>
     <string name="english">Englisch</string>
     <string name="language">Sprache</string>

@@ -24,7 +24,6 @@ enum class Engines(val displayName: String) {
 }
 
 object LanguagesIdKey : CreationExtras.Key<Map<Languages, String>>
-object EnginesIdKey : CreationExtras.Key<List<String>>
 object SettingsRepoIdKey : CreationExtras.Key<SettingsRepository>
 object SettingsDbIdKey : CreationExtras.Key<SettingsDatabase>
 object SearchCacheRepoIdKey : CreationExtras.Key<SearchCacheDatabase>

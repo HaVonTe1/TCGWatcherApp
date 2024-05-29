@@ -478,13 +478,13 @@ class SearchViewModel(
 
     fun onActiveChanged(query:String, active: Boolean) {
         logger.debug { "SearchModel::onActiveChanged: current show history =  ${_showHistoryContent.value}" }
-        logger.debug { "SearchModel::onActiveChanged: propagated active =  ${active}" }
+        logger.debug { "SearchModel::onActiveChanged: propagated active =  $active" }
         logger.debug { "SearchModel::onActiveChanged: query =  $query" }
         logger.debug { "SearchModel::onActiveChanged: lastQuery  = ${_lastQuery.value}" }
         logger.debug { "SearchModel::onActiveChanged: filteredHistoryList  = ${_historyList.value}" }
 
         val determineShowHistory = determineShowHistory(query, active)
-        logger.debug { "SearchModel::onActiveChanged: new show history =  ${determineShowHistory}" }
+        logger.debug { "SearchModel::onActiveChanged: new show history =  $determineShowHistory" }
         _showHistoryContent.value = determineShowHistory
 
     }

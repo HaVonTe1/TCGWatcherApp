@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">TCG Watcher</string>
-    <string name="bisaflor" translatable="false">Bisaflor\t\t\t</string>
     <string name="items">Items</string>
     <string name="search">Search</string>
     <string name="settings">Settings</string>
@@ -15,9 +14,6 @@
     <string name="addDesc">Add</string>
     <string name="deleteDesc">Delete</string>
     <string name="editDesc">Edit</string>
-    <string name="pageXofY">Page %s of %s</string>
-    <string name="forward">forward</string>
-    <string name="back">back</string>
     <string name="german">German</string>
     <string name="english">English</string>
     <string name="language">language</string>
