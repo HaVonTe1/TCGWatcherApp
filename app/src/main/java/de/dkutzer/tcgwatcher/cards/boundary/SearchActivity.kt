@@ -452,8 +452,8 @@ class SearchViewModel(
 
                     logger.debug { "query quick search" }
                     val pokemonCardQuickEntities = quicksearchRepository.find(newQuery)
-                    logger.trace { "pokemonCardQuickEntities: $pokemonCardQuickEntities" }
-                    val result = pokemonCardQuickEntities.map { "${it.nameDe} ${it.code}" }
+                    logger.debug { "pokemonCardQuickEntities: $pokemonCardQuickEntities" }
+                    val result = pokemonCardQuickEntities.map { "${it.nameDe} (${it.code})" }
                     logger.debug { "$result" }
                     result
                 }

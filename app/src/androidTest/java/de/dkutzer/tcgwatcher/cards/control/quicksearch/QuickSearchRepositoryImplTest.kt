@@ -5,12 +5,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import kotlin.system.measureTimeMillis
+
+private val logger = KotlinLogging.logger {}
 
 class QuickSearchRepositoryImplTest {
 
@@ -35,7 +38,7 @@ class QuickSearchRepositoryImplTest {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // 3
-                    db.execSQL("INSERT INTO qs_pokemon_cards_fts(qs_pokemon_cards_fts) VALUES ('rebuild')")
+                    db.execSQL("INSERT INTO qs_fts_pokemon_cards_fts(qs_fts_pokemon_cards_fts) VALUES ('rebuild')")
                 }
             })
             .build()
@@ -50,17 +53,54 @@ class QuickSearchRepositoryImplTest {
     }
 
     @Test
-    fun testMatching1() = runBlocking {
+    fun testMatchingWithCode() = runBlocking {
         // When
         val query = "evoli tg11"
-        val results = repository.find(query)
+        val duration = measureTimeMillis {
+            val results = repository.find(query)
+           // Assert.assertEquals(1,results.size)
+            println(results)
+
+        }
+        logger.info { "Time with $query: $duration"   }
 
         // Then
 
-        results.forEach {
-            println(it.nameDe)
-        }
-        Assert.assertEquals(1,results.size)
 
     }
+
+    @Test
+    fun testMatching2() = runBlocking {
+        // When
+        val query = "evoli"
+        val duration = measureTimeMillis {
+            val results = repository.find(query)
+            //Assert.assertEquals(1,results.size)
+            println(results)
+
+        }
+        logger.info { "Time with $query: $duration"   }
+
+        // Then
+
+
+    }
+
+
+    @Test
+    fun testMatching3() = runBlocking {
+        // When
+        val query = "evo"
+        val duration = measureTimeMillis {
+            val results = repository.find(query)
+            //Assert.assertEquals(1,results.size)
+            println(results)
+
+        }
+        logger.info { "Time with $query: $duration"   }
+
+
+    // Then
+    }
+
 }

@@ -55,7 +55,7 @@ class QuickSearchDaoTest
     fun testMatching1() = runBlocking {
         // When
         val query = "Evoli"
-        val results = dao.search(query)
+        val results = dao.fullTextSearchOverAllColumns(query)
 
         // Then
 

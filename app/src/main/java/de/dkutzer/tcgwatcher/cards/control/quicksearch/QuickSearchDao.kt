@@ -11,12 +11,25 @@ interface QuickSearchDao {
 
     @Query(
         """
-          SELECT * , matchinfo(qs_pokemon_cards_fts) as matchInfo
+          SELECT qs_pokemon_cards.* , matchinfo(qs_fts_pokemon_cards_fts) as matchInfo
           FROM qs_pokemon_cards
-          JOIN qs_pokemon_cards_fts ON qs_pokemon_cards.external_id = qs_pokemon_cards_fts.external_id
-          WHERE qs_pokemon_cards_fts MATCH :query
+          JOIN qs_fts_pokemon_cards_fts ON qs_pokemon_cards.id = qs_fts_pokemon_cards_fts.id
+          WHERE qs_fts_pokemon_cards_fts MATCH :query
     """
     )
-    fun search(query: String): List<PokemonCardQuickEntityWithMatchInfo>
+    fun fullTextSearchOverAllColumns(query: String): List<PokemonCardQuickEntityWithMatchInfo>
+
+
+
+    @Query(
+        """
+          SELECT qs_pokemon_cards.* , matchinfo(qs_fts_pokemon_cards_fts) as matchInfo
+          FROM qs_pokemon_cards
+          JOIN qs_fts_pokemon_cards_fts ON qs_pokemon_cards.id = qs_fts_pokemon_cards_fts.id
+          WHERE qs_fts_pokemon_cards_fts.names MATCH :query
+          AND qs_pokemon_cards.code like :code
+    """
+    )
+    fun fullTextSearchWithCode(query: String, code: String): List<PokemonCardQuickEntityWithMatchInfo>
 
 }
