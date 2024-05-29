@@ -127,7 +127,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
 //    logging
-    implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
+    implementation("io.github.oshai:kotlin-logging-jvm:6.0.9")
     implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.4")
 
     //DB
