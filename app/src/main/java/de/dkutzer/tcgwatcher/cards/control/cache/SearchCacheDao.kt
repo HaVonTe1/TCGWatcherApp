@@ -26,7 +26,7 @@ interface SearchCacheDao {
     @Query("SELECT searchTerm FROM search ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>
 
-    @Upsert()
+    @Upsert
     fun persistResults( results: List<SearchResultItemEntity>): List<Long>
 
     @Upsert

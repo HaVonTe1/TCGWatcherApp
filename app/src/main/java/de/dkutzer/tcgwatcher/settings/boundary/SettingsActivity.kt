@@ -39,7 +39,6 @@ import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepository
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.settings.entity.Engines
-import de.dkutzer.tcgwatcher.settings.entity.EnginesIdKey
 import de.dkutzer.tcgwatcher.settings.entity.Languages
 import de.dkutzer.tcgwatcher.settings.entity.LanguagesIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsRepoIdKey
@@ -61,7 +60,7 @@ fun SettingsActivity() {
         Languages.EN to stringResource(id = R.string.english))
 
 
-    val availableEngines = Engines.values().map { it.displayName }.toList()
+    val availableEngines = Engines.entries.map { it.displayName }.toList()
     val context = LocalContext.current
 
     val settingsRepository: SettingsRepository by lazy {
@@ -74,12 +73,11 @@ fun SettingsActivity() {
         factory = SettingsViewModel.Factory,
         extras = MutableCreationExtras().apply {
             set(LanguagesIdKey, availableLanguages)
-            set(EnginesIdKey, availableEngines)
             set(SettingsRepoIdKey, settingsRepository)
         }
     )
 
-    val setingsState = settingsViewModel.uiState.collectAsState();
+    val setingsState = settingsViewModel.uiState.collectAsState()
     SettingsView(
         settingsState = setingsState.value,
         availableLanguages = availableLanguages,
@@ -218,8 +216,7 @@ private fun DropdownSettingsItem(
 data class SettingsState(val currentLanguage: String = "", val currentEngine: String = "")
 
 class SettingsViewModel(
-    val languages: Map<Languages,String>,
-    val engines: List<String>,
+    private val languages: Map<Languages,String>,
     private val settingsRepository: SettingsRepository
 ): ViewModel() {
 
@@ -227,7 +224,7 @@ class SettingsViewModel(
     val uiState: StateFlow<SettingsState> = _uiState.asStateFlow()
 
 
-    fun fetchSettings() {
+    private fun fetchSettings() {
         logger.info { "Init SettingsViewModel" }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -284,10 +281,9 @@ class SettingsViewModel(
             ): T {
 
                 val languages = extras[LanguagesIdKey]
-                val engines = extras[EnginesIdKey]
                 val settingsRepo = extras[SettingsRepoIdKey]
                 return SettingsViewModel(
-                    languages!!, engines!!, settingsRepo!!
+                    languages!!, settingsRepo!!
                 ) as T
             }
         }

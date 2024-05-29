@@ -5,12 +5,11 @@ import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
 
 class BaseCardmarketApiClientTest {
 
-    class TestApiClient() : BaseCardmarketApiClient() {
+    class TestApiClient : BaseCardmarketApiClient() {
         override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
             return SearchResultsPageDto(results = listOf(), page = 9609, totalPages = 4163)
         }
@@ -24,12 +23,8 @@ class BaseCardmarketApiClientTest {
         }
     }
 
-    val apiClientMock = TestApiClient()
+    private val apiClientMock = TestApiClient()
 
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun parseGallerySearchResults() {
@@ -44,7 +39,5 @@ class BaseCardmarketApiClientTest {
 
     }
 
-    @Test
-    fun parseProductDetails() {
-    }
+
 }

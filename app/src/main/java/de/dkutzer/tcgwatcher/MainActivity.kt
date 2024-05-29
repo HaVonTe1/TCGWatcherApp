@@ -9,16 +9,20 @@ import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,13 +40,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.permissions.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import de.dkutzer.tcgwatcher.cards.boundary.SearchActivity
 import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
-import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import de.dkutzer.tcgwatcher.settings.boundary.SettingsActivity
 import de.dkutzer.tcgwatcher.ui.HomeScreenActivity
 import de.dkutzer.tcgwatcher.ui.ItemOfInterestActivity
-import de.dkutzer.tcgwatcher.cards.boundary.SearchActivity
-import de.dkutzer.tcgwatcher.settings.boundary.SettingsActivity
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
@@ -65,13 +73,13 @@ sealed class Screen(
     @StringRes val resourceId: Int,
     val icon: ImageVector
 ) {
-    object HomeScreen : Screen("home", R.string.home, icon = Icons.TwoTone.Star)
+    data object HomeScreen : Screen("home", R.string.home, icon = Icons.TwoTone.Star)
 
-    object ItemsOfInterestScreen :
+    data object ItemsOfInterestScreen :
         Screen("itemsOfInterest", R.string.items, icon = Icons.TwoTone.Menu)
 
-    object SearchScreen : Screen("search", R.string.search, icon = Icons.TwoTone.Search)
-    object SettingsScreen : Screen("settings", R.string.settings, icon = Icons.TwoTone.Settings)
+    data object SearchScreen : Screen("search", R.string.search, icon = Icons.TwoTone.Search)
+    data object SettingsScreen : Screen("settings", R.string.settings, icon = Icons.TwoTone.Settings)
 
 }
 
@@ -161,10 +169,10 @@ private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
     Scaffold(
         bottomBar = {
 
-            BottomNavigation(
-                backgroundColor = Color.LightGray,
+            NavigationBar(
+                containerColor = Color.LightGray,
                 contentColor = Color.Black,
-                elevation = 2.dp
+                tonalElevation = 2.dp
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
@@ -206,7 +214,7 @@ private fun RowScope.MyBottomNavigationItem(
     navController: NavHostController,
     screen: Screen
 ) {
-    BottomNavigationItem(
+    NavigationBarItem(
         icon = { Icon(screen.icon, contentDescription = null) },
         label = { Text(stringResource(screen.resourceId)) },
         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
