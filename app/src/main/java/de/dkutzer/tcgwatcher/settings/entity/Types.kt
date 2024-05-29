@@ -2,11 +2,12 @@ package de.dkutzer.tcgwatcher.settings.entity
 
 import androidx.lifecycle.viewmodel.CreationExtras
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
+import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepository
 
-enum class Languages(val code: String) {
-    DE("de"), EN("en");
+enum class Languages {
+    DE, EN;
 }
 
 
@@ -27,3 +28,6 @@ object EnginesIdKey : CreationExtras.Key<List<String>>
 object SettingsRepoIdKey : CreationExtras.Key<SettingsRepository>
 object SettingsDbIdKey : CreationExtras.Key<SettingsDatabase>
 object SearchCacheRepoIdKey : CreationExtras.Key<SearchCacheDatabase>
+object QuickSearchRepoIdKey : CreationExtras.Key<QuickSearchDatabase>
+
+

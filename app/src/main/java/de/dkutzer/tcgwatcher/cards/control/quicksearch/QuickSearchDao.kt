@@ -6,7 +6,7 @@ import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntityWithMatchInfo
 
 
 @Dao
-interface QuicksearchDao {
+interface QuickSearchDao {
 
 
     @Query(

@@ -1,9 +1,9 @@
 package de.dkutzer.tcgwatcher.cards.boundary
 
 import de.dkutzer.tcgwatcher.cards.entity.BaseConfig
-import de.dkutzer.tcgwatcher.settings.entity.Engines
 import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
+import de.dkutzer.tcgwatcher.settings.entity.Engines
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
 import org.htmlunit.BrowserVersion
@@ -19,10 +19,7 @@ import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger {}
 
-
-class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient()  {
-
-
+class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() {
     /*
     CM is protected by CloudFlare.
     Which means we get a 403 sometimes... Which is annoying. The Internet says
@@ -33,80 +30,77 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
     and you will have much more control over stuff like this app.
     Use Oauth2/OpenId instead of this multiple onion like token/secret/pass crap the next time.
      */
-
-    override suspend fun search(
-        searchString: String,
-        page: Int
-    ): SearchResultsPageDto {
-
-        /*
-        I searched half the internet for the best way to use htmlunit to bypass cloudflare
-        but it not working always.
-        We get some JS Exceptions which dont come up in a Browser. I guess I can ignore them.
-
-         */
-        logger.debug { "Searching for $searchString with page: $page" }
-        WebClient(BrowserVersion.CHROME).use { webClient ->
-            modifiyWebClient(webClient)
-            val params = mapOf(
-                "searchString" to searchString,
-                /* "sortBy" to "price_asc",*/
-                "perSite" to config.limit.toString(), // 100 is max
-                "mode" to "gallery",
-//                "language" to "3", //german -- TODO: the language is set via the path
-                "site" to "$page"
-            )
-            val webRequest = createWebRequest(
-                config.searchUrl,
-                //sorting defaults to popularity which is the best i think
-                params
-            )
-            webClient.waitForBackgroundJavaScript(5000)
-
-            logger.debug { "Executing Request now" }
-            lateinit var htmlPage: HtmlPage
-            val duration = measureTimeMillis {
-                htmlPage = webClient.getPage(webRequest)
-                webClient.waitForBackgroundJavaScript(5000)
-                //this should trick CF to do its thing and refresh the page before we parse it
-                //sadly i couldnt find a way to log this behaviour
-                htmlPage.enclosingWindow.jobManager.waitForJobs(5000)
-            }
-            logger.debug { "Duration: $duration" }
-
-
-            logger.info { "Status: ${htmlPage.webResponse.statusCode}" }
-
-            val document = Jsoup.parse(htmlPage.asXml())
-          //  logger.debug { document }
-
-            return parseGallerySearchResults(document, page)
-
-
-        }
-
+    companion object {
+        const val WAIT_TIME = 5000L
+        const val JS_TIMEOUT = 10000L
     }
 
-    private fun modifiyWebClient(webClient: WebClient) {
-        webClient.options.isJavaScriptEnabled = config.engine== Engines.HTMLUNIT_JS
-        webClient.options.isCssEnabled = false
-        webClient.options.isRedirectEnabled = true
-        webClient.options.isAppletEnabled = false
-        webClient.options.isDownloadImages = false
-        webClient.options.isWebSocketEnabled = false
-        webClient.options.isDoNotTrackEnabled = true
-        webClient.options.isPopupBlockerEnabled = true
-        webClient.options.isGeolocationEnabled = false
+    /*
+    I searched half the internet for the best way to use htmlunit to bypass cloudflare
+    but it not working always.
+    We get some JS Exceptions which dont come up in a Browser. I guess I can ignore them.
 
+     */
+    override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
+        logger.debug { "Searching for $searchString with page: $page" }
+        try {
+            WebClient(BrowserVersion.CHROME).use { webClient ->
+                modifyWebClient(webClient)
+                val params = mapOf(
+                    "searchString" to searchString,
+                    "perSite" to config.limit.toString(),
+                    "mode" to "gallery",
+                    "site" to "$page"
+                )
+                val webRequest = createWebRequest(config.searchUrl, params)
+                webClient.waitForBackgroundJavaScript(WAIT_TIME)
+
+                logger.debug { "Executing Request now" }
+                val htmlPage: HtmlPage?
+                val duration = measureTimeMillis {
+                    htmlPage = webClient.getPage(webRequest)
+                    webClient.waitForBackgroundJavaScript(WAIT_TIME)
+                    //this should trick CF to do its thing and refresh the page before we parse it
+                    //sadly i couldnt find a way to log this behaviour
+                    htmlPage.enclosingWindow.jobManager.waitForJobs(WAIT_TIME)
+                }
+                logger.debug { "Duration: $duration" }
+
+                htmlPage?.let {
+                    logger.info { "Status: ${it.webResponse.statusCode}" }
+                    val document = Jsoup.parse(it.asXml())
+                    return parseGallerySearchResults(document, page)
+                } ?: run {
+                    logger.error { "Failed to load page" }
+                    throw IllegalStateException("HtmlPage is null")
+                }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error during search" }
+            throw e
+        }
+    }
+
+    private fun modifyWebClient(webClient: WebClient) {
+        webClient.options.apply {
+            isJavaScriptEnabled = config.engine == Engines.HTMLUNIT_JS
+            isCssEnabled = false
+            isRedirectEnabled = true
+            isAppletEnabled = false
+            isDownloadImages = false
+            isWebSocketEnabled = false
+            isDoNotTrackEnabled = true
+            isPopupBlockerEnabled = true
+            isGeolocationEnabled = false
+            isThrowExceptionOnFailingStatusCode = false
+            isThrowExceptionOnScriptError = false
+        }
         webClient.cache.maxSize = 0
         webClient.ajaxController = NicelyResynchronizingAjaxController()
-        webClient.options.isThrowExceptionOnFailingStatusCode = false
         webClient.javaScriptErrorListener = SilentJavaScriptErrorListener()
-        webClient.waitForBackgroundJavaScript(10000)
-        webClient.javaScriptTimeout = 10000
-        webClient.waitForBackgroundJavaScriptStartingBefore(10000)
-        //webClient.htmlParserListener = HTMLParserListener.LOG_REPORTER //just a bunch of useless error messages
-        webClient.options.isThrowExceptionOnScriptError = false
+        webClient.waitForBackgroundJavaScript(JS_TIMEOUT)
+        webClient.javaScriptTimeout = JS_TIMEOUT
+        webClient.waitForBackgroundJavaScriptStartingBefore(JS_TIMEOUT)
         webClient.addRequestHeader(HttpHeaders.Accept, "text/html")
         webClient.addRequestHeader(
             HttpHeaders.AcceptLanguage,
@@ -123,29 +117,29 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
         return webRequest
     }
 
-
     override suspend fun getProductDetails(link: String): CardDetailsDto {
+        try {
+            WebClient(BrowserVersion.CHROME).use { webClient ->
+                modifyWebClient(webClient)
+                val webRequest = createWebRequest("${config.baseUrl}$link", mapOf())
+                webClient.waitForBackgroundJavaScript(WAIT_TIME)
 
-        WebClient(BrowserVersion.CHROME).use { webClient ->
-            modifiyWebClient(webClient)
-            val webRequest = createWebRequest(
-                "${config.baseUrl}$link",
-                mapOf()
-            )
-            webClient.waitForBackgroundJavaScript(5000)
+                val htmlPage: HtmlPage? = webClient.getPage(webRequest)
+                webClient.waitForBackgroundJavaScript(WAIT_TIME)
+                htmlPage?.enclosingWindow?.jobManager?.waitForJobs(WAIT_TIME)
 
-            val htmlPage: HtmlPage = webClient.getPage(webRequest)
-
-            webClient.waitForBackgroundJavaScript(5000)
-            htmlPage.enclosingWindow.jobManager.waitForJobs(5000)
-
-            println("Status: ${htmlPage.webResponse.statusCode}")
-
-            val document = Jsoup.parse(htmlPage.asXml())
-
-            return parseProductDetails(document)
+                htmlPage?.let {
+                    logger.info { "Status: ${it.webResponse.statusCode}" }
+                    val document = Jsoup.parse(it.asXml())
+                    return parseProductDetails(document)
+                } ?: run {
+                    logger.error { "Failed to load product details page" }
+                    throw IllegalStateException("HtmlPage is null")
+                }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error during getProductDetails" }
+            throw e
         }
     }
-
-
 }
