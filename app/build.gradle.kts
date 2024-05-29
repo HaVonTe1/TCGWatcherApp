@@ -112,14 +112,14 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
     //image download and caching
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     //REST
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-encoding:$ktorVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     //Parsing HTML
     implementation("org.htmlunit:htmlunit3-android:3.7.0")
     implementation("org.jsoup:jsoup:1.17.2")
@@ -129,7 +129,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
 //    logging
-    implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
+    implementation("io.github.oshai:kotlin-logging-jvm:6.0.9")
     implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.4")
 
     //DB
@@ -144,10 +144,10 @@ dependencies {
     //Testing
 
     testImplementation ("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.13.9")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.9.10")
+    testImplementation("io.mockk:mockk:1.13.11")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.0.0")
 
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
