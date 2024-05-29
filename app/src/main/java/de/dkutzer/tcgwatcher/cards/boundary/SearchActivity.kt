@@ -2,14 +2,32 @@ package de.dkutzer.tcgwatcher.cards.boundary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -29,27 +47,37 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.control.cache.PokemonPager
+import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
+import de.dkutzer.tcgwatcher.cards.control.cache.PokemonPager
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
+import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
+import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchRepositoryImpl
+import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
+import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
+import de.dkutzer.tcgwatcher.cards.entity.SearchProductModel
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepositoryImpl
-import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
-import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
 import de.dkutzer.tcgwatcher.settings.entity.Engines
 import de.dkutzer.tcgwatcher.settings.entity.Languages
+import de.dkutzer.tcgwatcher.settings.entity.QuickSearchRepoIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SearchCacheRepoIdKey
-import de.dkutzer.tcgwatcher.cards.entity.SearchProductModel
 import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
-import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
 import de.dkutzer.tcgwatcher.ui.ClickableIconButton
 import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 
@@ -69,12 +97,17 @@ fun SearchActivity(
         SearchCacheDatabase.getDatabase(context)
     }
 
+    val quicksearchDatabase: QuickSearchDatabase by lazy {
+        QuickSearchDatabase.getDatabase(context)
+    }
+
 
     val searchViewModel = viewModel<SearchViewModel>(
         factory = SearchViewModel.Factory,
         extras = MutableCreationExtras().apply {
             set(SettingsDbIdKey, settingsDatabase)
             set(SearchCacheRepoIdKey, searchCacheDatabase)
+            set(QuickSearchRepoIdKey, quicksearchDatabase)
         }
     )
 
@@ -92,6 +125,7 @@ fun SearchActivity(
     SearchView(
         pokemonPagingItems = pokemonPagingItems,
         historyList = searchViewModel.historyList,
+        quickSearchList = searchViewModel.quickSearchList,
         isSearching = searchViewModel.showHistoryContent,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
@@ -104,18 +138,22 @@ fun SearchActivity(
 private fun SearchView(
     pokemonPagingItems: LazyPagingItems<SearchProductModel>,
     historyList: StateFlow<List<String>>,
+    quickSearchList: StateFlow<List<String>>,
     isSearching: StateFlow<Boolean>,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onActiveChanged: (String, Boolean) -> Unit
 ) {
 
-    val listState = historyList.collectAsState()
+    val historyListState = historyList.collectAsState()
+    val quickSearchListState = quickSearchList.collectAsState()
 
     var query: String by remember { mutableStateOf("") }
     val active  by isSearching.collectAsState(initial = false)
 
-    val historyItems by remember(listState.value) { mutableStateOf(listState.value) }
+    val historyItems by remember(historyListState.value) { mutableStateOf(historyListState.value) }
+
+    val quickSearchItems by remember(quickSearchListState.value) { mutableStateOf(quickSearchList.value) }
 
 
     Column(
@@ -187,9 +225,14 @@ private fun SearchView(
                         modifier = Modifier.weight(0.95f)
                     ) {
                         items(
-                            count = historyItems.size
+                            count = historyItems.size + quickSearchItems.size
                         ) { index ->
-                            val item = historyItems[index]
+
+                            val item = if(index < historyItems.size)  {
+                                historyItems[index]
+                            } else {
+                                quickSearchItems[index - historyItems.size]
+                            }
                             Row(modifier =
                             Modifier
                                 .padding(all = 16.dp)
@@ -279,8 +322,12 @@ fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
 class SearchViewModel(
     private val settingsDatabase: SettingsDatabase,
     private val searchCacheDatabase: SearchCacheDatabase,
-) : ViewModel() {
+    quickSearchDatabase: QuickSearchDatabase,
 
+    ) : ViewModel() {
+
+
+   private val quicksearchRepository = QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
 
     private val _settings: MutableStateFlow<SettingsEntity> = MutableStateFlow(
         SettingsEntity(
@@ -336,6 +383,9 @@ class SearchViewModel(
             initialValue = listOf("")
         )
 
+    private val _quickSearchList = MutableStateFlow<List<String>>(mutableListOf())
+    val quickSearchList: StateFlow<List<String>> = _quickSearchList.asStateFlow()
+
 
     init {
         logger.debug { "SearchViewModel::init" }
@@ -364,12 +414,14 @@ class SearchViewModel(
                 extras: CreationExtras
             ): T {
                 logger.info { "Creating SearchViewModel" }
-                val settingsRepo = extras[SettingsDbIdKey]
-                val searchCacheRepository = extras[SearchCacheRepoIdKey]
+                val settingsDb = extras[SettingsDbIdKey]
+                val searchCacheDb = extras[SearchCacheRepoIdKey]
+                val quickSearchDb = extras[QuickSearchRepoIdKey]
 
                 return SearchViewModel(
-                    settingsRepo!!,
-                    searchCacheRepository!!,
+                    settingsDb!!,
+                    searchCacheDb!!,
+                    quickSearchDb!!
                 ) as T
             }
         }
@@ -392,6 +444,20 @@ class SearchViewModel(
                 filteredHistoryItems
             }
 
+        viewModelScope.launch(Dispatchers.IO) {
+            _quickSearchList.value =
+                if(newQuery.isBlank()) {
+                    emptyList()
+                } else {
+
+                    logger.debug { "query quick search" }
+                    val pokemonCardQuickEntities = quicksearchRepository.find(newQuery)
+                    logger.trace { "pokemonCardQuickEntities: $pokemonCardQuickEntities" }
+                    val result = pokemonCardQuickEntities.map { "${it.nameDe} ${it.code}" }
+                    logger.debug { "$result" }
+                    result
+                }
+        }
     }
 
 
@@ -406,6 +472,7 @@ class SearchViewModel(
         _historyList.value = unfilteredHistoryItems
         _query.value = searchString
         _lastQuery.value = searchString
+        _quickSearchList.value = emptyList()
         onActiveChanged(searchString, false)
     }
 

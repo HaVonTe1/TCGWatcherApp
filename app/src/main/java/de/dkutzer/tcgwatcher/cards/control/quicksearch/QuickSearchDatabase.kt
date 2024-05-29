@@ -14,20 +14,20 @@ import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntityFTS
     version = 1,
     exportSchema = false
 )
-abstract class QuicksearchDatabase : RoomDatabase() {
+abstract class QuickSearchDatabase : RoomDatabase() {
 
-    abstract val quicksearchDao: QuicksearchDao
+    abstract val quicksearchDao: QuickSearchDao
 
     //Highlander Pattern
     companion object {
         @Volatile
-        private var Instance: QuicksearchDatabase? = null
+        private var Instance: QuickSearchDatabase? = null
 
-        fun getDatabase(context: Context): QuicksearchDatabase {
+        fun getDatabase(context: Context): QuickSearchDatabase {
             return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, QuicksearchDatabase::class.java, "quicksearch_database")
+                Room.databaseBuilder(context, QuickSearchDatabase::class.java, "quicksearch_database")
                     .createFromAsset("quicksearch.db")
-                    .addCallback(object : RoomDatabase.Callback() {
+                    .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             // 3

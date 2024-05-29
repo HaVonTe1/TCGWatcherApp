@@ -5,34 +5,31 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.SmallTest
-import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
-@SmallTest
-class QuicksearchDaoTest
-{
+class QuickSearchRepositoryImplTest {
+
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var database: QuicksearchDatabase
-    private lateinit var dao: QuicksearchDao
+    private lateinit var database: QuickSearchDatabase
+    private lateinit var dao: QuickSearchDao
+    private lateinit var repository: QuickSearchRepository
 
     @Before
     fun setup() {
         database = Room.databaseBuilder(
             ApplicationProvider.getApplicationContext(),
-            QuicksearchDatabase::class.java, "test_quicksearch_database")
+            QuickSearchDatabase::class.java, "test_quicksearch_database")
 
 
-        .allowMainThreadQueries()
+            .allowMainThreadQueries()
             .createFromAsset("quicksearch.db")
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
@@ -43,21 +40,27 @@ class QuicksearchDaoTest
             })
             .build()
         dao = database.quicksearchDao
+
+        repository = QuickSearchRepositoryImpl(dao)
     }
 
-//    @After
-//    fun teardown() {
-//        database.close()
-//    }
+    @After
+    fun teardown() {
+        database.close()
+    }
 
     @Test
     fun testMatching1() = runBlocking {
         // When
-        val query = "Pikachu"
-        val results = dao.search(query)
+        val query = "evoli tg11"
+        val results = repository.find(query)
 
         // Then
-        assertEquals(1,results.size)
+
+        results.forEach {
+            println(it.nameDe)
+        }
+        Assert.assertEquals(1,results.size)
 
     }
 }
