@@ -1,42 +1,103 @@
 package de.dkutzer.tcgwatcher.cards.control.quicksearch
 
-import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntity
+import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntityWithMatchInfo
+import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickNormalizedEntity
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.system.measureTimeMillis
 
 
 interface QuickSearchRepository {
 
-    suspend fun find(query: String): List<PokemonCardQuickEntity>
-
+    suspend fun find(query: String): List<PokemonCardQuickNormalizedEntity>
 
 }
 
+private val logger = KotlinLogging.logger {}
+
+
 class QuickSearchRepositoryImpl(private val dao: QuickSearchDao) : QuickSearchRepository {
-    override suspend fun find(query: String): List<PokemonCardQuickEntity> {
-        val cardQuickEntities =
-            dao.search(sanatizeQuery(query))
-                .sortedByDescending { result -> calculateScore(result.matchInfo) }
-                .map { result -> result.pokemonCardQuickEntity }
-                .toList()
+    override suspend fun find(query: String): List<PokemonCardQuickNormalizedEntity> {
+        var cardQuickEntities = emptyList<PokemonCardQuickNormalizedEntity>()
+        val duration = measureTimeMillis {
+            var pokemonCardQuickEntityWithMatchInfos: List<PokemonCardQuickEntityWithMatchInfo> =
+                emptyList()
+            val innerDuration = measureTimeMillis {
+
+                val sanatizeQueryWrapper = sanatizeQuery(query)
+                logger.debug { "Sanitized query: $sanatizeQueryWrapper" }
+
+                if (!sanatizeQueryWrapper.isEmpty()) {
+                    pokemonCardQuickEntityWithMatchInfos =
+                        if (sanatizeQueryWrapper.code.isEmpty()) {
+                            logger.debug { "Full text search with names: ${sanatizeQueryWrapper.names}" }
+                            dao.fullTextSearchOverAllColumns(sanatizeQueryWrapper.names)
+                        } else {
+                            logger.debug { "Full text search with names: ${sanatizeQueryWrapper.names} and code: ${sanatizeQueryWrapper.code}" }
+
+                            dao.fullTextSearchWithCode(
+                                sanatizeQueryWrapper.names,
+                                sanatizeQueryWrapper.code
+                            )
+                        }
+                }
+            }
+            logger.debug { "Inner query executed in $innerDuration ms" }
+            cardQuickEntities =
+                pokemonCardQuickEntityWithMatchInfos
+                    .sortedByDescending { result -> calculateScore(result.matchInfo) }
+                    .map { result -> result.pokemonCardQuickEntity }
+                    .toList()
+
+        }
+        logger.debug { "Query executed in $duration ms" }
 
         return cardQuickEntities
     }
 
-    private fun sanatizeQuery(query: String?): String {
-        if (query == null) {
-            return ""
+    fun sanatizeQuery(query: String?): QueryWrapper {
+        var result = QueryWrapper.empty()
+
+
+        val duration = measureTimeMillis {
+            if (query == null) {
+                return result
+            }
+            if (query.trim().count() < 4) {
+                //a query with less then 4 characters is not valid because its to slow to search
+                return result
+            }
+            val queryList = query.trim().split(" ").toMutableList()
+            var queryWithDigts = queryList.find { s -> s.any { it in "0123456789" } }
+            queryList.remove(queryWithDigts)
+            queryWithDigts = if (queryWithDigts == null) {
+                ""
+            } else {
+                "%${queryWithDigts.lowercase()}%"
+            }
+            if (queryList.count() > 1) {
+                //Remove all elements in the list that have less then 3 characters and doesnt contains any digits because this would mean a search by number
+                queryList.removeAll { queryString -> queryString.length < 4 }
+            }
+            val moddedQuery = queryList.joinToString(" ") { word -> "*${word.lowercase()}*" }
+                .replace(Regex.fromLiteral("\""), "\"\"")
+            result = QueryWrapper(names = moddedQuery, code = queryWithDigts)
+
         }
-        val queryWithEscapedQuotes = query.replace(Regex.fromLiteral("\""), "\"\"")
-        val tokenizedQuery = queryWithEscapedQuotes.trim().split(" ").joinToString(" ") { word -> "*$word*" }
-        return tokenizedQuery
+        logger.debug { "Query sanitized in $duration ms" }
+        return result
     }
 
-    private fun calculateScore(matchInfo: ByteArray): Double {
-        val info = matchInfo.toIntArray()
-        val score = rank(info)
-        return score
+    private fun calculateScore(matchInfo: ByteArray): Double = rank(matchInfo.toIntArray())
+
+}
+
+
+data class QueryWrapper(val names: String, val code: String) {
+    companion object {
+        fun empty(): QueryWrapper = QueryWrapper(names = "", code = "")
     }
 
-
+    fun isEmpty() = names.isEmpty() && code.isEmpty()
 }
 
 fun ByteArray.toIntArray(skipSize: Int = 4): IntArray {

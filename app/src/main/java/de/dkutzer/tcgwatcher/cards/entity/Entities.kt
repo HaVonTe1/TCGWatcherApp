@@ -47,10 +47,11 @@ data class SearchWithResultsEntity(
     val results: List<SearchResultItemEntity>
 )
 
+@Entity(tableName = "qs_pokemon_cards")
+data class PokemonCardQuickNormalizedEntity (
+    @PrimaryKey(autoGenerate = false)
+    val id: String = "",
 
-@Entity(tableName = "qs_pokemon_cards_fts")
-@Fts4(contentEntity = PokemonCardQuickEntity::class)
-data class PokemonCardQuickEntityFTS(
     @ColumnInfo(name = "name_de")
     val nameDe: String,
     @ColumnInfo(name = "name_en")
@@ -59,31 +60,29 @@ data class PokemonCardQuickEntityFTS(
     val nameFr: String,
 
     val code: String,
-    @ColumnInfo(name = "external_id")
-    val externalId: String
-
 )
 
-@Entity(tableName = "qs_pokemon_cards")
-data class PokemonCardQuickEntity (
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
 
-    @ColumnInfo(name = "name_de")
-    val nameDe: String,
-    @ColumnInfo(name = "name_en")
-    val nameEn: String,
-    @ColumnInfo(name = "name_fr")
-    val nameFr: String,
 
+@Entity(tableName = "qs_fts_pokemon_cards_fts")
+@Fts4(contentEntity = PokemonCardQuickEntity::class)
+data class PokemonCardQuickEntityFTS(
+    val names: String,
     val code: String,
-    @ColumnInfo(name = "external_id")
-    val externalId: String
+    val id: String
+)
+
+@Entity(tableName = "qs_fts_pokemon_cards")
+data class PokemonCardQuickEntity (
+    @PrimaryKey(autoGenerate = false)
+    val id: String = "",
+    val names: String,
+    val code: String,
 )
 
 data class PokemonCardQuickEntityWithMatchInfo(
     @Embedded
-    val pokemonCardQuickEntity: PokemonCardQuickEntity,
+    val pokemonCardQuickEntity: PokemonCardQuickNormalizedEntity,
     @ColumnInfo(name = "matchInfo")
     val matchInfo: ByteArray
 ) {

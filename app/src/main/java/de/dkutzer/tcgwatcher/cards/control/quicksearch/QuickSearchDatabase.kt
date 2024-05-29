@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntity
 import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickEntityFTS
+import de.dkutzer.tcgwatcher.cards.entity.PokemonCardQuickNormalizedEntity
 
 
 @Database(
-    entities = [PokemonCardQuickEntity::class, PokemonCardQuickEntityFTS::class],
+    entities = [PokemonCardQuickEntity::class, PokemonCardQuickEntityFTS::class, PokemonCardQuickNormalizedEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -31,7 +32,7 @@ abstract class QuickSearchDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             // 3
-                            db.execSQL("INSERT INTO qs_pokemon_cards_fts(qs_pokemon_cards_fts) VALUES ('rebuild')")
+                            db.execSQL("INSERT INTO qs_fts_pokemon_cards_fts(qs_fts_pokemon_cards_fts) VALUES ('rebuild')")
                         }
                     })
                     .fallbackToDestructiveMigration()
