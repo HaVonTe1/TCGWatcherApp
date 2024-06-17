@@ -3,8 +3,11 @@ package de.dkutzer.tcgwatcher.cards.boundary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -13,14 +16,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,7 +56,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
@@ -54,7 +64,6 @@ import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchRepositoryImpl
-import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
 import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
 import de.dkutzer.tcgwatcher.cards.entity.SearchProductModel
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
@@ -66,7 +75,6 @@ import de.dkutzer.tcgwatcher.settings.entity.SearchCacheRepoIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
 import de.dkutzer.tcgwatcher.ui.ClickableIconButton
-import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -280,20 +288,26 @@ private fun SearchView(
                     NoSearchResults()
                 } else {
 
-                    LazyColumn(
-                        modifier = Modifier.weight(0.95f)
-                    ) {
-                        items(
-                            count = pokemonPagingItems.itemCount,
-                            key = pokemonPagingItems.itemKey { it.id }) { index ->
-                            val productModel = pokemonPagingItems[index]
-                            ItemOfInterestCard(
-                                productModel = productModel as BaseProductModel,
-                                showLastUpdated = false,
-                                iconRowContent = { SearchViewCardIconRow() },
-                            )
-                        }
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        ListDetailLayout(
+                            modifier = Modifier.padding(innerPadding)
+                        )
                     }
+
+//                    LazyColumn(
+//                        modifier = Modifier.weight(0.95f)
+//                    ) {
+//                        items(
+//                            count = pokemonPagingItems.itemCount,
+//                            key = pokemonPagingItems.itemKey { it.id }) { index ->
+//                            val productModel = pokemonPagingItems[index]
+//                            ItemOfInterestCard(
+//                                productModel = productModel as BaseProductModel,
+//                                showLastUpdated = false,
+//                                iconRowContent = { SearchViewCardIconRow() },
+//                            )
+//                        }
+//                    }
                 }
             }
         }
@@ -301,6 +315,93 @@ private fun SearchView(
 
     }
 }
+
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+fun ListDetailLayout(modifier: Modifier = Modifier) {
+    val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
+    NavigableListDetailPaneScaffold(
+        modifier = modifier,
+        navigator = navigator,
+        listPane = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(100) {
+                    Text(
+                        "Item $it",
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .clickable {
+                                navigator.navigateTo(
+                                    pane = ListDetailPaneScaffoldRole.Detail,
+                                    content = "Item $it"
+                                )
+                            }
+                            .padding(16.dp)
+                    )
+                }
+            }
+        },
+        detailPane = {
+            val content = navigator.currentDestination?.content?.toString() ?: "Select an item"
+            AnimatedPane {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = content)
+                    Row {
+                        AssistChip(
+                            onClick = {
+                                navigator.navigateTo(
+                                    pane = ListDetailPaneScaffoldRole.Extra,
+                                    content = "Option 1"
+                                )
+                            },
+                            label = {
+                                Text(text = "Option 1")
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        AssistChip(
+                            onClick = {
+                                navigator.navigateTo(
+                                    pane = ListDetailPaneScaffoldRole.Extra,
+                                    content = "Option 2"
+                                )
+                            },
+                            label = {
+                                Text(text = "Option 2")
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        extraPane = {
+            val content = navigator.currentDestination?.content?.toString() ?: "Select an option"
+            AnimatedPane {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = content)
+                }
+            }
+        }
+    )
+}
+
+
 
 @Composable
 fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
