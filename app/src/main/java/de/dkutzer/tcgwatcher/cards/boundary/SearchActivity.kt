@@ -3,12 +3,12 @@ package de.dkutzer.tcgwatcher.cards.boundary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.Add
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,8 +43,10 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -59,6 +60,10 @@ import androidx.paging.cachedIn
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
@@ -80,6 +85,7 @@ import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
 import de.dkutzer.tcgwatcher.ui.ClickableIconButton
 import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
+import de.dkutzer.tcgwatcher.ui.referrer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -92,6 +98,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import okhttp3.internal.userAgent
 import org.apache.commons.lang3.StringUtils
 
 private val logger = KotlinLogging.logger {}
@@ -347,7 +354,7 @@ fun ListDetailLayout(
                             .clickable {
                                 navigator.navigateTo(
                                     pane = ListDetailPaneScaffoldRole.Detail,
-                                    content = "Item $index"
+                                    content = productModel
                                 )
                             }
                     )
@@ -355,57 +362,12 @@ fun ListDetailLayout(
             }
         },
         detailPane = {
-            val content = navigator.currentDestination?.content?.toString() ?: "Select an item"
+            val content = navigator.currentDestination?.content //productModel
             AnimatedPane {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = content)
-                    Row {
-                        AssistChip(
-                            onClick = {
-                                navigator.navigateTo(
-                                    pane = ListDetailPaneScaffoldRole.Extra,
-                                    content = "Option 1"
-                                )
-                            },
-                            label = {
-                                Text(text = "Option 1")
-                            }
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        AssistChip(
-                            onClick = {
-                                navigator.navigateTo(
-                                    pane = ListDetailPaneScaffoldRole.Extra,
-                                    content = "Option 2"
-                                )
-                            },
-                            label = {
-                                Text(text = "Option 2")
-                            }
-                        )
-                    }
-                }
-            }
-        },
-        extraPane = {
-            val content = navigator.currentDestination?.content?.toString() ?: "Select an option"
-            AnimatedPane {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.tertiaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = content)
-                }
+                ItemCardDetailLayout(productModel = content as BaseProductModel)
             }
         }
+
     )
 }
 
@@ -629,12 +591,70 @@ private fun NoSearchResults() {
         Text(stringResource(id = R.string.emptySearch))
     }
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun TestSearchPreview() {
-//
-//  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
-//    SearchActivity()
-//
-//}
+
+@Preview(showBackground = false, showSystemUi = true)
+@Composable
+fun ItemCardDetailLayoutPreview() {
+
+  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
+    ItemCardDetailLayout(
+        productModel =  BaseProductModel(
+            id = "bla",
+            imageUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg",
+            intPrice = "10,00 €",
+            localName = "bbbbb",
+            detailsUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg"
+        ),
+    )
+
+}
+
+@Composable
+private fun ItemCardDetailLayout(
+    productModel: BaseProductModel,
+    modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+       // verticalArrangement = Arrangement.Center
+
+    ) {
+        Row (
+            modifier = modifier
+                .padding(1.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(.8f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+            AsyncImage(
+
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(productModel.imageUrl)
+                    .setHeader("User-Agent", userAgent)
+                    .setHeader("Referer", referrer) //TODO: cloudflare protection is kicking in without the referer
+                    .build(),
+
+                contentDescription = productModel.id,
+                modifier = modifier
+                    .fillMaxHeight()
+                    .align(Alignment.CenterVertically)
+                    //.align(Alignment.CenterHorizontally)
+                    .padding(1.dp),
+                contentScale = ContentScale.FillHeight,
+                imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger()).build()
+            )
+        }
+        Row (
+            modifier = modifier
+                .padding(1.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(.2f)
+        ) {
+            Text(text = productModel.localName)
+        }
+    }
+
+}
