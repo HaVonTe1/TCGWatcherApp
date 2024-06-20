@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -41,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,6 +58,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
@@ -64,6 +67,7 @@ import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchRepositoryImpl
+import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
 import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
 import de.dkutzer.tcgwatcher.cards.entity.SearchProductModel
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
@@ -75,6 +79,7 @@ import de.dkutzer.tcgwatcher.settings.entity.SearchCacheRepoIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
 import de.dkutzer.tcgwatcher.ui.ClickableIconButton
+import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -137,7 +142,7 @@ fun SearchActivity(
         isSearching = searchViewModel.showHistoryContent,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
-        onActiveChanged = { query, active ->  searchViewModel.onActiveChanged(query,active) }
+        onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) }
     )
 }
 
@@ -157,7 +162,7 @@ private fun SearchView(
     val quickSearchListState = quickSearchList.collectAsState()
 
     var query: String by remember { mutableStateOf("") }
-    val active  by isSearching.collectAsState(initial = false)
+    val active by isSearching.collectAsState(initial = false)
 
     val historyItems by remember(historyListState.value) { mutableStateOf(historyListState.value) }
 
@@ -165,7 +170,8 @@ private fun SearchView(
 
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -236,7 +242,7 @@ private fun SearchView(
                             count = historyItems.size + quickSearchItems.size
                         ) { index ->
 
-                            val item = if(index < historyItems.size)  {
+                            val item = if (index < historyItems.size) {
                                 historyItems[index]
                             } else {
                                 quickSearchItems[index - historyItems.size]
@@ -288,26 +294,18 @@ private fun SearchView(
                     NoSearchResults()
                 } else {
 
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Scaffold(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp))
+                    )
+                    { innerPadding ->
                         ListDetailLayout(
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(innerPadding),
+                            pokemonPagingItems
                         )
                     }
 
-//                    LazyColumn(
-//                        modifier = Modifier.weight(0.95f)
-//                    ) {
-//                        items(
-//                            count = pokemonPagingItems.itemCount,
-//                            key = pokemonPagingItems.itemKey { it.id }) { index ->
-//                            val productModel = pokemonPagingItems[index]
-//                            ItemOfInterestCard(
-//                                productModel = productModel as BaseProductModel,
-//                                showLastUpdated = false,
-//                                iconRowContent = { SearchViewCardIconRow() },
-//                            )
-//                        }
-//                    }
                 }
             }
         }
@@ -319,7 +317,11 @@ private fun SearchView(
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun ListDetailLayout(modifier: Modifier = Modifier) {
+fun ListDetailLayout(
+    modifier: Modifier = Modifier,
+    pokemonPagingItems: LazyPagingItems<SearchProductModel>
+) {
+
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
     NavigableListDetailPaneScaffold(
         modifier = modifier,
@@ -328,20 +330,26 @@ fun ListDetailLayout(modifier: Modifier = Modifier) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(8.dp)
             ) {
-                items(100) {
-                    Text(
-                        "Item $it",
+                items(
+                    count = pokemonPagingItems.itemCount,
+                    key = pokemonPagingItems.itemKey { it.id }
+                )
+                { index ->
+                    val productModel = pokemonPagingItems[index]
+                    ItemOfInterestCard(
+                        productModel = productModel as BaseProductModel,
+                        showLastUpdated = false,
+                        iconRowContent = { SearchViewCardIconRow() },
                         modifier = Modifier
                             .fillParentMaxWidth()
                             .clickable {
                                 navigator.navigateTo(
                                     pane = ListDetailPaneScaffoldRole.Detail,
-                                    content = "Item $it"
+                                    content = "Item $index"
                                 )
                             }
-                            .padding(16.dp)
                     )
                 }
             }
@@ -402,7 +410,6 @@ fun ListDetailLayout(modifier: Modifier = Modifier) {
 }
 
 
-
 @Composable
 fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
     Row(
@@ -428,7 +435,8 @@ class SearchViewModel(
     ) : ViewModel() {
 
 
-   private val quicksearchRepository = QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
+    private val quicksearchRepository =
+        QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
 
     private val _settings: MutableStateFlow<SettingsEntity> = MutableStateFlow(
         SettingsEntity(
@@ -547,7 +555,7 @@ class SearchViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
             _quickSearchList.value =
-                if(newQuery.isBlank()) {
+                if (newQuery.isBlank()) {
                     emptyList()
                 } else {
 
@@ -577,7 +585,7 @@ class SearchViewModel(
         onActiveChanged(searchString, false)
     }
 
-    fun onActiveChanged(query:String, active: Boolean) {
+    fun onActiveChanged(query: String, active: Boolean) {
         logger.debug { "SearchModel::onActiveChanged: current show history =  ${_showHistoryContent.value}" }
         logger.debug { "SearchModel::onActiveChanged: propagated active =  $active" }
         logger.debug { "SearchModel::onActiveChanged: query =  $query" }
@@ -591,18 +599,18 @@ class SearchViewModel(
     }
 
     private fun determineShowHistory(query: String, active: Boolean): Boolean {
-        if(query.isBlank() && active) { //reset
+        if (query.isBlank() && active) { //reset
             _lastQuery.value = ""
         }
-        if(query.isBlank() && _lastQuery.value.isBlank()) {
+        if (query.isBlank() && _lastQuery.value.isBlank()) {
             return true
         }
-        if(query.isBlank())
+        if (query.isBlank())
             return false
-        if(_historyList.value.isEmpty())
+        if (_historyList.value.isEmpty())
             return false
 
-        if(StringUtils.equals(query, lastQuery.value))
+        if (StringUtils.equals(query, lastQuery.value))
             return false
 
         return true
