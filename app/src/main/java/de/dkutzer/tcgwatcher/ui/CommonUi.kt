@@ -1,14 +1,10 @@
 package de.dkutzer.tcgwatcher.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -18,12 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -58,23 +52,6 @@ fun ClickableIconButton(
     }
 }
 
-@Composable
-fun RowScope.TableCell(
-    text: String,
-    weight: Float,
-    style: TextStyle
-
-) {
-    Text(
-        text = text,
-        Modifier
-            .border(1.dp, Color.Transparent)
-            .weight(weight, true)
-            .fillMaxWidth()
-            .padding(1.dp),
-        style = style
-    )
-}
 
 const val referrer = "https://www.cardmarket.com/"
 private const val  userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
@@ -116,7 +93,7 @@ fun ItemOfInterestCard(
                     .weight(.7f, false)
                     .fillMaxWidth()
                     .padding(1.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Bottom
             ) {
                 ItemDetailsTable(
                     localName = productModel.localName,
@@ -126,7 +103,6 @@ fun ItemOfInterestCard(
                     modifier = Modifier
                         .padding(4.dp)
                         .fillMaxHeight(.9f))
-                Spacer(modifier = Modifier.height(16.dp)) // doesnt work with arrangement. why?
                 iconRowContent()
             }
         }
@@ -141,51 +117,17 @@ fun ItemDetailsTable(
     lastUpdated: OffsetDateTime,
     modifier: Modifier = Modifier) {
 
-    // Each cell of a column must have the same weight.
-    val column1Weight = .3f // 30%
-    val column2Weight = .7f // 70%
-    // The LazyColumn will be our table. Notice the use of the weights below
     Column(modifier = modifier.padding(1.dp))
     {
-        Row(Modifier.fillMaxWidth()) {
-            TableCell(
-                text = stringResource(id = (R.string.nameLabel)),
-                weight = column1Weight,
-                style = MaterialTheme.typography.labelMedium)
-            TableCell(
-                text = localName,
-                weight = column2Weight,
-                style =  MaterialTheme.typography.headlineMedium
-            )
-        }
+        Text(text = stringResource(id = R.string.nameLabel), style = MaterialTheme.typography.labelMedium)
+        Text(text = localName, style = MaterialTheme.typography.headlineMedium)
 
-        Row(Modifier.fillMaxWidth()) {
-            TableCell(
-                text = stringResource(id = R.string.priceLabel),
-                weight = column1Weight,
-                MaterialTheme.typography.labelMedium
-            )
-            TableCell(
-                text = price,
-                weight = column2Weight,
-                MaterialTheme.typography.headlineLarge
-            )
-        }
+        Text(text = stringResource(id = R.string.priceLabel), style = MaterialTheme.typography.labelMedium)
+        Text(text = price, style = MaterialTheme.typography.headlineLarge)
+
         if(showLastUpdated) {
-            Row(Modifier.fillMaxWidth()) {
-                TableCell(
-                    text = stringResource(id = R.string.lastUpdateLabel),
-                    weight = column1Weight,
-                    MaterialTheme.typography.labelMedium
-                )
-                TableCell(
-                    text = lastUpdated.format(
-                        DateTimeFormatter.ofLocalizedDateTime(
-                            FormatStyle.MEDIUM
-                        )
-                    ), weight = column2Weight, MaterialTheme.typography.labelLarge
-                )
-            }
+            Text(text = stringResource(id = R.string.lastUpdateLabel), style = MaterialTheme.typography.labelMedium)
+            Text(text = lastUpdated.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
