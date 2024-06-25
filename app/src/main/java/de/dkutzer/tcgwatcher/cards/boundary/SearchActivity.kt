@@ -363,8 +363,11 @@ fun ListDetailLayout(
         },
         detailPane = {
             val content = navigator.currentDestination?.content //productModel
-            AnimatedPane {
-                ItemCardDetailLayout(productModel = content as BaseProductModel)
+            if(content!=null) {
+                AnimatedPane {
+                    ItemCardDetailLayout(productModel = content as BaseProductModel)
+                }
+
             }
         }
 

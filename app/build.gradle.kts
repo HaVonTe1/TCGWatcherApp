@@ -129,8 +129,8 @@ dependencies {
     implementation("org.htmlunit:htmlunit3-android:3.7.0")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.test.ext:junit-ktx:1.1.5")
-    implementation("androidx.test:runner:1.5.2")
+    implementation("androidx.test.ext:junit-ktx:1.2.0")
+    implementation("androidx.test:runner:1.6.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
 //    logging
@@ -155,8 +155,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.0.0")
 
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
