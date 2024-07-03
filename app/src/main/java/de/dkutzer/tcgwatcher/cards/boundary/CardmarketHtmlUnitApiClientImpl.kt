@@ -64,10 +64,10 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
                     //sadly i couldnt find a way to log this behaviour
                     htmlPage.enclosingWindow.jobManager.waitForJobs(WAIT_TIME)
                 }
-                logger.debug { "Duration: $duration" }
+                logger.info { "Duration: $duration" }
 
                 htmlPage?.let {
-                    logger.info { "Status: ${it.webResponse.statusCode}" }
+                    logger.debug { "Status: ${it.webResponse.statusCode}" }
                     val document = Jsoup.parse(it.asXml())
                     return parseGallerySearchResults(document, page)
                 } ?: run {
@@ -128,7 +128,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
                 htmlPage?.enclosingWindow?.jobManager?.waitForJobs(WAIT_TIME)
 
                 htmlPage?.let {
-                    logger.info { "Status: ${it.webResponse.statusCode}" }
+                    logger.debug { "Status: ${it.webResponse.statusCode}" }
                     val document = Jsoup.parse(it.asXml())
                     return parseProductDetails(document)
                 } ?: run {

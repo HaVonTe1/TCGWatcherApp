@@ -32,12 +32,12 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         tiles.forEach {
            logger.debug { "Parsing: $it" }
             val cmLink = it.attr("href")
-           logger.info { "link: $cmLink" }
+           logger.debug { "link: $cmLink" }
 
             val imgTag = it.getElementsByTag("img")
            logger.debug { "ImgTag: $imgTag" }
             val imageLink = imgTag.attr("data-echo")
-           logger.info { "Image Link: $imageLink" }
+           logger.debug { "Image Link: $imageLink" }
 
             val titleTag = it.getElementsByTag("h2")
            logger.debug { "TitleTag: $titleTag" }
@@ -86,7 +86,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         }
 
         val totalPages = groupValue?.toInt() ?: 0
-       logger.info { "Found: $totalPages" }
+       logger.debug { "Found: $totalPages" }
         return totalPages
     }
 
