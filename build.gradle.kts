@@ -7,6 +7,6 @@ plugins {
 }
 
 val roomVersion by extra { "2.6.1" }
-val ktorVersion by extra { "2.3.11" }
-val lifecycleVersion by extra { "2.8.2" }
+val ktorVersion by extra { "2.3.12" }
+val lifecycleVersion by extra { "2.8.3" }
 val pagingVersion by extra { "3.3.0" }
