@@ -86,7 +86,6 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             isJavaScriptEnabled = config.engine == Engines.HTMLUNIT_JS
             isCssEnabled = false
             isRedirectEnabled = true
-            isAppletEnabled = false
             isDownloadImages = false
             isWebSocketEnabled = false
             isDoNotTrackEnabled = true
