@@ -111,7 +111,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+    implementation("com.google.accompanist:accompanist-permissions:0.35.1-alpha")
 
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-beta04")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0-beta04")
