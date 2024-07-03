@@ -363,7 +363,7 @@ fun ListDetailLayout(
         },
         detailPane = {
             val content = navigator.currentDestination?.content //productModel
-            if(content!=null) {
+            if (content != null) {
                 AnimatedPane {
                     ItemCardDetailLayout(productModel = content as BaseProductModel)
                 }
@@ -487,7 +487,7 @@ class SearchViewModel(
                 modelClass: Class<T>,
                 extras: CreationExtras
             ): T {
-                logger.info { "Creating SearchViewModel" }
+                logger.debug { "Creating SearchViewModel" }
                 val settingsDb = extras[SettingsDbIdKey]
                 val searchCacheDb = extras[SearchCacheRepoIdKey]
                 val quickSearchDb = extras[QuickSearchRepoIdKey]
@@ -599,9 +599,9 @@ private fun NoSearchResults() {
 @Composable
 fun ItemCardDetailLayoutPreview() {
 
-  //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
+    //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
     ItemCardDetailLayout(
-        productModel =  BaseProductModel(
+        productModel = BaseProductModel(
             id = "bla",
             imageUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg",
             intPrice = "10,00 €",
@@ -615,48 +615,74 @@ fun ItemCardDetailLayoutPreview() {
 @Composable
 private fun ItemCardDetailLayout(
     productModel: BaseProductModel,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier
+) {
+    val innerPadding = 1.dp
     Column(
         modifier = modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-       // verticalArrangement = Arrangement.Center
+            .padding(innerPadding)
 
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row (
+
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(productModel.imageUrl)
+                .setHeader("User-Agent", userAgent)
+                .setHeader(
+                    "Referer",
+                    referrer
+                ) //TODO: cloudflare protection is kicking in without the referer
+                .build(),
+
+            contentDescription = productModel.id,
             modifier = modifier
-                .padding(1.dp)
+                .padding(innerPadding)
                 .fillMaxWidth()
                 .fillMaxHeight(.8f),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
 
-        ) {
-            AsyncImage(
+            contentScale = ContentScale.FillHeight,
+            imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger())
+                .build()
+        )
 
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(productModel.imageUrl)
-                    .setHeader("User-Agent", userAgent)
-                    .setHeader("Referer", referrer) //TODO: cloudflare protection is kicking in without the referer
-                    .build(),
-
-                contentDescription = productModel.id,
-                modifier = modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
-                    //.align(Alignment.CenterHorizontally)
-                    .padding(1.dp),
-                contentScale = ContentScale.FillHeight,
-                imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger()).build()
-            )
-        }
-        Row (
+        Row(
             modifier = modifier
-                .padding(1.dp)
+                .padding(innerPadding)
                 .fillMaxWidth()
-                .fillMaxHeight(.2f)
+                .fillMaxHeight()
         ) {
-            Text(text = productModel.localName)
+
+            Column(
+                modifier = modifier
+                    .padding(innerPadding)
+                    .fillMaxWidth(.5f)
+                    .fillMaxHeight()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.nameLabel),
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(text = productModel.localName, style = MaterialTheme.typography.headlineMedium)
+            }
+
+            Column(
+                modifier = modifier
+                    .padding(innerPadding)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            ) {
+
+                Text(
+                    text = stringResource(id = R.string.priceLabel),
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(text = productModel.intPrice, style = MaterialTheme.typography.headlineLarge)
+
+            }
+
         }
     }
 

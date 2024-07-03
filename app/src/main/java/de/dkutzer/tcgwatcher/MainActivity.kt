@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             HandroidLoggerAdapter.APP_NAME = "TCGWatcher"
-            HandroidLoggerAdapter.DEBUG = true
+            HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
             HandroidLoggerAdapter.ANDROID_API_LEVEL = Build.VERSION.SDK_INT
             MainTheme()
         }
