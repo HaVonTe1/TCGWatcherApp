@@ -136,7 +136,7 @@ dependencies {
 
 //    logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.4")
+    implementation ("com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.13")
 
     //DB
     implementation("androidx.room:room-ktx:$roomVersion")
