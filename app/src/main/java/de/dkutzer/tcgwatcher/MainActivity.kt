@@ -17,6 +17,7 @@ import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -27,14 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,11 +44,10 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import de.dkutzer.tcgwatcher.cards.boundary.SearchActivity
-import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
-import de.dkutzer.tcgwatcher.settings.boundary.SettingsActivity
-import de.dkutzer.tcgwatcher.ui.HomeScreenActivity
-import de.dkutzer.tcgwatcher.ui.ItemOfInterestActivity
+import de.dkutzer.tcgwatcher.cards.boundary.SearchScreen
+import de.dkutzer.tcgwatcher.settings.boundary.SettingsScreen
+import de.dkutzer.tcgwatcher.ui.HomeScreen
+import de.dkutzer.tcgwatcher.ui.ItemsOfInterestScreen
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import org.slf4j.impl.HandroidLoggerAdapter
 
@@ -162,34 +160,24 @@ private fun PermissionsDialog(
 
 
 @Composable
-private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
+private fun MainScreen() {
     val navController = rememberNavController()
-
     val snackbarHostState = remember { SnackbarHostState() }
+
     Scaffold(
         bottomBar = {
-
             NavigationBar(
-                containerColor = Color.LightGray,
-                contentColor = Color.Black,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.secondary,
                 tonalElevation = 2.dp
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
-                MyBottomNavigationItem(
-                    currentDestination = currentDestination,
-                    navController = navController,
-                    screen = Screen.HomeScreen
-                )
-                MyBottomNavigationItem(
-                    currentDestination,
-                    navController,
-                    Screen.ItemsOfInterestScreen
-                )
+                MyBottomNavigationItem(currentDestination, navController, Screen.HomeScreen)
+                MyBottomNavigationItem(currentDestination, navController, Screen.ItemsOfInterestScreen)
                 MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
                 MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
-
             }
         }
     ) { innerPadding ->
@@ -198,12 +186,10 @@ private fun MainScreen(items: List<BaseProductModel> = emptyList()) {
             startDestination = Screen.HomeScreen.route,
             Modifier.padding(innerPadding)
         ) {
-
-            composable(Screen.HomeScreen.route) { HomeScreenActivity(snackbarHostState) }
-            composable(Screen.ItemsOfInterestScreen.route) { ItemOfInterestActivity(items) }
-            composable(Screen.SearchScreen.route) { SearchActivity(snackbarHostState) }
-            composable(Screen.SettingsScreen.route) { SettingsActivity() }
-
+            composable(Screen.HomeScreen.route) { HomeScreen(snackbarHostState) }
+            composable(Screen.ItemsOfInterestScreen.route) { ItemsOfInterestScreen() }
+            composable(Screen.SearchScreen.route) { SearchScreen(snackbarHostState) }
+            composable(Screen.SettingsScreen.route) { SettingsScreen() }
         }
     }
 }
@@ -220,20 +206,8 @@ private fun RowScope.MyBottomNavigationItem(
         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
         onClick = {
             navController.navigate(screen.route) {
-                popUpTo(navController.graph.findStartDestination().id) {
-                    saveState = true
-                }
                 launchSingleTop = true
-                restoreState = true
             }
         }
     )
 }
-
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun TestMainPreview() {
-//    MainScreen(Datasource().loadMockData())
-//
-//}

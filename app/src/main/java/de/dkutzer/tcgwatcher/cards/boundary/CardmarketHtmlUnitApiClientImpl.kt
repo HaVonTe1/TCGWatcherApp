@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.cards.boundary
 
+import de.dkutzer.tcgwatcher.cards.control.toSearchResultItemDto
 import de.dkutzer.tcgwatcher.cards.entity.BaseConfig
 import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
@@ -67,9 +68,25 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
                 logger.info { "Duration: $duration" }
 
                 htmlPage?.let {
+                    logger.debug { "LoadTime: ${it.webResponse.loadTime}" }
                     logger.debug { "Status: ${it.webResponse.statusCode}" }
+                    val url = it.webResponse.webRequest.url
+                    logger.debug { "Url: $url" }
+
                     val document = Jsoup.parse(it.asXml())
-                    return parseGallerySearchResults(document, page)
+
+                    if(url.path.contains("Singles")) {
+                        val productDetails = parseProductDetails(document, url.path)
+                        val searchResultsPageDto = SearchResultsPageDto(
+                            listOf(productDetails.toSearchResultItemDto()),
+                            page,
+                            1
+                        )
+                        return searchResultsPageDto
+                    } else
+                    {
+                        return parseGallerySearchResults(document, page)
+                    }
                 } ?: run {
                     logger.error { "Failed to load page" }
                     throw IllegalStateException("HtmlPage is null")
@@ -80,6 +97,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
             throw e
         }
     }
+
 
     private fun modifyWebClient(webClient: WebClient) {
         webClient.options.apply {
@@ -130,7 +148,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
                 htmlPage?.let {
                     logger.debug { "Status: ${it.webResponse.statusCode}" }
                     val document = Jsoup.parse(it.asXml())
-                    return parseProductDetails(document)
+                    return parseProductDetails(document,link)
                 } ?: run {
                     logger.error { "Failed to load product details page" }
                     throw IllegalStateException("HtmlPage is null")

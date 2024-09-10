@@ -14,7 +14,6 @@ interface CardsApiClient {
     suspend fun search(searchString: String, offset: Int , limit: Int): SearchResultsPageDto {
         return search(searchString, (offset + limit).floorDiv(limit))
     }
-
     suspend fun getProductDetails(link: String): CardDetailsDto
 }
 abstract class BaseCardmarketApiClient : CardsApiClient {
@@ -51,10 +50,11 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
             val itemDto = SearchResultItemDto(
                 displayName = localName,
-                orgName = "",
+                orgName = "---",
                 cmLink = cmLink,
                 imgLink = imageLink,
-                price = intPrice
+                price = intPrice,
+                priceTrend = "?"
             )
 
             searchResultItemDtos.add(itemDto)
@@ -90,11 +90,22 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         return totalPages
     }
 
-    fun parseProductDetails(document: Document): CardDetailsDto {
+    fun parseProductDetails(document: Document, link: String): CardDetailsDto {
         val imageTags = document.getElementsByTag("img")
         val frontImageTag =
             imageTags.first { img -> img.classNames().size == 1 } //filter out "lazy" img tags
         val imageUrl = frontImageTag.attr("src")
+
+        logger.debug { "Image URL: $imageUrl" }
+
+        val h1Tags = document.getElementsByTag("h1")
+        val h1Tag = h1Tags.first()
+        val displayName = h1Tag?.ownText() ?: ""
+
+        logger.debug { "Display Name: $displayName" }
+
+        val orgName = link.split("/").last()
+        logger.debug { "Org Name: $orgName" }
 
         val infoDivs = document.getElementsByClass("info-list-container")
         var localPrice = "0,00 €"
@@ -117,6 +128,6 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         }
 
-        return CardDetailsDto(imageUrl, localPrice, localPriceTrend)
+        return CardDetailsDto(displayName =displayName, orgName =orgName, imageUrl,link, localPrice, localPriceTrend)
     }
 }

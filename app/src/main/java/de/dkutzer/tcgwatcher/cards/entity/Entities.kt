@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.Fts4
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import java.time.Instant
 
 
 @Entity(tableName = "search")
@@ -29,7 +30,9 @@ data class SearchResultItemEntity(
     val orgName: String,
     val cmLink: String,
     val imgLink: String,
-    val price: String
+    val price: String,
+    val priceTrend: String,
+    val lastUpdated: Long
 )
 
 @Entity("remote_key")
@@ -46,6 +49,11 @@ data class SearchWithResultsEntity(
     )
     val results: List<SearchResultItemEntity>
 )
+
+
+fun SearchWithResultsEntity.isOlderThan(seconds: Long): Boolean {
+   return Instant.ofEpochMilli(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+}
 
 @Entity(tableName = "qs_pokemon_cards")
 data class PokemonCardQuickNormalizedEntity (

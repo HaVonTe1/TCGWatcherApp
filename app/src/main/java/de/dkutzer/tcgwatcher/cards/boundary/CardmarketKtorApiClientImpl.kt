@@ -53,6 +53,8 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
         }
     }
 
+
+
     override suspend fun getProductDetails(link: String): CardDetailsDto {
         HttpClient(OkHttp) {
             followRedirects = true
@@ -73,7 +75,7 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
             val bodyAsText = response.bodyAsText()
             val document = Jsoup.parse(bodyAsText)
 
-            return parseProductDetails(document)
+            return parseProductDetails(document, "todo")
         }
     }
 }

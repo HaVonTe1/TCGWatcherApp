@@ -20,7 +20,8 @@ class MapperTest {
             orgName = "Org 1",
             cmLink = "https://example.com/item1",
             imgLink = "https://example.com/item1.jpg",
-            price = "$10"
+            price = "$10",
+            priceTrend = "sdf"
         )
 
         // Act
@@ -46,7 +47,8 @@ class MapperTest {
             orgName = "Org 2",
             cmLink = "https://example.com/item2",
             imgLink = "https://example.com/item2.jpg",
-            price = "$20"
+            price = "$20",
+            priceTrend = "sf"
         )
 
         // When

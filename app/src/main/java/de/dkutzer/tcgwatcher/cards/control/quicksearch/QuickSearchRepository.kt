@@ -16,6 +16,7 @@ private val logger = KotlinLogging.logger {}
 
 
 class QuickSearchRepositoryImpl(private val dao: QuickSearchDao) : QuickSearchRepository {
+
     override suspend fun find(query: String): List<PokemonCardQuickNormalizedEntity> {
         var cardQuickEntities = emptyList<PokemonCardQuickNormalizedEntity>()
         val duration = measureTimeMillis {

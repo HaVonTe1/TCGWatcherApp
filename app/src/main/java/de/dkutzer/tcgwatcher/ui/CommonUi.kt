@@ -26,7 +26,7 @@ import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.cards.boundary.SearchViewCardIconRow
-import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -58,7 +58,7 @@ private const val  userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) 
 
 @Composable
 fun ItemOfInterestCard(
-    productModel: BaseProductModel,
+    productModel: ProductModel,
     showLastUpdated: Boolean,
     iconRowContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
@@ -97,7 +97,8 @@ fun ItemOfInterestCard(
             ) {
                 ItemDetailsTable(
                     localName = productModel.localName,
-                    price = productModel.intPrice,
+                    price = productModel.price,
+                    priceTrend = productModel.priceTrend,
                     showLastUpdated = showLastUpdated,
                     lastUpdated = OffsetDateTime.now(),
                     modifier = Modifier
@@ -113,6 +114,7 @@ fun ItemOfInterestCard(
 fun ItemDetailsTable(
     localName: String,
     price : String,
+    priceTrend: String,
     showLastUpdated: Boolean,
     lastUpdated: OffsetDateTime,
     modifier: Modifier = Modifier) {
@@ -137,11 +139,13 @@ fun ItemDetailsTable(
 @Composable
 fun ItemOfInterestCardPreview() {
     ItemOfInterestCard(
-        productModel = BaseProductModel(
+        productModel = ProductModel(
             id = "bla",
             imageUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg",
-            intPrice = "10,00 €",
+            price = "10,00 €",
+            priceTrend = "20,00 €",
             localName = "bbbbb",
+            orgName = "ssss",
             detailsUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg"
         ),
         showLastUpdated = true,

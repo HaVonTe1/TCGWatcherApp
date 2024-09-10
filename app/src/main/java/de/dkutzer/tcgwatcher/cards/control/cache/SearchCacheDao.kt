@@ -2,6 +2,7 @@ package de.dkutzer.tcgwatcher.cards.control.cache
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -31,6 +32,12 @@ interface SearchCacheDao {
 
     @Upsert
     fun persistSearch( search: SearchEntity) : Long
+
+    @Delete
+    fun removeSearch(search: SearchEntity)
+
+    @Delete
+    fun removeResults(results: List<SearchResultItemEntity>)
 
 
 }

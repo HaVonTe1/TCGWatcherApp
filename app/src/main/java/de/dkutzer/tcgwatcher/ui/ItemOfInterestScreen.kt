@@ -13,10 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.entity.BaseProductModel
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 
 @Composable
-fun ItemOfInterestActivity(ioiList: List<BaseProductModel>, modifier: Modifier = Modifier) {
+fun ItemsOfInterestScreen(ioiList: List<ProductModel> = emptyList(), modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(ioiList.size) {
             ItemOfInterestCard(

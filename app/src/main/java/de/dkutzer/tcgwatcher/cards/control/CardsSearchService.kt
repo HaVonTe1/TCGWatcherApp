@@ -4,20 +4,21 @@ import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
 import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResults
+import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPage
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchWithResultsEntity
+import de.dkutzer.tcgwatcher.cards.entity.isOlderThan
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.time.OffsetDateTime
+import java.time.Instant
 import kotlin.system.measureTimeMillis
 
-interface CardsRepository {
+interface CardsSearchService {
 
     suspend fun getDetails(link: String) : CardDetailsDto
 
-    suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResults
+    suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 
-    suspend fun searchByOffset(searchString: String, limit: Int, offset: Int): SearchResults {
+    suspend fun searchByOffset(searchString: String, limit: Int, offset: Int): SearchResultsPage {
         return searchByPage(searchString, page =  (limit+offset).div(limit), limit = limit)
     }
 }
@@ -25,39 +26,38 @@ interface CardsRepository {
 private val logger = KotlinLogging.logger {}
 
 
-class CardmarketCardsRepositoryAdapter(
+class CardmarketCardsSearchServiceAdapter(
     private val client: BaseCardmarketApiClient,
     private val cache: SearchCacheRepository
-) :
-    CardsRepository {
+) : CardsSearchService {
 
     override suspend fun getDetails(link: String): CardDetailsDto {
-
         return client.getProductDetails(link)
     }
 
-
-    override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResults {
-
+    override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResultsPage {
         logger.debug { "New Search in Adapter" }
         if(searchString.isEmpty())
-            return SearchResults(emptyList(), 1, 1)
-        lateinit var result: SearchResults
+            return SearchResultsPage(emptyList(), 1, 1)
+        lateinit var result: SearchResultsPage
         logger.debug { "Looking in the Cache for: $searchString" }
 
-
-        val searchWithResults = cache.findBySearchTerm(searchString, page)
+        var searchWithResults = cache.findBySearchTerm(searchString, page)
         logger.trace { "Found: ${searchWithResults?.results?.size}" }
-        if(searchWithResults!=null) {
-            //TODO: handle lastUpdated for refreshing
+        val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
+        if(searchWithResults!=null && searchWithResults.isOlderThan(threeDaysSeconds)) {
+            cache.deleteSearchResults(searchWithResults.results)
+            cache.deleteSearch(searchWithResults.search)
+            searchWithResults = null
+        }
+        if(searchWithResults!=null && !searchWithResults.isOlderThan(threeDaysSeconds)) {
             val searchItems = searchWithResults.results.map { it.toSearchItem() }
-            result = SearchResults(
+            result = SearchResultsPage(
                 searchItems,
                 page,
                 searchWithResults.search.size.floorDiv(limit).plus(1)
             )
             logger.trace { "Returning cached results: $result" }
-
         }
         else {
             logger.debug { "Start a new Search: $searchString" }
@@ -84,15 +84,13 @@ class CardmarketCardsRepositoryAdapter(
                         searchResults.totalPages
                     )
                     logger.trace { "Results so far: $mergedResults" }
-
                 }
-
 
                 val searchWithResultsEntity = SearchWithResultsEntity(
                     search = SearchEntity(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
-                        lastUpdated = OffsetDateTime.now().toEpochSecond()
+                        lastUpdated = Instant.now().epochSecond
                     ),
                     results = mergedResults.results.map { it.toSearchItemEntity() }.toList()
                 )
@@ -104,19 +102,15 @@ class CardmarketCardsRepositoryAdapter(
 
 
                 val searchItems = updatedSearchResult?.results?.map { it.toSearchItem() }
-                result = SearchResults(
+                result = SearchResultsPage(
                     searchItems ?: listOf(),
                     page,
                     updatedSearchResult?.search?.size?.floorDiv(limit)?.plus(1) ?: 0
                 )
             }
             logger.debug { "Duration: $duration" }
-
-
         }
         logger.debug { "Final result: $result" }
         return result
-
     }
-
 }

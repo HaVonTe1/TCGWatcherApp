@@ -1,14 +1,16 @@
 package de.dkutzer.tcgwatcher
 
-import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsRepositoryAdapter
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
+import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.cards.entity.SearchWithResultsEntity
-import io.mockk.*
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import kotlinx.coroutines.test.runTest
@@ -19,7 +21,7 @@ import org.junit.Test
 import java.time.OffsetDateTime
 
 
-class CardmarketCardsRepositoryAdapterTest {
+class CardmarketCardsSearchServiceAdapterTest {
 
     @get:Rule
     val mockkRule = MockKRule(this)
@@ -39,7 +41,8 @@ class CardmarketCardsRepositoryAdapterTest {
         orgName = "Miranda Pitts",
         cmLink = "fames",
         imgLink = "instructior",
-        price = "hac"
+        price = "hac",
+        priceTrend = "dfsgdff"
 
     )
 
@@ -50,8 +53,9 @@ class CardmarketCardsRepositoryAdapterTest {
         orgName = "Floyd Nieves",
         cmLink = "tation",
         imgLink = "molestiae",
-        price = "dictum"
-
+        price = "dictum",
+        priceTrend = "sfds",
+        lastUpdated = OffsetDateTime.now().toEpochSecond()
     )
 
     @Test
@@ -78,7 +82,7 @@ class CardmarketCardsRepositoryAdapterTest {
         )
 
         val repositoryAdapter =
-            CardmarketCardsRepositoryAdapter(apiClientMock, cacheRepoMock)
+            CardmarketCardsSearchServiceAdapter(apiClientMock, cacheRepoMock)
 
         val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5)
 

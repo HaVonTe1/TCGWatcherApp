@@ -21,7 +21,7 @@ import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 
 @Composable
-fun HomeScreenActivity(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
+fun HomeScreen(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
 
 
     Box(
@@ -29,8 +29,8 @@ fun HomeScreenActivity(snackbarHostState: SnackbarHostState, modifier: Modifier 
         .background(
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.secondary
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.colorScheme.surfaceBright
                 )
             )
         )
@@ -54,12 +54,3 @@ fun HomeScreenActivity(snackbarHostState: SnackbarHostState, modifier: Modifier 
     }
 
 }
-
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun TestSearchPreview() {
-//
-//    HomeScreenActivity()
-//
-//}

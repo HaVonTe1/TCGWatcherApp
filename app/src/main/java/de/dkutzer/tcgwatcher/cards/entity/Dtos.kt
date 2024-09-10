@@ -11,11 +11,15 @@ data class SearchResultItemDto(
     val orgName: String,
     val cmLink: String,
     val imgLink: String,
-    val price: String
+    val price: String,
+    val priceTrend: String
 )
 
 data class CardDetailsDto(
+    val displayName: String,
+    val orgName: String,
     val imageUrl: String,
-    val localPrice: String,
-    val localPriceTrend: String
+    val detailsUrl: String,
+    val price: String,
+    val priceTrend: String
 )

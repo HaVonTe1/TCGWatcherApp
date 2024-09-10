@@ -17,8 +17,11 @@ class BaseCardmarketApiClientTest {
         override suspend fun getProductDetails(link: String): CardDetailsDto {
             return CardDetailsDto(
                 imageUrl = "https://duckduckgo.com/?q=finibus",
-                localPrice = "interdum",
-                localPriceTrend = "aptent"
+                price = "interdum",
+                priceTrend = "aptent",
+                detailsUrl = "https://duckduckgo.com/?q=interdum",
+                orgName = "dfsdfsdf",
+                displayName = "sfsdf"
             )
         }
     }

@@ -53,7 +53,7 @@ private val logger = KotlinLogging.logger {}
 
 
 @Composable
-fun SettingsActivity() {
+fun SettingsScreen() {
 
     val availableLanguages = mapOf(
         Languages.DE to stringResource(id = R.string.german) ,
