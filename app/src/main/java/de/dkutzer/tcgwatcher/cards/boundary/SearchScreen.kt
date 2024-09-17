@@ -1,6 +1,6 @@
 package de.dkutzer.tcgwatcher.cards.boundary
 
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,21 +9,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.twotone.Add
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -32,22 +33,24 @@ import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -91,6 +94,7 @@ import de.dkutzer.tcgwatcher.ui.referrer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -151,7 +155,9 @@ fun SearchScreen(
         isSearching = searchViewModel.showHistoryContent,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
-        onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) }
+        onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },
+        onRefreshSearch = { searchViewModel.onRefreshSearch() },
+        onRefreshSingleItem = { searchViewModel.onRefreshSingleItem(it) }
     )
 }
 
@@ -165,7 +171,10 @@ private fun SearchView(
 
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
-    onActiveChanged: (String, Boolean) -> Unit
+    onActiveChanged: (String, Boolean) -> Unit,
+
+    onRefreshSearch: () -> Unit,
+    onRefreshSingleItem: (item: ProductModel) -> Unit
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -182,14 +191,7 @@ private fun SearchView(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        androidx.compose.material.MaterialTheme.colors.primary,
-                        androidx.compose.material.MaterialTheme.colors.secondary
-                    )
-                )
-            )
+
     ) {
 
         SearchBar(
@@ -259,13 +261,14 @@ private fun SearchView(
                                     .clickable {
                                         logger.debug { "SearchBar:content:historyItemClick: $item" }
                                         query = item.displayName
-                                        onSearchSubmit( item.displayName.uppercase())
+                                        onSearchSubmit(item.displayName.uppercase())
                                     }
                                 )
                                 {
                                     Icon(
                                         modifier = Modifier.padding(end = 8.dp),
-                                        imageVector = Icons.Default.Search, contentDescription = null
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null
                                     )
                                     Text(text = item.displayName)
                                 }
@@ -276,7 +279,7 @@ private fun SearchView(
                                     .clickable {
                                         logger.debug { "SearchBar:content:quicksearchItemClick: $item" }
                                         query = item.displayName
-                                        onSearchSubmit( "${item.displayName} (${item.code})")
+                                        onSearchSubmit("${item.displayName} (${item.code})")
                                     }
                                 )
                                 {
@@ -284,16 +287,22 @@ private fun SearchView(
                                         modifier = Modifier.padding(end = 8.dp),
                                         imageVector = Icons.Default.Star, contentDescription = null
                                     )
-                                    Column (
+                                    Column(
                                         modifier = Modifier.padding(end = 1.dp)
                                     ) {
-                                        Text(text = "${item.displayName} (${item.code})" , style = MaterialTheme.typography.labelLarge)
+                                        Text(
+                                            text = "${item.displayName} (${item.code})",
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
 //                                        Row (modifier = Modifier.padding(end = 1.dp)) {
 //                                            Text(text = item.id, style = MaterialTheme.typography.labelSmall)
 //                                        }
-                                        Row (modifier = Modifier.padding(end = 1.dp)) {
+                                        Row(modifier = Modifier.padding(end = 1.dp)) {
                                             val txt = "${item.nameDe} ${item.nameEn} ${item.nameFr}"
-                                            Text(text = txt, style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                text = txt,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
                                         }
                                     }
 
@@ -301,12 +310,9 @@ private fun SearchView(
                             }
                         }
                     }
-
                 }
-
             }
         )
-
         Column(
             modifier = Modifier.fillMaxSize(),
             Arrangement.Center,
@@ -315,28 +321,27 @@ private fun SearchView(
 
             if (searchResultPagingItems.loadState.refresh is LoadState.Loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.width(64.dp),
+                    modifier = Modifier.width(128.dp),
                     color = MaterialTheme.colorScheme.secondary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
-                return
+
 
             } else {
-                when(searchResultPagingItems.itemCount) {
+                when (searchResultPagingItems.itemCount) {
                     0 -> NoSearchResults()
-                    1 -> ItemCardDetailLayout(productModel =  searchResultPagingItems[0]!!)
+                    1 -> ItemCardDetailLayout(
+                        productModel = searchResultPagingItems[0]!!,
+                        onRefreshItemDetailsContent = { onRefreshSingleItem(searchResultPagingItems[0]!!) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+
                     else -> {
-                        Scaffold(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp))
+                        ListDetailLayout(
+                            productPagingItems = searchResultPagingItems,
+                            onRefreshList = { onRefreshSearch() },
+                            onRefreshDetails = {  item -> onRefreshSingleItem(item) }
                         )
-                        { innerPadding ->
-                            ListDetailLayout(
-                                modifier = Modifier.padding(innerPadding),
-                                searchResultPagingItems
-                            )
-                        }
                     }
                 }
             }
@@ -349,7 +354,13 @@ private fun SearchView(
 @Composable
 fun ListDetailLayout(
     modifier: Modifier = Modifier,
-    pokemonPagingItems: LazyPagingItems<ProductModel>
+    productPagingItems: LazyPagingItems<ProductModel>,
+    onRefreshList: () -> Unit = {
+        logger.debug { "ItemCardDetailLayout::onRefreshList" }
+    },
+    onRefreshDetails: (ProductModel) -> Unit = {
+        logger.debug { "ItemCardDetailLayout::onRefreshDetails" }
+    }
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
@@ -357,38 +368,49 @@ fun ListDetailLayout(
         modifier = modifier,
         navigator = navigator,
         listPane = {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                items(
-                    count = pokemonPagingItems.itemCount,
-                    key = pokemonPagingItems.itemKey { it.id }
-                )
-                { index ->
-                    val productModel = pokemonPagingItems[index]
-                    ItemOfInterestCard(
-                        productModel = productModel!!,
-                        showLastUpdated = false,
-                        iconRowContent = { SearchViewCardIconRow() },
+
+            PullToRefreshLazyColumn(
+                modifier = modifier,
+                onRefreshContent = { onRefreshList() },
+                content = {
+                    LazyColumn(
                         modifier = Modifier
-                            .fillParentMaxWidth()
-                            .clickable {
-                                navigator.navigateTo(
-                                    pane = ListDetailPaneScaffoldRole.Detail,
-                                    content = productModel
-                                )
-                            }
-                    )
+                            .fillMaxSize(),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        items(
+                            count = productPagingItems.itemCount,
+                            key = productPagingItems.itemKey { it.id }
+                        )
+                        { index ->
+                            val productModel = productPagingItems[index]
+                            ItemOfInterestCard(
+                                productModel = productModel!!,
+                                showLastUpdated = false,
+                                iconRowContent = { SearchViewCardIconRow() },
+                                modifier = Modifier
+                                    .fillParentMaxWidth()
+                                    .clickable {
+                                        navigator.navigateTo(
+                                            pane = ListDetailPaneScaffoldRole.Detail,
+                                            content = productModel
+                                        )
+                                    }
+                            )
+                        }
+                    }
                 }
-            }
+            )
+
         },
         detailPane = {
             val content = navigator.currentDestination?.content //productModel
             if (content != null) {
                 AnimatedPane {
-                    ItemCardDetailLayout(productModel = content as ProductModel)
+                    ItemCardDetailLayout(
+                        productModel = content as ProductModel,
+                        onRefreshItemDetailsContent = { onRefreshDetails(content) }
+                    )
                 }
 
             }
@@ -438,33 +460,36 @@ class SearchViewModel(
     private val _showHistoryContent = MutableStateFlow(false)
     val showHistoryContent = _showHistoryContent.asStateFlow()
 
+    private val _lastQuery: MutableStateFlow<String> = MutableStateFlow("")
+    private val lastQuery: StateFlow<String> = _lastQuery.asStateFlow()
 
     private val _query: MutableStateFlow<String> = MutableStateFlow("")
     private val query: StateFlow<String> = _query.asStateFlow()
 
-    private val _lastQuery: MutableStateFlow<String> = MutableStateFlow("")
-    private val lastQuery: StateFlow<String> = _lastQuery.asStateFlow()
+    private val _refreshItem: MutableStateFlow<ProductModel?> = MutableStateFlow(null)
+    private val refreshItem: StateFlow<ProductModel?> = _refreshItem.asStateFlow()
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
-        query.flatMapLatest { latestSearchQueryFromFlow ->
-
-            logger.debug { "SesrchViewModel:: Flow of query changed: $latestSearchQueryFromFlow" }
+        combine(query, refreshItem) { latestSearchQuery, latestRefreshItem ->
+            logger.debug { "SearchViewModel:: Flow of query or refreshItem changed: $latestSearchQuery, $latestRefreshItem" }
             val config = CardmarketConfig(settings.value)
-
             val productApiClient = CardmarketApiClientFactory(config).create()
             val pokemonPager =
                 PokemonPager.providePokemonPager(
-                    latestSearchQueryFromFlow,
+                    latestSearchQuery,
+                    latestRefreshItem,
                     searchCacheDatabase,
                     productApiClient
                 )
             val pokemonRepositoryImpl = CardmarketPokemonRepositoryAdapter(pokemonPager)
             logger.debug { "getPokemonList now" }
             val getPokemonList = GetPokemonList(pokemonRepositoryImpl)
-            getPokemonList().cachedIn(viewModelScope)
-        }
+            logger.debug { "getPokemonList done" }
+            val pagingDataFlow = getPokemonList().cachedIn(viewModelScope)
+            pagingDataFlow
+        }.flatMapLatest { it }
 
 
     private var unfilteredHistoryItems: ArrayList<String> = arrayListOf()
@@ -483,9 +508,6 @@ class SearchViewModel(
     private val _quickSearchList = MutableStateFlow<List<QuickSearchResultItem>>(mutableListOf())
     val quickSearchList: StateFlow<List<QuickSearchResultItem>> = _quickSearchList.asStateFlow()
 
-
-    private val _singleSearchResult = MutableStateFlow<ProductModel?>(null)
-    val singleSearchResult = _singleSearchResult.asStateFlow()
 
     init {
         logger.debug { "SearchViewModel::init" }
@@ -569,6 +591,18 @@ class SearchViewModel(
         }
     }
 
+    fun onRefreshSearch() {
+        logger.debug { "SearchViewModel::onRefreshSearch" }
+        _refreshItem.value = null
+        _query.value = lastQuery.value
+    }
+
+    fun onRefreshSingleItem(item: ProductModel) {
+        logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
+        //setting a new value to the state lets the flow emit a signal which will recalculate the resultitems in the viemodel
+        _query.value=""
+        _refreshItem.value = item
+    }
 
     fun onSearchSubmit(searchString: String) {
         logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
@@ -578,7 +612,8 @@ class SearchViewModel(
         }
         if (!unfilteredHistoryItems.contains(searchString))
             unfilteredHistoryItems.add(searchString)
-        _historyList.value = unfilteredHistoryItems.map { HistorySearchResultItem(displayName = it) }
+        _historyList.value =
+            unfilteredHistoryItems.map { HistorySearchResultItem(displayName = it) }
         _query.value = searchString
         _lastQuery.value = searchString
         _quickSearchList.value = emptyList()
@@ -622,99 +657,201 @@ class SearchViewModel(
 @Composable
 private fun NoSearchResults() {
 
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        Text(stringResource(id = R.string.emptySearch))
+        items(
+            count = 1
+        ) {
+
+            Text(stringResource(id = R.string.emptySearch))
+        }
     }
 }
 
-@Preview(showBackground = false, showSystemUi = true)
-@Composable
-fun ItemCardDetailLayoutPreview() {
 
-    //  searchViewModel.searchResults = (Datasource().loadMockSearchData())
-    ItemCardDetailLayout(
-        productModel = ProductModel(
-            id = "bla",
-            imageUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg",
-            price = "10,00 €",
-            priceTrend = "20,00 €",
-            localName = "bbbbb",
-            orgName = "aaaa",
-            detailsUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg"
-        ),
-    )
+private const val USER_AGENT = "User-Agent"
 
-}
+private const val REFERER = "Referer"
 
 @Composable
 private fun ItemCardDetailLayout(
     productModel: ProductModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefreshItemDetailsContent: (item: ProductModel) -> Unit = {
+        logger.debug { "ItemCardDetailLayout::onRefreshContent" }
+    }
 ) {
     val innerPadding = 1.dp
-    Column(
-        modifier = modifier
-            .padding(innerPadding)
 
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(productModel.imageUrl)
-                .setHeader("User-Agent", userAgent)
-                .setHeader(
-                    "Referer",
-                    referrer
-                ) //TODO: cloudflare protection is kicking in without the referer
-                .build(),
-
-            contentDescription = productModel.id,
-            modifier = modifier
-                .padding(innerPadding)
-                .fillMaxWidth()
-                .fillMaxHeight(.8f),
-
-            contentScale = ContentScale.FillHeight,
-            imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger())
-                .build()
-        )
-
-        Row(
-            modifier = modifier
-                .padding(innerPadding)
-                .fillMaxWidth()
-                .fillMaxHeight()
-        ) {
-
-            Column(
-                modifier = modifier
+    PullToRefreshLazyColumn(
+        modifier = modifier,
+        onRefreshContent = { onRefreshItemDetailsContent(productModel) },
+        content = {
+            LazyColumn(
+                modifier = Modifier
                     .padding(innerPadding)
-                    .fillMaxWidth(.7f)
-                    .fillMaxHeight()
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Top,
             ) {
+                items(
+                    count = 1
+                ) {
 
-                Text(text = productModel.localName, style = MaterialTheme.typography.headlineMedium)
-                Text(text = productModel.orgName, style = MaterialTheme.typography.headlineSmall)
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(productModel.imageUrl)
+                            .setHeader(USER_AGENT, userAgent)
+                            .setHeader(
+                                REFERER,
+                                referrer
+                            )
+                            .build(),
 
+                        contentDescription = productModel.id,
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .height(410.dp) //this sucks, but i dont know how to max the height and width of an image but keep the aspect ratio
+                            .fillMaxWidth(),
+
+                        contentScale = ContentScale.FillHeight,
+                        imageLoader = LocalContext.current.imageLoader.newBuilder()
+                            .logger(DebugLogger())
+                            .build()
+                    )
+
+                    Card(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        elevation = CardDefaults.cardElevation()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(innerPadding)
+                                .fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxWidth(.7f)
+                                    .fillMaxHeight()
+                            ) {
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .height(24.dp)
+                                            .padding(1.dp),
+                                        painter = painterResource(R.drawable.de_language_icon),
+                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                    )
+
+                                    Text(
+                                        text = productModel.localName,
+                                        style = MaterialTheme.typography.headlineMedium
+                                    )
+
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .height(24.dp)
+                                            .padding(1.dp),
+                                        painter = painterResource(R.drawable.globe_line_icon),
+                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                    )
+                                    Text(
+                                        text = productModel.orgName,
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+
+                                }
+
+                            }
+
+                            Column {
+                                Row {
+                                    Icon(
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .height(24.dp)
+                                            .padding(1.dp),
+                                        painter = painterResource(R.drawable.price_tag_euro_icon),
+                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                    )
+                                    Text(
+                                        text = productModel.price,
+                                        style = MaterialTheme.typography.headlineLarge
+                                    )
+                                }
+                                Row {
+                                    Icon(
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .height(24.dp)
+                                            .padding(1.dp),
+                                        painter = painterResource(R.drawable.stock_market_icon),
+                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                    )
+                                    Text(
+                                        text = productModel.priceTrend,
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+
+                                }
+
+
+                            }
+                        }
+
+
+                    }
+                }
             }
-
-            Column(
-
-            ) {
-
-                Text(text = productModel.price, style = MaterialTheme.typography.headlineLarge)
-                Text(text = productModel.priceTrend, style = MaterialTheme.typography.headlineSmall)
-
-            }
-
         }
+    )
+
+
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PullToRefreshLazyColumn(
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    onRefreshContent: () -> Unit,
+) {
+    val state = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val onRefresh: () -> Unit = {
+        isRefreshing = true
+        coroutineScope.launch {
+            onRefreshContent()
+            delay(100)
+            isRefreshing = false
+        }
+    }
+    PullToRefreshBox(
+        modifier = modifier.padding(8.dp),
+        state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = state,
+                isRefreshing = isRefreshing,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    ) {
+        content()
     }
 
 }

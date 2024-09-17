@@ -99,22 +99,22 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
-    implementation("androidx.activity:activity-compose:1.9.1")
-    implementation("androidx.activity:activity-ktx:1.9.1")
-    implementation("androidx.fragment:fragment-ktx:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2024.08.00"))
+    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.fragment:fragment-ktx:1.8.3")
+    implementation(platform("androidx.compose:compose-bom:2024.09.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material:1.6.8")
+    implementation("androidx.compose.material:material:1.7.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
 
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-rc01")
-    implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0-rc01")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0")
+    implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0")
 
 
     //image download and caching
@@ -132,7 +132,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.test.ext:junit-ktx:1.2.1")
     implementation("androidx.test:runner:1.6.2")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
 
 //    logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
@@ -150,7 +150,7 @@ dependencies {
     //Testing
 
     testImplementation ("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.13.11")
+    testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.0.20")
@@ -158,7 +158,7 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.08.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
 

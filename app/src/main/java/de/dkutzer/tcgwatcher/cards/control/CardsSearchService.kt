@@ -2,19 +2,18 @@ package de.dkutzer.tcgwatcher.cards.control
 
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
-import de.dkutzer.tcgwatcher.cards.entity.CardDetailsDto
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPage
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.cards.entity.SearchWithResultsEntity
-import de.dkutzer.tcgwatcher.cards.entity.isOlderThan
+import de.dkutzer.tcgwatcher.cards.entity.SearchWithItemsEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 import kotlin.system.measureTimeMillis
 
 interface CardsSearchService {
 
-    suspend fun getDetails(link: String) : CardDetailsDto
+    suspend fun getSingleItemByItem(link: ProductModel) : SearchResultsPage
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 
@@ -31,50 +30,84 @@ class CardmarketCardsSearchServiceAdapter(
     private val cache: SearchCacheRepository
 ) : CardsSearchService {
 
-    override suspend fun getDetails(link: String): CardDetailsDto {
-        return client.getProductDetails(link)
+    private val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
+
+
+    override suspend fun getSingleItemByItem(item: ProductModel): SearchResultsPage {
+
+        /*
+        This use case is different from the search by query.
+        We might dont have a "searchEntity" here. Because we came here via a refresh from a singleItemView.
+        Only in the case, that we already refreshed this item, where is a "SearchEntity".
+        In every case the SearchEntity with the cmLink as Id needs to pe upserted.
+         */
+        logger.debug { "Adapter: getSingleItemByLink: $item" }
+        logger.debug { "Adapter: Start a new load: ${item.detailsUrl}" }
+        val productDetails = client.getProductDetails(item.detailsUrl)
+        val productModel = productDetails.toProductModel()
+        val result = SearchResultsPage(listOf(productModel), 1, 1)
+
+        val searchWithItemsEntity =
+            cache.findSearchWithItemsByQuery(item.detailsUrl, 1) ?: SearchWithItemsEntity(
+                search = SearchEntity(
+                    searchTerm = item.detailsUrl,
+                    size = 1,
+                    lastUpdated = Instant.now().epochSecond,
+                    history = false
+                ),
+                results = listOf(productModel.toSearchResultItemEntity())
+            )
+
+
+        logger.debug { "Persisting cache: $searchWithItemsEntity" }
+
+        cache.persistsSearchWithItems(searchWithItemsEntity)
+        //make sure the refreshed data is mirrored to all search items with this link
+        //TODO: another nested table which stores the items and the searchitems_table just references to it
+        cache.updateItemByLink(item.detailsUrl, productModel.toSearchResultItemEntity())
+
+        return result
     }
 
     override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResultsPage {
-        logger.debug { "New Search in Adapter" }
+        logger.debug { "Adapter: New Search by searchTerm: $searchString}" }
         if(searchString.isEmpty())
             return SearchResultsPage(emptyList(), 1, 1)
         lateinit var result: SearchResultsPage
-        logger.debug { "Looking in the Cache for: $searchString" }
+        logger.debug { "Adapter: Looking in the Cache for: $searchString" }
 
-        var searchWithResults = cache.findBySearchTerm(searchString, page)
-        logger.trace { "Found: ${searchWithResults?.results?.size}" }
-        val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
+        var searchWithResults = cache.findSearchWithItemsByQuery(searchString, page)
+        logger.trace { "Adapter: Found: ${searchWithResults?.results?.size}" }
         if(searchWithResults!=null && searchWithResults.isOlderThan(threeDaysSeconds)) {
-            cache.deleteSearchResults(searchWithResults.results)
+            cache.deleteSearchItems(searchWithResults.results)
             cache.deleteSearch(searchWithResults.search)
             searchWithResults = null
         }
         if(searchWithResults!=null && !searchWithResults.isOlderThan(threeDaysSeconds)) {
-            val searchItems = searchWithResults.results.map { it.toSearchItem() }
+            val searchItems = searchWithResults.results.map { it.toProductModel() }
             result = SearchResultsPage(
                 searchItems,
                 page,
                 searchWithResults.search.size.floorDiv(limit).plus(1)
             )
-            logger.trace { "Returning cached results: $result" }
+            logger.trace { "Adapter: Returning cached results: $result" }
         }
         else {
-            logger.debug { "Start a new Search: $searchString" }
+            logger.debug { "Adapter: Start a new Search: $searchString" }
             val duration = measureTimeMillis {
 
-                logger.trace { "Requesting the Api with $searchString for page: 1" }
+                logger.trace { "Adapter: Requesting the Api with $searchString for page: 1" }
                 var searchResults = client.search(searchString, 1)
                 var mergedResults = SearchResultsPageDto(
                     searchResults.results,
                     1,
                     searchResults.totalPages
                 )
-                logger.trace { "Results so far: $mergedResults" }
+                logger.trace { "Adapter: Results so far: $mergedResults" }
                 while (searchResults.page < searchResults.totalPages) {
-                    logger.debug { "traversing pagination with total pages: ${searchResults.totalPages}" }
+                    logger.debug { "Adapter: traversing pagination with total pages: ${searchResults.totalPages}" }
                     val newPage = searchResults.page + 1
-                    logger.trace { "Requesting the Api with $searchString for page: $newPage" }
+                    logger.trace { "Adapter: Requesting the Api with $searchString for page: $newPage" }
 
                     searchResults = client.search(searchString, newPage)
 
@@ -83,25 +116,26 @@ class CardmarketCardsSearchServiceAdapter(
                         newPage,
                         searchResults.totalPages
                     )
-                    logger.trace { "Results so far: $mergedResults" }
+                    logger.trace { "Adapter: Results so far: $mergedResults" }
                 }
 
-                val searchWithResultsEntity = SearchWithResultsEntity(
+                val searchWithItemsEntity = SearchWithItemsEntity(
                     search = SearchEntity(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
-                        lastUpdated = Instant.now().epochSecond
+                        lastUpdated = Instant.now().epochSecond,
+                        history = true
                     ),
                     results = mergedResults.results.map { it.toSearchItemEntity() }.toList()
                 )
-                logger.debug { "Persisting cache: $searchWithResultsEntity" }
-                cache.persistsSearch(searchWithResultsEntity)
+                logger.debug { "Persisting cache: $searchWithItemsEntity" }
+                cache.persistsSearchWithItems(searchWithItemsEntity)
 
                 logger.debug { "Now fetching paged results from newly cache" }
-                val updatedSearchResult = cache.findBySearchTerm(searchString, page)
+                val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)
 
 
-                val searchItems = updatedSearchResult?.results?.map { it.toSearchItem() }
+                val searchItems = updatedSearchResult?.results?.map { it.toProductModel() }
                 result = SearchResultsPage(
                     searchItems ?: listOf(),
                     page,

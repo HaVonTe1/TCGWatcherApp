@@ -3,11 +3,11 @@ package de.dkutzer.tcgwatcher
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
+import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.cards.entity.SearchWithResultsEntity
+import de.dkutzer.tcgwatcher.cards.entity.SearchWithItemsEntity
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,7 +46,7 @@ class CardmarketCardsSearchServiceAdapterTest {
 
     )
 
-    private fun createSearchResultItemEntity() = SearchResultItemEntity(
+    private fun createSearchResultItemEntity() = ProductItemEntity(
         id = 8848,
         searchId = 9235,
         displayName = "Cyrus Wright",
@@ -68,14 +68,15 @@ class CardmarketCardsSearchServiceAdapterTest {
             )
         )
 
-        coEvery { cacheRepoMock.findBySearchTerm(eq("Ramalama"), 1) }.returns(
+        coEvery { cacheRepoMock.findSearchWithItemsByQuery(eq("Ramalama"), 1) }.returns(
             null
         ).andThen(
-            SearchWithResultsEntity(
+            SearchWithItemsEntity(
                 search = SearchEntity(
                     searchId = 1,
                     searchTerm = "Ramalama",
                     size = 1,
+                    history = true,
                     lastUpdated = OffsetDateTime.now().toEpochSecond()
                 ), results = listOf(createSearchResultItemEntity())
             )
@@ -89,7 +90,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         Assert.assertEquals(1, searchResults.items.size)
 
 
-        coVerify(exactly = 2) { cacheRepoMock.findBySearchTerm(eq("Ramalama"), eq(1))  }
+        coVerify(exactly = 2) { cacheRepoMock.findSearchWithItemsByQuery(eq("Ramalama"), eq(1))  }
         coVerify(exactly = 1) { apiClientMock.search(eq("Ramalama"))  }
     }
 

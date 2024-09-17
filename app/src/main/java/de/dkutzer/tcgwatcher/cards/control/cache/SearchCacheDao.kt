@@ -7,9 +7,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
 
 @Dao
 interface SearchCacheDao {
@@ -19,16 +19,16 @@ interface SearchCacheDao {
     fun findSearch(searchTerm: String) : SearchEntity?
 
     @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
-    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<SearchResultItemEntity>
+    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductItemEntity>
 
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.searchId = sri.searchId WHERE s.searchTerm = :searchTerm")
-    fun pagingSource(searchTerm: String): PagingSource<Int, SearchResultItemEntity>
+    fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
 
-    @Query("SELECT searchTerm FROM search ORDER BY lastUpdated DESC")
+    @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>
 
     @Upsert
-    fun persistResults( results: List<SearchResultItemEntity>): List<Long>
+    fun persistItems(results: List<ProductItemEntity>): List<Long>
 
     @Upsert
     fun persistSearch( search: SearchEntity) : Long
@@ -37,7 +37,13 @@ interface SearchCacheDao {
     fun removeSearch(search: SearchEntity)
 
     @Delete
-    fun removeResults(results: List<SearchResultItemEntity>)
+    fun removeItems(results: List<ProductItemEntity>)
+
+    @Query("SELECT * FROM search_result_item WHERE cmLink = :link")
+    fun findItemsByLink(link: String) : List<ProductItemEntity>
+
+    @Query("UPDATE search_result_item SET price = :price, priceTrend = :priceTrend, lastUpdated = :lastUpdated WHERE cmLink = :detailsUrl")
+    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, lastUpdated: Long)
 
 
 }

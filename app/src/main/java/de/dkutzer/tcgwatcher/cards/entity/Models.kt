@@ -9,20 +9,13 @@ data class ProductModel(
     val imageUrl: String,
     val detailsUrl: String,
     val price: String,
-    val priceTrend: String
-)
-
-data class SearchItem(
-    val displayName : String,
-    val orgName: String,
-    val cmLink: String,
-    val imgLink: String,
-    val price : String,
+    val priceTrend: String,
     val timestamp: Long
 )
 
+
 data class SearchResultsPage(
-    val items: List<SearchItem>,
+    val items: List<ProductModel>,
     val currentPage: Int,
     val pages: Int
 )

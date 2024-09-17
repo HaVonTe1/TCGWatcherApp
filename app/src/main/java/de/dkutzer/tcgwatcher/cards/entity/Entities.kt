@@ -16,12 +16,12 @@ data class SearchEntity(
     @ColumnInfo(index = true)
     val searchTerm: String,
     val size: Int,
-    val lastUpdated: Long
-
+    val lastUpdated: Long,
+    val history: Boolean
 )
 
 @Entity(tableName = "search_result_item")
-data class SearchResultItemEntity(
+data class ProductItemEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     @ColumnInfo(index = true)
@@ -33,7 +33,11 @@ data class SearchResultItemEntity(
     val price: String,
     val priceTrend: String,
     val lastUpdated: Long
-)
+) {
+    fun isOlderThan(seconds: Long): Boolean {
+        return Instant.ofEpochMilli(this.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+    }
+}
 
 @Entity("remote_key")
 data class RemoteKeyEntity(
@@ -41,19 +45,22 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-data class SearchWithResultsEntity(
+data class SearchWithItemsEntity(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "searchId",
         entityColumn = "searchId"
     )
-    val results: List<SearchResultItemEntity>
-)
+    val results: List<ProductItemEntity>
 
-
-fun SearchWithResultsEntity.isOlderThan(seconds: Long): Boolean {
-   return Instant.ofEpochMilli(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+) {
+    fun isOlderThan(seconds: Long): Boolean {
+        return Instant.ofEpochMilli(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+    }
 }
+
+
+
 
 @Entity(tableName = "qs_pokemon_cards")
 data class PokemonCardQuickNormalizedEntity (

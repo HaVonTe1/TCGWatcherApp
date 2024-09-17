@@ -7,8 +7,9 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -17,9 +18,10 @@ private val logger = KotlinLogging.logger {}
 @OptIn(ExperimentalPagingApi::class)
 class SearchRemoteMediator (
     private val searchTerm: String,
+    private val refreshItem: ProductModel?,
     private val pokemonDatabase: SearchCacheDatabase,
     pokemonApi: BaseCardmarketApiClient,
-) : RemoteMediator<Int, SearchResultItemEntity>() {
+) : RemoteMediator<Int, ProductItemEntity>() {
 
     private val REMOTE_KEY_ID = "cm"
     private val searchCacheRepository = SearchCacheRepositoryImpl(pokemonDatabase.searchCacheDao)
@@ -27,10 +29,17 @@ class SearchRemoteMediator (
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, SearchResultItemEntity>,
+        state: PagingState<Int, ProductItemEntity>,
     ): MediatorResult {
 
+        logger.debug { "Mediator searchTerm: $searchTerm" }
+        logger.debug { "Mediator refreshItem: $refreshItem" }
+
         logger.debug { "Mediator load: $loadType" }
+        logger.debug { "Mediator state: $state" }
+        logger.debug { "Mediator state.config: ${state.config}" }
+        logger.debug { "Mediator state.config.pageSize: ${state.config.pageSize}" }
+        logger.debug { "Mediator state.config.initialLoadSize: ${state.config.initialLoadSize}" }
         val offset = when (loadType) {
             LoadType.REFRESH -> 0
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
@@ -48,9 +57,13 @@ class SearchRemoteMediator (
         // but we want to make at least calls as possible
         // so we make a call to fetch ALL data from the api and return the
         // cached room stuff
-        val searchByOffset =
+        //TODO: needs testing
+        val searchResultsPage = if(searchTerm.isEmpty() && refreshItem!=null) {
+            adapter.getSingleItemByItem(refreshItem)
+        } else {
             adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
-        logger.debug { "SearchResult from Adapter: $searchByOffset" }
+        }
+        logger.debug { "SearchResult from Adapter: $searchResultsPage" }
         // MAKE API CALL
 
         val nextOffset = offset + state.config.pageSize
@@ -69,7 +82,7 @@ class SearchRemoteMediator (
         }
         // CHECK IF END OF PAGINATION REACHED
         // i dunno if this always works. what if the total number of resuls is equal to the pageSize?
-        return MediatorResult.Success(endOfPaginationReached = searchByOffset.items.size < state.config.pageSize)
+        return MediatorResult.Success(endOfPaginationReached = searchResultsPage.items.size < state.config.pageSize)
     }
 
 }

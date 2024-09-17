@@ -18,14 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.boundary.SearchViewCardIconRow
 import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -52,7 +50,7 @@ fun ClickableIconButton(
     }
 }
 
-
+//TODO: make R resources of this
 const val referrer = "https://www.cardmarket.com/"
 private const val  userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 
@@ -78,7 +76,7 @@ fun ItemOfInterestCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(productModel.imageUrl)
                     .setHeader("User-Agent", userAgent)
-                    .setHeader("Referer", referrer) //TODO: cloudflare protection is kicking in without the referer
+                    .setHeader("Referer", referrer)
                     .build(),
 
                 contentDescription = productModel.id,
@@ -135,23 +133,5 @@ fun ItemDetailsTable(
 }
 
 
-@Preview
-@Composable
-fun ItemOfInterestCardPreview() {
-    ItemOfInterestCard(
-        productModel = ProductModel(
-            id = "bla",
-            imageUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg",
-            price = "10,00 €",
-            priceTrend = "20,00 €",
-            localName = "bbbbb",
-            orgName = "ssss",
-            detailsUrl = "https://product-images.s3.cardmarket.com/51/TEF/760774/760774.jpg"
-        ),
-        showLastUpdated = true,
-        iconRowContent = { SearchViewCardIconRow() }
-
-    )
-}
 
 

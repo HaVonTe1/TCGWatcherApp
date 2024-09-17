@@ -6,10 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
 
 @Database(
-    entities = [SearchEntity::class, SearchResultItemEntity::class,  RemoteKeyEntity::class],
+    entities = [SearchEntity::class, ProductItemEntity::class,  RemoteKeyEntity::class],
     version = 1,
     exportSchema = false
 )

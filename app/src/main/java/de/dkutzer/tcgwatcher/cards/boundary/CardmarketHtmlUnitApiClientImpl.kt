@@ -135,6 +135,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
     }
 
     override suspend fun getProductDetails(link: String): CardDetailsDto {
+        logger.debug { "CMHtmlUnitApiClientImpl: getProductDetails: $link" }
         try {
             WebClient(BrowserVersion.CHROME).use { webClient ->
                 modifyWebClient(webClient)
