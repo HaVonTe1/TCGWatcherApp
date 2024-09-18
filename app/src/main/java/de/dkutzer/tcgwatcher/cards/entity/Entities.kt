@@ -35,7 +35,7 @@ data class ProductItemEntity(
     val lastUpdated: Long
 ) {
     fun isOlderThan(seconds: Long): Boolean {
-        return Instant.ofEpochMilli(this.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+        return Instant.ofEpochSecond(this.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
     }
 }
 
@@ -55,7 +55,8 @@ data class SearchWithItemsEntity(
 
 ) {
     fun isOlderThan(seconds: Long): Boolean {
-        return Instant.ofEpochMilli(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+
+        return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
     }
 }
 

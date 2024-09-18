@@ -42,8 +42,8 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE cmLink = :link")
     fun findItemsByLink(link: String) : List<ProductItemEntity>
 
-    @Query("UPDATE search_result_item SET price = :price, priceTrend = :priceTrend, lastUpdated = :lastUpdated WHERE cmLink = :detailsUrl")
-    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, lastUpdated: Long)
+    @Query("UPDATE search_result_item SET price = :price, priceTrend = :priceTrend, orgName = :orgName, lastUpdated = :lastUpdated WHERE cmLink = :detailsUrl")
+    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, orgName: String, lastUpdated: Long)
 
 
 }

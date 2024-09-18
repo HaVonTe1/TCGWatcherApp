@@ -7,9 +7,10 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
-import de.dkutzer.tcgwatcher.cards.entity.ProductModel
-import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.RefreshState
+import de.dkutzer.tcgwatcher.cards.entity.RefreshWrapper
+import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -18,7 +19,7 @@ private val logger = KotlinLogging.logger {}
 @OptIn(ExperimentalPagingApi::class)
 class SearchRemoteMediator (
     private val searchTerm: String,
-    private val refreshItem: ProductModel?,
+    private val refreshModel: RefreshWrapper,
     private val pokemonDatabase: SearchCacheDatabase,
     pokemonApi: BaseCardmarketApiClient,
 ) : RemoteMediator<Int, ProductItemEntity>() {
@@ -33,7 +34,7 @@ class SearchRemoteMediator (
     ): MediatorResult {
 
         logger.debug { "Mediator searchTerm: $searchTerm" }
-        logger.debug { "Mediator refreshItem: $refreshItem" }
+        logger.debug { "Mediator refreshItem: $refreshModel" }
 
         logger.debug { "Mediator load: $loadType" }
         logger.debug { "Mediator state: $state" }
@@ -58,8 +59,8 @@ class SearchRemoteMediator (
         // so we make a call to fetch ALL data from the api and return the
         // cached room stuff
         //TODO: needs testing
-        val searchResultsPage = if(searchTerm.isEmpty() && refreshItem!=null) {
-            adapter.getSingleItemByItem(refreshItem)
+        val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
+            adapter.getSingleItemByItem(refreshModel.item!!)
         } else {
             adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
         }

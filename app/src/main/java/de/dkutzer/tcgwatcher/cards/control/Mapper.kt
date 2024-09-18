@@ -16,7 +16,7 @@ fun SearchResultItemDto.toSearchItemEntity(searchId: Long = 0) : ProductItemEnti
         cmLink = this.cmLink,
         priceTrend = this.priceTrend,
         searchId = searchId.toInt(),
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = Instant.now().epochSecond
     )
 }
 
@@ -35,7 +35,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
     )
 }
 
-fun ProductModel.toSearchResultItemEntity() : ProductItemEntity {
+fun ProductModel.toSearchResultItemEntity(searchId: Int = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.localName,
         imgLink = this.imageUrl,
@@ -44,7 +44,7 @@ fun ProductModel.toSearchResultItemEntity() : ProductItemEntity {
         cmLink = this.detailsUrl,
         priceTrend = this.priceTrend,
         lastUpdated = this.timestamp,
-        searchId = 0)
+        searchId = searchId)
 }
 
 

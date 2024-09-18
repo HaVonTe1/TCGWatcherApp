@@ -77,8 +77,14 @@ class CardmarketCardsSearchServiceAdapter(
         logger.debug { "Adapter: Looking in the Cache for: $searchString" }
 
         var searchWithResults = cache.findSearchWithItemsByQuery(searchString, page)
-        logger.trace { "Adapter: Found: ${searchWithResults?.results?.size}" }
+        logger.debug { "Adapter: Found: ${searchWithResults?.results?.size}" }
+        val lastUpdated = searchWithResults?.search?.lastUpdated
+        if(lastUpdated!=null)
+            logger.debug { "TTL: ${Instant.ofEpochSecond(lastUpdated)}" }
+
         if(searchWithResults!=null && searchWithResults.isOlderThan(threeDaysSeconds)) {
+            logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(lastUpdated!!)}" }
+
             cache.deleteSearchItems(searchWithResults.results)
             cache.deleteSearch(searchWithResults.search)
             searchWithResults = null

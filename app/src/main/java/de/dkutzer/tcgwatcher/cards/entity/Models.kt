@@ -20,17 +20,28 @@ data class SearchResultsPage(
     val pages: Int
 )
 
-data class QuickSearchResultItem(
+data class QuickSearchItem(
     val id: String,
     override  val displayName: String,
     val nameDe: String,
     val nameEn: String,
     val nameFr: String,
     val code: String
-): SearchResultItem(displayName)
+): SearchSuggestionItem(displayName)
 
-data class HistorySearchResultItem(
+data class HistorySearchItem(
     override val displayName: String,
-): SearchResultItem(displayName)
+): SearchSuggestionItem(displayName)
 
-open class SearchResultItem(open val displayName: String)
+open class SearchSuggestionItem(open val displayName: String)
+
+
+data class RefreshWrapper(
+    val item: ProductModel? = null,
+    val state: RefreshState = RefreshState.IDLE,
+    val query: String
+)
+
+enum class RefreshState {
+    REFRESH_ITEM, REFRESH_SEARCH, ERROR, IDLE
+}

@@ -77,7 +77,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         itemEntity: ProductItemEntity
     ) {
         //alle search items mit diesem link mit den daten aus der entity aktualisiern
-        searchCacheDao.updateItemsByLink(detailsUrl, price = itemEntity.price, priceTrend = itemEntity.priceTrend, lastUpdated = itemEntity.lastUpdated)
+        searchCacheDao.updateItemsByLink(detailsUrl, price = itemEntity.price, priceTrend = itemEntity.priceTrend, orgName = itemEntity.orgName, lastUpdated = itemEntity.lastUpdated)
     }
 
 }

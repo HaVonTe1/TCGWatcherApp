@@ -1,6 +1,8 @@
 package de.dkutzer.tcgwatcher.cards.boundary
 
 
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.twotone.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,9 +81,11 @@ import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
-import de.dkutzer.tcgwatcher.cards.entity.HistorySearchResultItem
+import de.dkutzer.tcgwatcher.cards.entity.HistorySearchItem
 import de.dkutzer.tcgwatcher.cards.entity.ProductModel
-import de.dkutzer.tcgwatcher.cards.entity.QuickSearchResultItem
+import de.dkutzer.tcgwatcher.cards.entity.QuickSearchItem
+import de.dkutzer.tcgwatcher.cards.entity.RefreshState
+import de.dkutzer.tcgwatcher.cards.entity.RefreshWrapper
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.control.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.settings.entity.Engines
@@ -94,6 +100,7 @@ import de.dkutzer.tcgwatcher.ui.referrer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -146,6 +153,42 @@ fun SearchScreen(
             )
         }
     }
+    var showDialog by remember { mutableStateOf(false) }
+
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    var backPressHandled by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Use BackHandler to intercept the back button press
+    BackHandler(enabled = !backPressHandled)  {
+        showDialog = searchViewModel.onBack()
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Exit App?") },
+            text = { Text("Are you sure you want to exit the app?") },
+            confirmButton = {
+                Button(onClick = {
+                    // Perform the action to exit the app
+                    // For example, finish the activity
+                    backPressHandled = true
+                    coroutineScope.launch {
+                        awaitFrame()
+                        onBackPressedDispatcher?.onBackPressed()
+                        backPressHandled = false
+                    }
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
 
 
     SearchView(
@@ -165,8 +208,8 @@ fun SearchScreen(
 @Composable
 private fun SearchView(
     searchResultPagingItems: LazyPagingItems<ProductModel>,
-    historyList: StateFlow<List<HistorySearchResultItem>>,
-    quickSearchList: StateFlow<List<QuickSearchResultItem>>,
+    historyList: StateFlow<List<HistorySearchItem>>,
+    quickSearchList: StateFlow<List<QuickSearchItem>>,
     isSearching: StateFlow<Boolean>,
 
     onSearchQueryChange: (String) -> Unit,
@@ -174,7 +217,7 @@ private fun SearchView(
     onActiveChanged: (String, Boolean) -> Unit,
 
     onRefreshSearch: () -> Unit,
-    onRefreshSingleItem: (item: ProductModel) -> Unit
+    onRefreshSingleItem: (item: ProductModel) -> Unit,
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -340,7 +383,7 @@ private fun SearchView(
                         ListDetailLayout(
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
-                            onRefreshDetails = {  item -> onRefreshSingleItem(item) }
+                            onRefreshDetails = {  item -> onRefreshSingleItem(item) },
                         )
                     }
                 }
@@ -355,12 +398,8 @@ private fun SearchView(
 fun ListDetailLayout(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
-    onRefreshList: () -> Unit = {
-        logger.debug { "ItemCardDetailLayout::onRefreshList" }
-    },
-    onRefreshDetails: (ProductModel) -> Unit = {
-        logger.debug { "ItemCardDetailLayout::onRefreshDetails" }
-    }
+    onRefreshList: () -> Unit,
+    onRefreshDetails: (ProductModel) -> Unit
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
@@ -466,14 +505,17 @@ class SearchViewModel(
     private val _query: MutableStateFlow<String> = MutableStateFlow("")
     private val query: StateFlow<String> = _query.asStateFlow()
 
-    private val _refreshItem: MutableStateFlow<ProductModel?> = MutableStateFlow(null)
-    private val refreshItem: StateFlow<ProductModel?> = _refreshItem.asStateFlow()
+    private val _refreshItem: MutableStateFlow<RefreshWrapper> = MutableStateFlow(RefreshWrapper(item = null, query = "", state = RefreshState.IDLE))
+    private val refreshItem: StateFlow<RefreshWrapper> = _refreshItem.asStateFlow()
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
         combine(query, refreshItem) { latestSearchQuery, latestRefreshItem ->
             logger.debug { "SearchViewModel:: Flow of query or refreshItem changed: $latestSearchQuery, $latestRefreshItem" }
+
+
+
             val config = CardmarketConfig(settings.value)
             val productApiClient = CardmarketApiClientFactory(config).create()
             val pokemonPager =
@@ -493,8 +535,8 @@ class SearchViewModel(
 
 
     private var unfilteredHistoryItems: ArrayList<String> = arrayListOf()
-    private val _historyList = MutableStateFlow<List<HistorySearchResultItem>>(mutableListOf())
-    val historyList: StateFlow<List<HistorySearchResultItem>> =
+    private val _historyList = MutableStateFlow<List<HistorySearchItem>>(mutableListOf())
+    val historyList: StateFlow<List<HistorySearchItem>> =
 
         query.combine(_historyList) { text, historyItems ->
             logger.debug { "history combine: $text and $historyItems" }
@@ -505,8 +547,8 @@ class SearchViewModel(
             initialValue = emptyList()
         )
 
-    private val _quickSearchList = MutableStateFlow<List<QuickSearchResultItem>>(mutableListOf())
-    val quickSearchList: StateFlow<List<QuickSearchResultItem>> = _quickSearchList.asStateFlow()
+    private val _quickSearchList = MutableStateFlow<List<QuickSearchItem>>(mutableListOf())
+    val quickSearchList: StateFlow<List<QuickSearchItem>> = _quickSearchList.asStateFlow()
 
 
     init {
@@ -521,7 +563,7 @@ class SearchViewModel(
 
             logger.debug { "searchHistory: $searchHistory" }
             unfilteredHistoryItems.addAll(searchHistory)
-            _historyList.value = searchHistory.map { HistorySearchResultItem(displayName = it) }
+            _historyList.value = searchHistory.map { HistorySearchItem(displayName = it) }
         }
     }
 
@@ -555,7 +597,7 @@ class SearchViewModel(
 
         _historyList.value =
             if (newQuery.isBlank()) { //return the entire list of items if not is typed
-                unfilteredHistoryItems.map { HistorySearchResultItem(displayName = it) }
+                unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
             } else {
 
                 val filteredHistoryItems =
@@ -563,7 +605,7 @@ class SearchViewModel(
                         historyItem.uppercase().contains(newQuery.trim().uppercase())
                     }
                 logger.debug { "filter result: $filteredHistoryItems" }
-                filteredHistoryItems.map { HistorySearchResultItem(displayName = it) }
+                filteredHistoryItems.map { HistorySearchItem(displayName = it) }
             }
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -576,7 +618,7 @@ class SearchViewModel(
                     val pokemonCardQuickEntities = quicksearchRepository.find(newQuery)
                     logger.debug { "pokemonCardQuickEntities: $pokemonCardQuickEntities" }
                     val result = pokemonCardQuickEntities.map {
-                        QuickSearchResultItem(
+                        QuickSearchItem(
                             id = it.id,
                             nameDe = it.nameDe,
                             nameEn = it.nameEn,
@@ -591,17 +633,27 @@ class SearchViewModel(
         }
     }
 
+    fun onBack() : Boolean {
+        logger.debug { "SearchViewModel::onBack" }
+        logger.debug { "SearchViewModel::onBack: state: ${_refreshItem.value.state}" }
+
+        if(_refreshItem.value.state == RefreshState.REFRESH_ITEM) {
+            _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.IDLE)
+            return false
+        }
+        return  true
+
+    }
+
+
     fun onRefreshSearch() {
         logger.debug { "SearchViewModel::onRefreshSearch" }
-        _refreshItem.value = null
-        _query.value = lastQuery.value
+        _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.REFRESH_SEARCH)
     }
 
     fun onRefreshSingleItem(item: ProductModel) {
         logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
-        //setting a new value to the state lets the flow emit a signal which will recalculate the resultitems in the viemodel
-        _query.value=""
-        _refreshItem.value = item
+        _refreshItem.value = RefreshWrapper(item, query = "", state = RefreshState.REFRESH_ITEM)
     }
 
     fun onSearchSubmit(searchString: String) {
@@ -613,7 +665,7 @@ class SearchViewModel(
         if (!unfilteredHistoryItems.contains(searchString))
             unfilteredHistoryItems.add(searchString)
         _historyList.value =
-            unfilteredHistoryItems.map { HistorySearchResultItem(displayName = it) }
+            unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
         _query.value = searchString
         _lastQuery.value = searchString
         _quickSearchList.value = emptyList()
@@ -680,9 +732,7 @@ private const val REFERER = "Referer"
 private fun ItemCardDetailLayout(
     productModel: ProductModel,
     modifier: Modifier = Modifier,
-    onRefreshItemDetailsContent: (item: ProductModel) -> Unit = {
-        logger.debug { "ItemCardDetailLayout::onRefreshContent" }
-    }
+    onRefreshItemDetailsContent: (item: ProductModel) -> Unit,
 ) {
     val innerPadding = 1.dp
 
@@ -825,7 +875,7 @@ private fun ItemCardDetailLayout(
 fun PullToRefreshLazyColumn(
     content: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    onRefreshContent: () -> Unit,
+    onRefreshContent: () -> Unit
 ) {
     val state = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -833,8 +883,11 @@ fun PullToRefreshLazyColumn(
     val onRefresh: () -> Unit = {
         isRefreshing = true
         coroutineScope.launch {
+            logger.debug{"PullToRefreshLazyColumn::onRefresh"}
             onRefreshContent()
+            logger.debug{"PullToRefreshLazyColumn::delay"}
             delay(100)
+            logger.debug{"PullToRefreshLazyColumn::done"}
             isRefreshing = false
         }
     }
