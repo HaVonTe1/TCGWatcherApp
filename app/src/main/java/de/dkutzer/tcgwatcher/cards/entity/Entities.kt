@@ -27,6 +27,7 @@ data class ProductItemEntity(
     @ColumnInfo(index = true)
     var searchId: Int,
     val displayName: String,
+    val code: String,
     val orgName: String,
     val cmLink: String,
     val imgLink: String,

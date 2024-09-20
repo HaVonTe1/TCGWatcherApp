@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -337,11 +336,8 @@ private fun SearchView(
                                             text = "${item.displayName} (${item.code})",
                                             style = MaterialTheme.typography.labelLarge
                                         )
-//                                        Row (modifier = Modifier.padding(end = 1.dp)) {
-//                                            Text(text = item.id, style = MaterialTheme.typography.labelSmall)
-//                                        }
                                         Row(modifier = Modifier.padding(end = 1.dp)) {
-                                            val txt = "${item.nameDe} ${item.nameEn} ${item.nameFr}"
+                                            val txt = "${item.nameDe} | ${item.nameEn} | ${item.nameFr}"
                                             Text(
                                                 text = txt,
                                                 style = MaterialTheme.typography.labelSmall
@@ -426,7 +422,7 @@ fun ListDetailLayout(
                             ItemOfInterestCard(
                                 productModel = productModel!!,
                                 showLastUpdated = false,
-                                iconRowContent = { SearchViewCardIconRow() },
+                                iconRowContent = {  },
                                 modifier = Modifier
                                     .fillParentMaxWidth()
                                     .clickable {
@@ -634,7 +630,6 @@ class SearchViewModel(
     }
 
     fun onBack() : Boolean {
-        logger.debug { "SearchViewModel::onBack" }
         logger.debug { "SearchViewModel::onBack: state: ${_refreshItem.value.state}" }
 
         if(_refreshItem.value.state == RefreshState.REFRESH_ITEM) {
@@ -778,26 +773,17 @@ private fun ItemCardDetailLayout(
                             .fillMaxSize(),
                         elevation = CardDefaults.cardElevation()
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(innerPadding)
-                                    .fillMaxWidth(.7f)
-                                    .fillMaxHeight()
-                            ) {
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Icon(
                                         modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp)
-                                            .padding(1.dp),
+                                            .width(32.dp)
+                                            .height(32.dp)
+                                            .padding(4.dp),
                                         painter = painterResource(R.drawable.de_language_icon),
-                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                        contentDescription = stringResource(id = R.string.nameLabel)
                                     )
 
                                     Text(
@@ -809,11 +795,11 @@ private fun ItemCardDetailLayout(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp)
-                                            .padding(1.dp),
+                                            .width(32.dp)
+                                            .height(32.dp)
+                                            .padding(4.dp),
                                         painter = painterResource(R.drawable.globe_line_icon),
-                                        contentDescription = stringResource(id = R.string.priceLabel)
+                                        contentDescription = stringResource(id = R.string.nameLabel)
                                     )
                                     Text(
                                         text = productModel.orgName,
@@ -822,15 +808,15 @@ private fun ItemCardDetailLayout(
 
                                 }
 
-                            }
 
-                            Column {
-                                Row {
+
+                                Row (verticalAlignment = Alignment.CenterVertically)
+                                {
                                     Icon(
                                         modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp)
-                                            .padding(1.dp),
+                                            .width(32.dp)
+                                            .height(32.dp)
+                                            .padding(4.dp),
                                         painter = painterResource(R.drawable.price_tag_euro_icon),
                                         contentDescription = stringResource(id = R.string.priceLabel)
                                     )
@@ -839,12 +825,12 @@ private fun ItemCardDetailLayout(
                                         style = MaterialTheme.typography.headlineLarge
                                     )
                                 }
-                                Row {
+                                Row (verticalAlignment = Alignment.CenterVertically){
                                     Icon(
                                         modifier = Modifier
-                                            .width(24.dp)
-                                            .height(24.dp)
-                                            .padding(1.dp),
+                                            .width(32.dp)
+                                            .height(32.dp)
+                                            .padding(4.dp),
                                         painter = painterResource(R.drawable.stock_market_icon),
                                         contentDescription = stringResource(id = R.string.priceLabel)
                                     )
@@ -856,8 +842,6 @@ private fun ItemCardDetailLayout(
                                 }
 
 
-                            }
-                        }
 
 
                     }

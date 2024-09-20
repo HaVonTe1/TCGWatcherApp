@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -13,10 +15,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -26,8 +30,6 @@ import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 
 @Composable
@@ -95,6 +97,7 @@ fun ItemOfInterestCard(
             ) {
                 ItemDetailsTable(
                     localName = productModel.localName,
+                    code = productModel.code,
                     price = productModel.price,
                     priceTrend = productModel.priceTrend,
                     showLastUpdated = showLastUpdated,
@@ -111,6 +114,7 @@ fun ItemOfInterestCard(
 @Composable
 fun ItemDetailsTable(
     localName: String,
+    code: String,
     price : String,
     priceTrend: String,
     showLastUpdated: Boolean,
@@ -119,15 +123,51 @@ fun ItemDetailsTable(
 
     Column(modifier = modifier.padding(1.dp))
     {
-        Text(text = stringResource(id = R.string.nameLabel), style = MaterialTheme.typography.labelMedium)
-        Text(text = localName, style = MaterialTheme.typography.headlineMedium)
-
-        Text(text = stringResource(id = R.string.priceLabel), style = MaterialTheme.typography.labelMedium)
-        Text(text = price, style = MaterialTheme.typography.headlineLarge)
-
-        if(showLastUpdated) {
-            Text(text = stringResource(id = R.string.lastUpdateLabel), style = MaterialTheme.typography.labelMedium)
-            Text(text = lastUpdated.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)), style = MaterialTheme.typography.labelLarge)
+        Row(
+            modifier = Modifier.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(32.dp)
+                    .padding(4.dp),
+                painter = painterResource(R.drawable.de_language_icon),
+                contentDescription = stringResource(id = R.string.nameLabel)
+            )
+            Text(text = localName, style = MaterialTheme.typography.headlineMedium)
+        }
+        Row(
+            modifier = Modifier.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = " ($code)", style = MaterialTheme.typography.bodySmall)
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(32.dp)
+                    .padding(4.dp),
+                painter = painterResource(R.drawable.price_tag_euro_icon),
+                contentDescription = stringResource(id = R.string.nameLabel)
+            )
+            Text(text = price, style = MaterialTheme.typography.headlineLarge)
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(32.dp)
+                    .padding(4.dp),
+                painter = painterResource(R.drawable.stock_market_icon),
+                contentDescription = stringResource(id = R.string.nameLabel)
+            )
+            Text(text = priceTrend, style = MaterialTheme.typography.headlineLarge)
         }
     }
 }

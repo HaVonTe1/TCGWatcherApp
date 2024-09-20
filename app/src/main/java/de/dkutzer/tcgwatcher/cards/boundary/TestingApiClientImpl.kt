@@ -12,6 +12,7 @@ class TestingApiClientImpl(config: BaseConfig) : BaseCardmarketApiClient() {
         val resultItemList = listOf(
             SearchResultItemDto(
                 displayName = "Blaues Pokemon",
+                code = "TST 1",
                 orgName = "Blue Pokemon",
                 cmLink = "https://localhost:8080/test/bluepoke",
                 imgLink = "https://havonte.ddns.net/test/card_blue.png",
@@ -20,6 +21,7 @@ class TestingApiClientImpl(config: BaseConfig) : BaseCardmarketApiClient() {
             ),
             SearchResultItemDto(
                 displayName = "Braunes Pokemon",
+                code = "TST 2",
                 orgName = "Brown Pokemon",
                 cmLink = "https://localhost:8080/test/brownpoke",
                 imgLink = "https://havonte.ddns.net/test/card_braun.png",
@@ -28,6 +30,7 @@ class TestingApiClientImpl(config: BaseConfig) : BaseCardmarketApiClient() {
             ),
             SearchResultItemDto(
                 displayName = "Grünes Pokemon",
+                code = "TST 3",
                 orgName = "Green Pokemon",
                 cmLink = "https://localhost:8080/test/greenpoke",
                 imgLink = "https://havonte.ddns.net/test/card_green.png",
@@ -37,6 +40,7 @@ class TestingApiClientImpl(config: BaseConfig) : BaseCardmarketApiClient() {
             SearchResultItemDto(
                 displayName = "Rotes Pokemon",
                 orgName = "Red Pokemon",
+                code = "TST 4",
                 cmLink = "https://localhost:8080/test/redpoke",
                 imgLink = "https://havonte.ddns.net/test/card_red.png",
                 price = "4.00 €",

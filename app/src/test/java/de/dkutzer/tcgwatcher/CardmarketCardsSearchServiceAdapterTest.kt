@@ -38,6 +38,7 @@ class CardmarketCardsSearchServiceAdapterTest {
 
     private fun createResultItemDto() = SearchResultItemDto(
         displayName = "Vincent Le",
+        code = "TST 1",
         orgName = "Miranda Pitts",
         cmLink = "fames",
         imgLink = "instructior",
@@ -50,6 +51,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         id = 8848,
         searchId = 9235,
         displayName = "Cyrus Wright",
+        code = "TST 1",
         orgName = "Floyd Nieves",
         cmLink = "tation",
         imgLink = "molestiae",

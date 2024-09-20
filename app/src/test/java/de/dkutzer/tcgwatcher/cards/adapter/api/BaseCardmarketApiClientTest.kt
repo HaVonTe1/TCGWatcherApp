@@ -21,7 +21,8 @@ class BaseCardmarketApiClientTest {
                 priceTrend = "aptent",
                 detailsUrl = "https://duckduckgo.com/?q=interdum",
                 orgName = "dfsdfsdf",
-                displayName = "sfsdf"
+                displayName = "sfsdf",
+                code = "TST 1",
             )
         }
     }

@@ -10,6 +10,7 @@ import java.time.Instant
 fun SearchResultItemDto.toSearchItemEntity(searchId: Long = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.displayName,
+        code = this.code,
         imgLink = this.imgLink,
         orgName = this.orgName,
         price = this.price,
@@ -25,6 +26,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
     return ProductModel(
         id = android.net.Uri.parse(this.cmLink).lastPathSegment!!,
         localName = this.displayName,
+        code = this.code,
         orgName = this.orgName,
         detailsUrl = this.cmLink,
         imageUrl = this.imgLink,
@@ -38,6 +40,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
 fun ProductModel.toSearchResultItemEntity(searchId: Int = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.localName,
+        code = this.code,
         imgLink = this.imageUrl,
         orgName = this.orgName,
         price = this.price,
@@ -52,6 +55,7 @@ fun CardDetailsDto.toSearchResultItemDto(): SearchResultItemDto {
 
     return SearchResultItemDto(
         displayName = this.displayName,
+        code = this.code,
         orgName = this.orgName,
         cmLink = this.detailsUrl,
         imgLink = this.imageUrl,
@@ -62,6 +66,7 @@ fun CardDetailsDto.toSearchResultItemDto(): SearchResultItemDto {
 fun CardDetailsDto.toProductModel(): ProductModel {
     return ProductModel(
         localName = this.displayName,
+        code = this.code,
         orgName = this.orgName,
         detailsUrl = this.detailsUrl,
         imageUrl = this.imageUrl,

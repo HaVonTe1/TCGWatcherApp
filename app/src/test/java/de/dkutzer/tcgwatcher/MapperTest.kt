@@ -17,6 +17,7 @@ class MapperTest {
         val searchId = 1L
         val dto = SearchResultItemDto(
             displayName = "Item 1",
+            code = "TST 1",
             orgName = "Org 1",
             cmLink = "https://example.com/item1",
             imgLink = "https://example.com/item1.jpg",
@@ -44,6 +45,7 @@ class MapperTest {
         val searchId = 10L
         val dto = SearchResultItemDto(
             displayName = "Item 2",
+            code = "TST 2",
             orgName = "Org 2",
             cmLink = "https://example.com/item2",
             imgLink = "https://example.com/item2.jpg",

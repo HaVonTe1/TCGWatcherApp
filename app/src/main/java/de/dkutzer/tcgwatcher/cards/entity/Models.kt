@@ -5,6 +5,7 @@ package de.dkutzer.tcgwatcher.cards.entity
 data class ProductModel(
     val id: String,
     val localName: String,
+    val code: String,
     val orgName: String,
     val imageUrl: String,
     val detailsUrl: String,

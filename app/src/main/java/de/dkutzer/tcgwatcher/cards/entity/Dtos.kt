@@ -8,6 +8,7 @@ data class SearchResultsPageDto(
 
 data class SearchResultItemDto(
     val displayName: String,
+    val code: String,
     val orgName: String,
     val cmLink: String,
     val imgLink: String,
@@ -17,6 +18,7 @@ data class SearchResultItemDto(
 
 data class CardDetailsDto(
     val displayName: String,
+    val code: String,
     val orgName: String,
     val imageUrl: String,
     val detailsUrl: String,

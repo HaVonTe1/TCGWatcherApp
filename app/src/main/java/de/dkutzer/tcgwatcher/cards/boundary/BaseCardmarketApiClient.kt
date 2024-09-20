@@ -20,6 +20,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
     private val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
 
+    private val nameAndCodePattern = "^(.*?)\\s*\\((.*?)\\)$".toRegex()
 
     fun parseGallerySearchResults(document: Document, page: Int): SearchResultsPageDto {
        logger.debug { "Parsing a tags with class card and a href" }
@@ -41,7 +42,13 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             val titleTag = it.getElementsByTag("h2")
            logger.debug { "TitleTag: $titleTag" }
             val localName = titleTag.text()
-           logger.debug { "Local Name: $localName" }
+            logger.debug { "Local Name: $localName" }
+
+            val matchResult = nameAndCodePattern.find(localName)
+            val name = matchResult?.groupValues?.getOrNull(1)
+            val code = matchResult?.groupValues?.getOrNull(2)
+            logger.debug { "name: $name code: $code"  }
+
 
             val intPriceTag = it.getElementsByTag("b")
            logger.debug { "Found intPriceTag: $intPriceTag" }
@@ -49,7 +56,8 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
            logger.debug { "Price: $intPrice" }
 
             val itemDto = SearchResultItemDto(
-                displayName = localName,
+                displayName = name ?: localName,
+                code = code ?: "",
                 orgName = "---",
                 cmLink = cmLink,
                 imgLink = imageLink,
@@ -104,6 +112,12 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         logger.debug { "Display Name: $displayName" }
 
+        val matchResult = nameAndCodePattern.find(displayName)
+        val name = matchResult?.groupValues?.getOrNull(1)
+        val code = matchResult?.groupValues?.getOrNull(2)
+        logger.debug { "name: $name code: $code"  }
+
+
         val orgName = link.split("/").last()
         logger.debug { "Org Name: $orgName" }
 
@@ -128,6 +142,6 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         }
 
-        return CardDetailsDto(displayName =displayName, orgName =orgName, imageUrl,link, localPrice, localPriceTrend)
+        return CardDetailsDto(displayName =name ?: displayName, code = code ?: "", orgName =orgName, imageUrl,link, localPrice, localPriceTrend)
     }
 }
