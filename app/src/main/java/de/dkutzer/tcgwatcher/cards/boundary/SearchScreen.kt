@@ -165,8 +165,8 @@ fun SearchScreen(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Exit App?") },
-            text = { Text("Are you sure you want to exit the app?") },
+            title = { Text( stringResource( R.string.exit_app)) },
+            text = { Text(stringResource(R.string.sure_exit)) },
             confirmButton = {
                 Button(onClick = {
                     // Perform the action to exit the app
@@ -178,12 +178,12 @@ fun SearchScreen(
                         backPressHandled = false
                     }
                 }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.yes))
                 }
             },
             dismissButton = {
                 Button(onClick = { showDialog = false }) {
-                    Text("No")
+                    Text(stringResource(R.string.no))
                 }
             }
         )
@@ -199,7 +199,8 @@ fun SearchScreen(
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
         onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },
         onRefreshSearch = { searchViewModel.onRefreshSearch() },
-        onRefreshSingleItem = { searchViewModel.onRefreshSingleItem(it) }
+        onRefreshSingleItem = { searchViewModel.onRefreshSingleItem(it) },
+        onQuicksearchItemClick = { searchViewModel.onQuickSearch(it) }
     )
 }
 
@@ -217,6 +218,7 @@ private fun SearchView(
 
     onRefreshSearch: () -> Unit,
     onRefreshSingleItem: (item: ProductModel) -> Unit,
+    onQuicksearchItemClick: (item: ProductModel) -> Unit,
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -256,32 +258,50 @@ private fun SearchView(
                 )
             },
             trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(
-                        onClick =
-                        {
-                            logger.debug { "SearchBar::trailingIcon:onClick: " }
-                            query = ""
-                            onSearchQueryChange("")
-                            onActiveChanged("", true)
+                Row(modifier = Modifier.padding(end = 8.dp)) {
+                    if (query.isNotEmpty()) {
+                        IconButton(
+                            onClick =
+                            {
+                                logger.debug { "SearchBar::trailingIcon:onClick: " }
+                                query = ""
+                                onSearchQueryChange("")
+                                onActiveChanged("", true)
 
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            contentDescription = stringResource(id = R.string.clearSearch)
-                        )
+                            }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                contentDescription = stringResource(id = R.string.clearSearch)
+                            )
+                        }
+//                        IconButton(
+//                            onClick =
+//                            {
+//                                logger.debug { "SearchBar::trailingIcon:onClick: " }
+//                                query = ""
+//                                onSearchQueryChange("")
+//                                onActiveChanged("", true)
+//
+//                            }) {
+//                            Icon(
+//                                imageVector = Icons.Default.Build,
+//                                tint = MaterialTheme.colorScheme.onSurface,
+//                                contentDescription = stringResource(id = R.string.clearSearch)
+//                            )
+//                        }
                     }
+
                 }
             },
             onSearch = {
                 logger.debug { "SearchBar::onSearch: $it" }
-                onSearchSubmit(query.uppercase())
+                onSearchSubmit(query)
             },
             active = active,
             onActiveChange = {
                 logger.debug { "SearchBar:Active changed: $it" }
-                onActiveChanged(query.uppercase(), it)
+                onActiveChanged(query, it)
             },
             tonalElevation = 4.dp,
             content = {
@@ -303,7 +323,7 @@ private fun SearchView(
                                     .clickable {
                                         logger.debug { "SearchBar:content:historyItemClick: $item" }
                                         query = item.displayName
-                                        onSearchSubmit(item.displayName.uppercase())
+                                        onSearchSubmit(item.displayName)
                                     }
                                 )
                                 {
@@ -321,7 +341,7 @@ private fun SearchView(
                                     .clickable {
                                         logger.debug { "SearchBar:content:quicksearchItemClick: $item" }
                                         query = item.displayName
-                                        onSearchSubmit("${item.displayName} (${item.code})")
+                                        onQuicksearchItemClick(item.toProductModel())
                                     }
                                 )
                                 {
@@ -504,13 +524,13 @@ class SearchViewModel(
     private val _refreshItem: MutableStateFlow<RefreshWrapper> = MutableStateFlow(RefreshWrapper(item = null, query = "", state = RefreshState.IDLE))
     private val refreshItem: StateFlow<RefreshWrapper> = _refreshItem.asStateFlow()
 
+    private val _quicksearchItem: MutableStateFlow<ProductModel?> = MutableStateFlow(null)
+    private val quicksearchItem: StateFlow<ProductModel?> = _quicksearchItem.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
-        combine(query, refreshItem) { latestSearchQuery, latestRefreshItem ->
-            logger.debug { "SearchViewModel:: Flow of query or refreshItem changed: $latestSearchQuery, $latestRefreshItem" }
-
-
+        combine(query, refreshItem, quicksearchItem) { latestSearchQuery, latestRefreshItem, quicksearchItem ->
+            logger.debug { "SearchViewModel:: Flow of query or refreshItem or quicksearchItme changed: $latestSearchQuery, $latestRefreshItem $quicksearchItem" }
 
             val config = CardmarketConfig(settings.value)
             val productApiClient = CardmarketApiClientFactory(config).create()
@@ -518,6 +538,7 @@ class SearchViewModel(
                 PokemonPager.providePokemonPager(
                     latestSearchQuery,
                     latestRefreshItem,
+                    quicksearchItem,
                     searchCacheDatabase,
                     productApiClient
                 )
@@ -591,6 +612,7 @@ class SearchViewModel(
     fun onSearchQueryChange(newQuery: String) {
         logger.debug { "SearchViewModel::onSearchQueryChange: $newQuery" }
 
+        _quicksearchItem.value=null
         _historyList.value =
             if (newQuery.isBlank()) { //return the entire list of items if not is typed
                 unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
@@ -612,7 +634,6 @@ class SearchViewModel(
 
                     logger.debug { "query quick search" }
                     val pokemonCardQuickEntities = quicksearchRepository.find(newQuery)
-                    logger.debug { "pokemonCardQuickEntities: $pokemonCardQuickEntities" }
                     val result = pokemonCardQuickEntities.map {
                         QuickSearchItem(
                             id = it.id,
@@ -620,6 +641,8 @@ class SearchViewModel(
                             nameEn = it.nameEn,
                             nameFr = it.nameFr,
                             code = it.code,
+                            cmSetId = it.cmSetId,
+                            cmCardId = it.cmCardId,
                             displayName = it.nameDe //make this configurable based on the language setting
                         )
                     }
@@ -632,6 +655,7 @@ class SearchViewModel(
     fun onBack() : Boolean {
         logger.debug { "SearchViewModel::onBack: state: ${_refreshItem.value.state}" }
 
+        _quicksearchItem.value = null
         if(_refreshItem.value.state == RefreshState.REFRESH_ITEM) {
             _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.IDLE)
             return false
@@ -643,21 +667,29 @@ class SearchViewModel(
 
     fun onRefreshSearch() {
         logger.debug { "SearchViewModel::onRefreshSearch" }
+        _quicksearchItem.value = null
         _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.REFRESH_SEARCH)
     }
 
     fun onRefreshSingleItem(item: ProductModel) {
         logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
+        _quicksearchItem.value = null
         _refreshItem.value = RefreshWrapper(item, query = "", state = RefreshState.REFRESH_ITEM)
     }
 
     fun onSearchSubmit(searchString: String) {
         logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
+        _quicksearchItem.value = null
         if (searchString.isEmpty()) {
             logger.debug { "Empty search" }
             return
         }
-        if (!unfilteredHistoryItems.contains(searchString))
+        if (unfilteredHistoryItems.none {
+                it.contentEquals(
+                    other = searchString,
+                    ignoreCase = true
+                )
+            })
             unfilteredHistoryItems.add(searchString)
         _historyList.value =
             unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
@@ -673,6 +705,7 @@ class SearchViewModel(
         logger.debug { "SearchModel::onActiveChanged: query =  $query" }
         logger.debug { "SearchModel::onActiveChanged: lastQuery  = ${_lastQuery.value}" }
         logger.debug { "SearchModel::onActiveChanged: filteredHistoryList  = ${_historyList.value}" }
+        logger.debug { "SearchModel::onActiveChanged: quichsearchItem  = ${_quicksearchItem.value}" }
 
         val determineShowHistory = determineShowHistory(query, active)
         logger.debug { "SearchModel::onActiveChanged: new show history =  $determineShowHistory" }
@@ -696,6 +729,13 @@ class SearchViewModel(
             return false
 
         return true
+    }
+
+    fun onQuickSearch(item: ProductModel) {
+        logger.debug { "SearchViewModel::onQuickSearch: $item" }
+        _quicksearchItem.value = item
+        _showHistoryContent.value = false
+
     }
 
 

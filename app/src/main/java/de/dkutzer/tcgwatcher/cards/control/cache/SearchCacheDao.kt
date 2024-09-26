@@ -15,13 +15,13 @@ import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 interface SearchCacheDao {
 
 
-    @Query("SELECT * FROM search WHERE searchTerm = :searchTerm")
+    @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
     fun findSearch(searchTerm: String) : SearchEntity?
 
     @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
     fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductItemEntity>
 
-    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.searchId = sri.searchId WHERE s.searchTerm = :searchTerm")
+    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.searchId = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")

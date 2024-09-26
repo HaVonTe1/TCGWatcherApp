@@ -76,3 +76,5 @@ fun CardDetailsDto.toProductModel(): ProductModel {
         timestamp = Instant.now().epochSecond
     )
 }
+
+

@@ -4,12 +4,13 @@ import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
 import de.dkutzer.tcgwatcher.cards.entity.SearchWithItemsEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.time.Instant
 
 
 interface SearchCacheRepository {
 
-    suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit : Int = 5) : SearchWithItemsEntity?
-    suspend fun persistsSearchWithItems(results: SearchWithItemsEntity)
+    suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchWithItemsEntity?
+    suspend fun persistsSearchWithItems(results: SearchWithItemsEntity): SearchWithItemsEntity
     suspend fun persistSearchItems(results: List<ProductItemEntity>)
     suspend fun getSearchHistory(): List<String>
     suspend fun deleteSearch(search: SearchEntity)
@@ -40,12 +41,20 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
-    override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity) {
+    override suspend fun persistsSearchWithItems(searchWithItems: SearchWithItemsEntity): SearchWithItemsEntity {
 
-        val searchId = searchCacheDao.persistSearch(results.search)
-        results.results.forEach { it.searchId = searchId.toInt() }
+        val persistedSearchId = searchCacheDao.persistSearch(searchWithItems.search)
+        searchWithItems.results.forEach { it.searchId = persistedSearchId.toInt() }
 
-        searchCacheDao.persistItems(results.results)
+        searchCacheDao.persistItems(searchWithItems.results)
+        return SearchWithItemsEntity(
+            SearchEntity(
+                searchId =  persistedSearchId.toInt(),
+                searchTerm = searchWithItems.search.searchTerm,
+                lastUpdated = Instant.now().epochSecond,
+                size = searchWithItems.results.size,
+                history = searchWithItems.search.history),
+            searchWithItems.results)
     }
 
     override suspend fun persistSearchItems(results: List<ProductItemEntity>) {

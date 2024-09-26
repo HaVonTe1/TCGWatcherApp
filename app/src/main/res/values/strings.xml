@@ -21,4 +21,8 @@
     <string name="engine_desc">The underlying tool which makes the web requests.</string>
     <string name="language_desc">The language printed on the cards</string>
     <string name="home">Home</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="exit_app">Exit App?</string>
+    <string name="sure_exit">Are you sure you want to exit the app?</string>
 </resources>

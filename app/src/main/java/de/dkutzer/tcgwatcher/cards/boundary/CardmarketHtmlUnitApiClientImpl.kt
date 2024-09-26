@@ -139,7 +139,13 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
         try {
             WebClient(BrowserVersion.CHROME).use { webClient ->
                 modifyWebClient(webClient)
-                val webRequest = createWebRequest("${config.baseUrl}$link", mapOf())
+
+                val targetUri = if(!link.startsWith("http")) {
+                    "${config.baseUrl}$link"
+                } else {
+                    link
+                }
+                val webRequest = createWebRequest(targetUri, mapOf())
                 webClient.waitForBackgroundJavaScript(WAIT_TIME)
 
                 val htmlPage: HtmlPage? = webClient.getPage(webRequest)

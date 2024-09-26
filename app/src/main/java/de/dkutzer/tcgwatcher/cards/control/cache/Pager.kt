@@ -5,6 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import de.dkutzer.tcgwatcher.cards.entity.RefreshState
 import de.dkutzer.tcgwatcher.cards.entity.RefreshWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,6 +23,7 @@ abstract class PokemonPager {
         fun providePokemonPager(
             searchTerm: String,
             refreshModel: RefreshWrapper,
+            quicksearchItem: ProductModel? = null,
             pokemonDatabase: SearchCacheDatabase,
             pokemonApi: BaseCardmarketApiClient,
         ): Pager<Int, ProductItemEntity> {
@@ -34,17 +36,22 @@ abstract class PokemonPager {
                     remoteMediator = SearchRemoteMediator(
                         searchTerm = searchTerm,
                         refreshModel = refreshModel,
+                        quicksearchItem = quicksearchItem,
                         pokemonDatabase = pokemonDatabase,
                         pokemonApi = pokemonApi,
                     ),
                     pagingSourceFactory = {
                         logger.debug { "refreshItem: [$refreshModel] searchTerm: [$searchTerm]" }
                         if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-                            logger.debug { "calling refresh item as paging source" }
+                            logger.debug { "calling refresh item as paging source: $refreshModel" }
                             pokemonDatabase.searchCacheDao.findItemsByQuery(refreshModel.item!!.detailsUrl)
                         }
+                        else if(quicksearchItem != null) {
+                            logger.debug { "calling quicksearch  as paging source: $quicksearchItem" }
+                            pokemonDatabase.searchCacheDao.findItemsByQuery(quicksearchItem.detailsUrl)
+                        }
                         else {
-                            logger.debug { "calling search term as paging source" }
+                            logger.debug { "calling search term as paging source: $searchTerm" }
                             pokemonDatabase.searchCacheDao.findItemsByQuery(searchTerm)
                         }
                     },

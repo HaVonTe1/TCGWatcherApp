@@ -8,6 +8,7 @@ import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
 import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
+import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import de.dkutzer.tcgwatcher.cards.entity.RefreshState
 import de.dkutzer.tcgwatcher.cards.entity.RefreshWrapper
 import de.dkutzer.tcgwatcher.cards.entity.RemoteKeyEntity
@@ -20,6 +21,7 @@ private val logger = KotlinLogging.logger {}
 class SearchRemoteMediator (
     private val searchTerm: String,
     private val refreshModel: RefreshWrapper,
+    private val quicksearchItem: ProductModel? = null,
     private val pokemonDatabase: SearchCacheDatabase,
     pokemonApi: BaseCardmarketApiClient,
 ) : RemoteMediator<Int, ProductItemEntity>() {
@@ -35,10 +37,10 @@ class SearchRemoteMediator (
 
         logger.debug { "Mediator searchTerm: $searchTerm" }
         logger.debug { "Mediator refreshItem: $refreshModel" }
+        logger.debug { "Mediator quicksearchItem: $quicksearchItem" }
 
         logger.debug { "Mediator load: $loadType" }
         logger.debug { "Mediator state: $state" }
-        logger.debug { "Mediator state.config: ${state.config}" }
         logger.debug { "Mediator state.config.pageSize: ${state.config.pageSize}" }
         logger.debug { "Mediator state.config.initialLoadSize: ${state.config.initialLoadSize}" }
         val offset = when (loadType) {
@@ -58,10 +60,13 @@ class SearchRemoteMediator (
         // but we want to make at least calls as possible
         // so we make a call to fetch ALL data from the api and return the
         // cached room stuff
-        //TODO: needs testing
+
         val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
             adapter.getSingleItemByItem(refreshModel.item!!)
-        } else {
+        } else if (quicksearchItem != null) {
+            adapter.getSingleItemByItem(quicksearchItem, useCache = true)
+        }
+        else {
             adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }

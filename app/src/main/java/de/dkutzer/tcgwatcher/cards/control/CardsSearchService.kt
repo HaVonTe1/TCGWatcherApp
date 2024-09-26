@@ -13,7 +13,7 @@ import kotlin.system.measureTimeMillis
 
 interface CardsSearchService {
 
-    suspend fun getSingleItemByItem(link: ProductModel) : SearchResultsPage
+    suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean = false) : SearchResultsPage
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 
@@ -33,7 +33,7 @@ class CardmarketCardsSearchServiceAdapter(
     private val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
 
 
-    override suspend fun getSingleItemByItem(item: ProductModel): SearchResultsPage {
+    override suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean): SearchResultsPage {
 
         /*
         This use case is different from the search by query.
@@ -41,32 +41,58 @@ class CardmarketCardsSearchServiceAdapter(
         Only in the case, that we already refreshed this item, where is a "SearchEntity".
         In every case the SearchEntity with the cmLink as Id needs to pe upserted.
          */
-        logger.debug { "Adapter: getSingleItemByLink: $item" }
-        logger.debug { "Adapter: Start a new load: ${item.detailsUrl}" }
-        val productDetails = client.getProductDetails(item.detailsUrl)
-        val productModel = productDetails.toProductModel()
+        logger.debug { "Adapter: getSingleItemByLink: $searchItem" }
+        logger.debug { "Adapter: Start a new load: ${searchItem.detailsUrl}" }
+
+        val searchWithItemsEntity = if(useCache) {
+            logger.debug { "Adapter: Looking in the Cache for: ${searchItem.detailsUrl}" }
+            val cachedSearch = cache.findSearchWithItemsByQuery(searchItem.detailsUrl)
+            logger.debug { "Adapter: Found: $cachedSearch" }
+            if(cachedSearch==null || cachedSearch.isOlderThan(threeDaysSeconds)){
+                logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(cachedSearch?.search?.lastUpdated!!)}" }
+                val newSearch =
+                    createNewSearchModelViaRemoteRequestByProductModel(searchItem)
+
+                logger.debug { "Adapter: Persisting cache: $newSearch" }
+
+                cache.persistsSearchWithItems(newSearch)
+            } else {
+                logger.debug { "Adapter: Returning cached results: $cachedSearch" }
+                cachedSearch
+            }
+        }
+        else {
+            logger.debug { "Adapter: no cache - Start a new Search: ${searchItem.detailsUrl}" }
+            val newSearch = createNewSearchModelViaRemoteRequestByProductModel(searchItem)
+            logger.debug { "Adapter: Persisting cache: $newSearch" }
+
+            cache.persistsSearchWithItems(newSearch)
+        }
+
+        val productModel = searchWithItemsEntity.results.first().toProductModel()
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
-        val searchWithItemsEntity =
-            cache.findSearchWithItemsByQuery(item.detailsUrl, 1) ?: SearchWithItemsEntity(
-                search = SearchEntity(
-                    searchTerm = item.detailsUrl,
-                    size = 1,
-                    lastUpdated = Instant.now().epochSecond,
-                    history = false
-                ),
-                results = listOf(productModel.toSearchResultItemEntity())
-            )
-
-
-        logger.debug { "Persisting cache: $searchWithItemsEntity" }
-
-        cache.persistsSearchWithItems(searchWithItemsEntity)
         //make sure the refreshed data is mirrored to all search items with this link
         //TODO: another nested table which stores the items and the searchitems_table just references to it
-        cache.updateItemByLink(item.detailsUrl, productModel.toSearchResultItemEntity())
+        cache.updateItemByLink(searchItem.detailsUrl, productModel.toSearchResultItemEntity())
 
+        logger.debug { "Adapter: Returning cached results: $result" }
         return result
+    }
+
+    private suspend fun createNewSearchModelViaRemoteRequestByProductModel(searchItem: ProductModel) : SearchWithItemsEntity{
+        val productDetails = client.getProductDetails(searchItem.detailsUrl)
+        val productModel = productDetails.toProductModel()
+        val searchWithItemsEntity = SearchWithItemsEntity(
+            search = SearchEntity(
+                searchTerm = searchItem.detailsUrl,
+                size = 1,
+                lastUpdated = Instant.now().epochSecond,
+                history = false
+            ),
+            results = listOf(productModel.toSearchResultItemEntity())
+        )
+        return searchWithItemsEntity
     }
 
     override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResultsPage {

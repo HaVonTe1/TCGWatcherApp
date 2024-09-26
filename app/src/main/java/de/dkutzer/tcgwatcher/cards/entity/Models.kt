@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.cards.entity
 
+import java.time.Instant
 
 
 data class ProductModel(
@@ -20,6 +21,7 @@ data class SearchResultsPage(
     val currentPage: Int,
     val pages: Int
 )
+val cmBasePath  = "/de/Pokemon/Products/Singles/"
 
 data class QuickSearchItem(
     val id: String,
@@ -27,8 +29,24 @@ data class QuickSearchItem(
     val nameDe: String,
     val nameEn: String,
     val nameFr: String,
-    val code: String
-): SearchSuggestionItem(displayName)
+    val code: String,
+    val cmSetId: String,
+    val cmCardId: String,
+): SearchSuggestionItem(displayName) {
+    fun toProductModel(): ProductModel {
+        return ProductModel(
+            id = id,
+            localName = displayName,
+            code = code,
+            orgName = this.nameEn,
+            imageUrl = "",
+            detailsUrl = "$cmBasePath$cmSetId/$cmCardId",
+            price = "",
+            priceTrend = "",
+            timestamp = Instant.now().epochSecond
+        )
+    }
+}
 
 data class HistorySearchItem(
     override val displayName: String,

@@ -77,6 +77,11 @@ data class PokemonCardQuickNormalizedEntity (
     val nameFr: String,
 
     val code: String,
+
+    @ColumnInfo(name = "cm_set_id")
+    val cmSetId: String,
+    @ColumnInfo(name = "cm_card_id")
+    val cmCardId: String,
 )
 
 
