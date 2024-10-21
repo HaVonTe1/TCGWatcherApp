@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -50,20 +49,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -72,46 +68,23 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.control.CardmarketPokemonRepositoryAdapter
-import de.dkutzer.tcgwatcher.cards.control.GetPokemonList
-import de.dkutzer.tcgwatcher.cards.control.cache.PokemonPager
 import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheDatabase
-import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchDatabase
-import de.dkutzer.tcgwatcher.cards.control.quicksearch.QuickSearchRepositoryImpl
-import de.dkutzer.tcgwatcher.cards.entity.CardmarketConfig
 import de.dkutzer.tcgwatcher.cards.entity.HistorySearchItem
 import de.dkutzer.tcgwatcher.cards.entity.ProductModel
 import de.dkutzer.tcgwatcher.cards.entity.QuickSearchItem
-import de.dkutzer.tcgwatcher.cards.entity.RefreshState
-import de.dkutzer.tcgwatcher.cards.entity.RefreshWrapper
 import de.dkutzer.tcgwatcher.settings.control.SettingsDatabase
-import de.dkutzer.tcgwatcher.settings.control.SettingsRepositoryImpl
-import de.dkutzer.tcgwatcher.settings.entity.Engines
-import de.dkutzer.tcgwatcher.settings.entity.Languages
 import de.dkutzer.tcgwatcher.settings.entity.QuickSearchRepoIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SearchCacheRepoIdKey
 import de.dkutzer.tcgwatcher.settings.entity.SettingsDbIdKey
-import de.dkutzer.tcgwatcher.settings.entity.SettingsEntity
-import de.dkutzer.tcgwatcher.ui.ClickableIconButton
 import de.dkutzer.tcgwatcher.ui.ItemOfInterestCard
 import de.dkutzer.tcgwatcher.ui.referrer
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import okhttp3.internal.userAgent
-import org.apache.commons.lang3.StringUtils
 
 private val logger = KotlinLogging.logger {}
 
@@ -159,13 +132,13 @@ fun SearchScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // Use BackHandler to intercept the back button press
-    BackHandler(enabled = !backPressHandled)  {
+    BackHandler(enabled = !backPressHandled) {
         showDialog = searchViewModel.onBack()
     }
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text( stringResource( R.string.exit_app)) },
+            title = { Text(stringResource(R.string.exit_app)) },
             text = { Text(stringResource(R.string.sure_exit)) },
             confirmButton = {
                 Button(onClick = {
@@ -231,21 +204,18 @@ private fun SearchView(
 
     val quickSearchItems by remember(quickSearchListState.value) { mutableStateOf(quickSearchList.value) }
 
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-
     ) {
-
         SearchBar(
             query = query,
             onQueryChange = { text ->
                 logger.debug { "SearchBar::OnQueryChange: $text" }
                 query = text
-
                 onSearchQueryChange(text)
-
             },
             placeholder = {
                 Text(text = stringResource(id = R.string.searchPlaceHolder))
@@ -258,44 +228,16 @@ private fun SearchView(
                 )
             },
             trailingIcon = {
-                Row(modifier = Modifier.padding(end = 8.dp)) {
-                    if (query.isNotEmpty()) {
-                        IconButton(
-                            onClick =
-                            {
-                                logger.debug { "SearchBar::trailingIcon:onClick: " }
-                                query = ""
-                                onSearchQueryChange("")
-                                onActiveChanged("", true)
-
-                            }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = stringResource(id = R.string.clearSearch)
-                            )
-                        }
-//                        IconButton(
-//                            onClick =
-//                            {
-//                                logger.debug { "SearchBar::trailingIcon:onClick: " }
-//                                query = ""
-//                                onSearchQueryChange("")
-//                                onActiveChanged("", true)
-//
-//                            }) {
-//                            Icon(
-//                                imageVector = Icons.Default.Build,
-//                                tint = MaterialTheme.colorScheme.onSurface,
-//                                contentDescription = stringResource(id = R.string.clearSearch)
-//                            )
-//                        }
-                    }
-
-                }
+                SearchTrailingIcon(query, onClick = {
+                    logger.debug { "SearchBar::trailingIcon:onClick: " }
+                    query = ""
+                    onSearchQueryChange("")
+                    onActiveChanged("", true)
+                })
             },
             onSearch = {
                 logger.debug { "SearchBar::onSearch: $it" }
+                keyboardController?.hide()
                 onSearchSubmit(query)
             },
             active = active,
@@ -305,71 +247,22 @@ private fun SearchView(
             },
             tonalElevation = 4.dp,
             content = {
-                logger.debug { "SearchBar:Content:active: $active" }
-                logger.debug { "SearchBar:Content:pokemonPagingItems: ${searchResultPagingItems.loadState.refresh}" }
-                logger.debug { "SearchBar:Content:itemCount: ${searchResultPagingItems.itemCount}" }
-                if (active) {
-                    LazyColumn(
-                        modifier = Modifier.weight(0.95f)
-                    ) {
-                        items(
-                            count = historyItems.size + quickSearchItems.size
-                        ) { index ->
-
-                            if (index < historyItems.size) {
-                                val item = historyItems[index]
-                                Row(modifier = Modifier
-                                    .padding(all = 4.dp)
-                                    .clickable {
-                                        logger.debug { "SearchBar:content:historyItemClick: $item" }
-                                        query = item.displayName
-                                        onSearchSubmit(item.displayName)
-                                    }
-                                )
-                                {
-                                    Icon(
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null
-                                    )
-                                    Text(text = item.displayName)
-                                }
-                            } else {
-                                val item = quickSearchItems[index - historyItems.size]
-                                Row(modifier = Modifier
-                                    .padding(all = 4.dp)
-                                    .clickable {
-                                        logger.debug { "SearchBar:content:quicksearchItemClick: $item" }
-                                        query = item.displayName
-                                        onQuicksearchItemClick(item.toProductModel())
-                                    }
-                                )
-                                {
-                                    Icon(
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        imageVector = Icons.Default.Star, contentDescription = null
-                                    )
-                                    Column(
-                                        modifier = Modifier.padding(end = 1.dp)
-                                    ) {
-                                        Text(
-                                            text = "${item.displayName} (${item.code})",
-                                            style = MaterialTheme.typography.labelLarge
-                                        )
-                                        Row(modifier = Modifier.padding(end = 1.dp)) {
-                                            val txt = "${item.nameDe} | ${item.nameEn} | ${item.nameFr}"
-                                            Text(
-                                                text = txt,
-                                                style = MaterialTheme.typography.labelSmall
-                                            )
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
+                SearchPreviewContent(
+                    active,
+                    searchResultPagingItems,
+                    historyItems,
+                    quickSearchItems,
+                    onHistorieItemClicked = {
+                        logger.debug { "SearchBar:content:historyItemClick: $it" }
+                        query = it
+                        onSearchSubmit(it)
+                    },
+                    onQuickSearchItemClicked = {
+                        logger.debug { "SearchBar:content:quicksearchItemClick: $it" }
+                        query = it.displayName
+                        onQuicksearchItemClick(it.toProductModel())
                     }
-                }
+                )
             }
         )
         Column(
@@ -377,15 +270,12 @@ private fun SearchView(
             Arrangement.Center,
             CenterHorizontally
         ) {
-
             if (searchResultPagingItems.loadState.refresh is LoadState.Loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.width(128.dp),
                     color = MaterialTheme.colorScheme.secondary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
-
-
             } else {
                 when (searchResultPagingItems.itemCount) {
                     0 -> NoSearchResults()
@@ -399,10 +289,100 @@ private fun SearchView(
                         ListDetailLayout(
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
-                            onRefreshDetails = {  item -> onRefreshSingleItem(item) },
+                            onRefreshDetails = { item -> onRefreshSingleItem(item) },
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchPreviewContent(
+    active: Boolean,
+    searchResultPagingItems: LazyPagingItems<ProductModel>,
+    historyItems: List<HistorySearchItem>,
+    quickSearchItems: List<QuickSearchItem>,
+    onHistorieItemClicked: (String) -> Unit,
+    onQuickSearchItemClicked: (QuickSearchItem) -> Unit,
+) {
+
+    logger.debug { "SearchBar:Content:active: $active" }
+    logger.debug { "SearchBar:Content:pokemonPagingItems: ${searchResultPagingItems.loadState.refresh}" }
+    logger.debug { "SearchBar:Content:itemCount: ${searchResultPagingItems.itemCount}" }
+    if (active) {
+        LazyColumn {
+            items(
+                count = historyItems.size + quickSearchItems.size
+            ) { index ->
+
+                if (index < historyItems.size) {
+                    val item = historyItems[index]
+                    Row(modifier = Modifier
+                        .padding(all = 4.dp)
+                        .clickable { onHistorieItemClicked(item.displayName) }
+                    )
+                    {
+                        Icon(
+                            modifier = Modifier.padding(end = 8.dp),
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null
+                        )
+                        Text(text = item.displayName)
+                    }
+                } else {
+                    val item = quickSearchItems[index - historyItems.size]
+                    Row(modifier = Modifier
+                        .padding(all = 4.dp)
+                        .clickable { onQuickSearchItemClicked(item) }
+                    )
+                    {
+                        Icon(
+                            modifier = Modifier.padding(end = 8.dp),
+                            imageVector = Icons.Default.Star, contentDescription = null
+                        )
+                        Column(
+                            modifier = Modifier.padding(end = 1.dp)
+                        ) {
+                            Text(
+                                text = "${item.displayName} (${item.code})",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Row(modifier = Modifier.padding(end = 1.dp)) {
+                                val txt = "${item.nameDe} | ${item.nameEn} | ${item.nameFr}"
+                                Text(
+                                    text = txt,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+@Composable
+private fun SearchTrailingIcon(
+    query: String,
+    onClick: () -> Unit,
+) {
+
+    Row(modifier = Modifier.padding(end = 8.dp)) {
+        if (query.isNotEmpty()) {
+            IconButton(
+                onClick = { onClick() }
+            )
+            {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    contentDescription = stringResource(id = R.string.clearSearch)
+                )
             }
         }
     }
@@ -442,7 +422,7 @@ fun ListDetailLayout(
                             ItemOfInterestCard(
                                 productModel = productModel!!,
                                 showLastUpdated = false,
-                                iconRowContent = {  },
+                                iconRowContent = { },
                                 modifier = Modifier
                                     .fillParentMaxWidth()
                                     .clickable {
@@ -474,272 +454,6 @@ fun ListDetailLayout(
     )
 }
 
-
-@Composable
-fun SearchViewCardIconRow(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .padding(1.dp)
-            .fillMaxSize(),
-        horizontalArrangement = Arrangement.SpaceBetween
-
-    ) {
-        ClickableIconButton(
-            icon = Icons.TwoTone.Add,
-            desc = stringResource(id = R.string.addDesc),
-            onClick = {})
-    }
-}
-
-
-class SearchViewModel(
-    private val settingsDatabase: SettingsDatabase,
-    private val searchCacheDatabase: SearchCacheDatabase,
-    quickSearchDatabase: QuickSearchDatabase,
-
-    ) : ViewModel() {
-
-
-    private val quicksearchRepository =
-        QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
-
-    private val _settings: MutableStateFlow<SettingsEntity> = MutableStateFlow(
-        SettingsEntity(
-            id = 1,
-            language = Languages.EN,
-            engine = Engines.KTOR
-        )
-    )
-    private val settings: StateFlow<SettingsEntity> = _settings.asStateFlow()
-
-    private val _showHistoryContent = MutableStateFlow(false)
-    val showHistoryContent = _showHistoryContent.asStateFlow()
-
-    private val _lastQuery: MutableStateFlow<String> = MutableStateFlow("")
-    private val lastQuery: StateFlow<String> = _lastQuery.asStateFlow()
-
-    private val _query: MutableStateFlow<String> = MutableStateFlow("")
-    private val query: StateFlow<String> = _query.asStateFlow()
-
-    private val _refreshItem: MutableStateFlow<RefreshWrapper> = MutableStateFlow(RefreshWrapper(item = null, query = "", state = RefreshState.IDLE))
-    private val refreshItem: StateFlow<RefreshWrapper> = _refreshItem.asStateFlow()
-
-    private val _quicksearchItem: MutableStateFlow<ProductModel?> = MutableStateFlow(null)
-    private val quicksearchItem: StateFlow<ProductModel?> = _quicksearchItem.asStateFlow()
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
-        combine(query, refreshItem, quicksearchItem) { latestSearchQuery, latestRefreshItem, quicksearchItem ->
-            logger.debug { "SearchViewModel:: Flow of query or refreshItem or quicksearchItme changed: $latestSearchQuery, $latestRefreshItem $quicksearchItem" }
-
-            val config = CardmarketConfig(settings.value)
-            val productApiClient = CardmarketApiClientFactory(config).create()
-            val pokemonPager =
-                PokemonPager.providePokemonPager(
-                    latestSearchQuery,
-                    latestRefreshItem,
-                    quicksearchItem,
-                    searchCacheDatabase,
-                    productApiClient
-                )
-            val pokemonRepositoryImpl = CardmarketPokemonRepositoryAdapter(pokemonPager)
-            logger.debug { "getPokemonList now" }
-            val getPokemonList = GetPokemonList(pokemonRepositoryImpl)
-            logger.debug { "getPokemonList done" }
-            val pagingDataFlow = getPokemonList().cachedIn(viewModelScope)
-            pagingDataFlow
-        }.flatMapLatest { it }
-
-
-    private var unfilteredHistoryItems: ArrayList<String> = arrayListOf()
-    private val _historyList = MutableStateFlow<List<HistorySearchItem>>(mutableListOf())
-    val historyList: StateFlow<List<HistorySearchItem>> =
-
-        query.combine(_historyList) { text, historyItems ->
-            logger.debug { "history combine: $text and $historyItems" }
-            historyItems
-        }.stateIn(//basically convert the Flow returned from combine operator to StateFlow
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),//it will allow the StateFlow survive 5 seconds before it been canceled
-            initialValue = emptyList()
-        )
-
-    private val _quickSearchList = MutableStateFlow<List<QuickSearchItem>>(mutableListOf())
-    val quickSearchList: StateFlow<List<QuickSearchItem>> = _quickSearchList.asStateFlow()
-
-
-    init {
-        logger.debug { "SearchViewModel::init" }
-        viewModelScope.launch(Dispatchers.IO) {
-            val settingsEntity = SettingsRepositoryImpl(settingsDatabase.settingsDao).load()
-            logger.debug { "SettingsEntity: $settingsEntity" }
-            _settings.value = settingsEntity
-
-            val searchHistory =
-                SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao).getSearchHistory()
-
-            logger.debug { "searchHistory: $searchHistory" }
-            unfilteredHistoryItems.addAll(searchHistory)
-            _historyList.value = searchHistory.map { HistorySearchItem(displayName = it) }
-        }
-    }
-
-
-    // Define ViewModel factory in a companion object
-    companion object {
-
-        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(
-                modelClass: Class<T>,
-                extras: CreationExtras
-            ): T {
-                logger.debug { "Creating SearchViewModel" }
-                val settingsDb = extras[SettingsDbIdKey]
-                val searchCacheDb = extras[SearchCacheRepoIdKey]
-                val quickSearchDb = extras[QuickSearchRepoIdKey]
-
-                return SearchViewModel(
-                    settingsDb!!,
-                    searchCacheDb!!,
-                    quickSearchDb!!
-                ) as T
-            }
-        }
-    }
-
-
-    fun onSearchQueryChange(newQuery: String) {
-        logger.debug { "SearchViewModel::onSearchQueryChange: $newQuery" }
-
-        _quicksearchItem.value=null
-        _historyList.value =
-            if (newQuery.isBlank()) { //return the entire list of items if not is typed
-                unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
-            } else {
-
-                val filteredHistoryItems =
-                    unfilteredHistoryItems.filter { historyItem ->// filter and return a list of countries based on the text the user typed
-                        historyItem.uppercase().contains(newQuery.trim().uppercase())
-                    }
-                logger.debug { "filter result: $filteredHistoryItems" }
-                filteredHistoryItems.map { HistorySearchItem(displayName = it) }
-            }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            _quickSearchList.value =
-                if (newQuery.isBlank()) {
-                    emptyList()
-                } else {
-
-                    logger.debug { "query quick search" }
-                    val pokemonCardQuickEntities = quicksearchRepository.find(newQuery)
-                    val result = pokemonCardQuickEntities.map {
-                        QuickSearchItem(
-                            id = it.id,
-                            nameDe = it.nameDe,
-                            nameEn = it.nameEn,
-                            nameFr = it.nameFr,
-                            code = it.code,
-                            cmSetId = it.cmSetId,
-                            cmCardId = it.cmCardId,
-                            displayName = it.nameDe //make this configurable based on the language setting
-                        )
-                    }
-                    logger.debug { "$result" }
-                    result
-                }
-        }
-    }
-
-    fun onBack() : Boolean {
-        logger.debug { "SearchViewModel::onBack: state: ${_refreshItem.value.state}" }
-
-        _quicksearchItem.value = null
-        if(_refreshItem.value.state == RefreshState.REFRESH_ITEM) {
-            _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.IDLE)
-            return false
-        }
-        return  true
-
-    }
-
-
-    fun onRefreshSearch() {
-        logger.debug { "SearchViewModel::onRefreshSearch" }
-        _quicksearchItem.value = null
-        _refreshItem.value = RefreshWrapper(item = null, query = _query.value, state = RefreshState.REFRESH_SEARCH)
-    }
-
-    fun onRefreshSingleItem(item: ProductModel) {
-        logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
-        _quicksearchItem.value = null
-        _refreshItem.value = RefreshWrapper(item, query = "", state = RefreshState.REFRESH_ITEM)
-    }
-
-    fun onSearchSubmit(searchString: String) {
-        logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
-        _quicksearchItem.value = null
-        if (searchString.isEmpty()) {
-            logger.debug { "Empty search" }
-            return
-        }
-        if (unfilteredHistoryItems.none {
-                it.contentEquals(
-                    other = searchString,
-                    ignoreCase = true
-                )
-            })
-            unfilteredHistoryItems.add(searchString)
-        _historyList.value =
-            unfilteredHistoryItems.map { HistorySearchItem(displayName = it) }
-        _query.value = searchString
-        _lastQuery.value = searchString
-        _quickSearchList.value = emptyList()
-        onActiveChanged(searchString, false)
-    }
-
-    fun onActiveChanged(query: String, active: Boolean) {
-        logger.debug { "SearchModel::onActiveChanged: current show history =  ${_showHistoryContent.value}" }
-        logger.debug { "SearchModel::onActiveChanged: propagated active =  $active" }
-        logger.debug { "SearchModel::onActiveChanged: query =  $query" }
-        logger.debug { "SearchModel::onActiveChanged: lastQuery  = ${_lastQuery.value}" }
-        logger.debug { "SearchModel::onActiveChanged: filteredHistoryList  = ${_historyList.value}" }
-        logger.debug { "SearchModel::onActiveChanged: quichsearchItem  = ${_quicksearchItem.value}" }
-
-        val determineShowHistory = determineShowHistory(query, active)
-        logger.debug { "SearchModel::onActiveChanged: new show history =  $determineShowHistory" }
-        _showHistoryContent.value = determineShowHistory
-
-    }
-
-    private fun determineShowHistory(query: String, active: Boolean): Boolean {
-        if (query.isBlank() && active) { //reset
-            _lastQuery.value = ""
-        }
-        if (query.isBlank() && _lastQuery.value.isBlank()) {
-            return true
-        }
-        if (query.isBlank())
-            return false
-        if (_historyList.value.isEmpty())
-            return false
-
-        if (StringUtils.equals(query, lastQuery.value))
-            return false
-
-        return true
-    }
-
-    fun onQuickSearch(item: ProductModel) {
-        logger.debug { "SearchViewModel::onQuickSearch: $item" }
-        _quicksearchItem.value = item
-        _showHistoryContent.value = false
-
-    }
-
-
-}
 
 @Composable
 private fun NoSearchResults() {
@@ -798,10 +512,9 @@ private fun ItemCardDetailLayout(
                         contentDescription = productModel.id,
                         modifier = Modifier
                             .padding(innerPadding)
-                            .height(410.dp) //this sucks, but i dont know how to max the height and width of an image but keep the aspect ratio
                             .fillMaxWidth(),
 
-                        contentScale = ContentScale.FillHeight,
+                        contentScale = ContentScale.FillWidth,
                         imageLoader = LocalContext.current.imageLoader.newBuilder()
                             .logger(DebugLogger())
                             .build()
@@ -813,84 +526,42 @@ private fun ItemCardDetailLayout(
                             .fillMaxSize(),
                         elevation = CardDefaults.cardElevation()
                     ) {
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .width(32.dp)
-                                            .height(32.dp)
-                                            .padding(4.dp),
-                                        painter = painterResource(R.drawable.de_language_icon),
-                                        contentDescription = stringResource(id = R.string.nameLabel)
-                                    )
-
-                                    Text(
-                                        text = productModel.localName,
-                                        style = MaterialTheme.typography.headlineMedium
-                                    )
-
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .width(32.dp)
-                                            .height(32.dp)
-                                            .padding(4.dp),
-                                        painter = painterResource(R.drawable.globe_line_icon),
-                                        contentDescription = stringResource(id = R.string.nameLabel)
-                                    )
-                                    Text(
-                                        text = productModel.orgName,
-                                        style = MaterialTheme.typography.headlineSmall
-                                    )
-
-                                }
-
-
-
-                                Row (verticalAlignment = Alignment.CenterVertically)
-                                {
-                                    Icon(
-                                        modifier = Modifier
-                                            .width(32.dp)
-                                            .height(32.dp)
-                                            .padding(4.dp),
-                                        painter = painterResource(R.drawable.price_tag_euro_icon),
-                                        contentDescription = stringResource(id = R.string.priceLabel)
-                                    )
-                                    Text(
-                                        text = productModel.price,
-                                        style = MaterialTheme.typography.headlineLarge
-                                    )
-                                }
-                                Row (verticalAlignment = Alignment.CenterVertically){
-                                    Icon(
-                                        modifier = Modifier
-                                            .width(32.dp)
-                                            .height(32.dp)
-                                            .padding(4.dp),
-                                        painter = painterResource(R.drawable.stock_market_icon),
-                                        contentDescription = stringResource(id = R.string.priceLabel)
-                                    )
-                                    Text(
-                                        text = productModel.priceTrend,
-                                        style = MaterialTheme.typography.headlineSmall
-                                    )
-
-                                }
-
-
-
-
+                        IconWithText(painterResource(R.drawable.de_language_icon),stringResource(id = R.string.nameLabel),productModel.localName, MaterialTheme.typography.headlineMedium)
+                        IconWithText(painterResource(R.drawable.globe_line_icon),stringResource(id = R.string.nameLabel),productModel.orgName, MaterialTheme.typography.headlineSmall)
+                        IconWithText(painterResource(R.drawable.price_tag_euro_icon),stringResource(id = R.string.priceLabel),productModel.price, MaterialTheme.typography.headlineLarge)
+                        IconWithText(painterResource(R.drawable.stock_market_icon),stringResource(id = R.string.priceLabel),productModel.priceTrend, MaterialTheme.typography.headlineSmall)
                     }
                 }
             }
         }
     )
+}
 
+@Composable
+private fun IconWithText(
+    icon: Painter,
+    desc: String,
+    text: String,
+    testStyle: TextStyle
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            modifier = Modifier
+                .width(32.dp)
+                .height(32.dp)
+                .padding(4.dp),
+            painter = icon,
+            contentDescription = desc
+        )
 
+        Text(
+            text = text,
+            style = testStyle
+        )
+
+    }
 }
 
 
@@ -907,11 +578,11 @@ fun PullToRefreshLazyColumn(
     val onRefresh: () -> Unit = {
         isRefreshing = true
         coroutineScope.launch {
-            logger.debug{"PullToRefreshLazyColumn::onRefresh"}
+            logger.debug { "PullToRefreshLazyColumn::onRefresh" }
             onRefreshContent()
-            logger.debug{"PullToRefreshLazyColumn::delay"}
+            logger.debug { "PullToRefreshLazyColumn::delay" }
             delay(100)
-            logger.debug{"PullToRefreshLazyColumn::done"}
+            logger.debug { "PullToRefreshLazyColumn::done" }
             isRefreshing = false
         }
     }
