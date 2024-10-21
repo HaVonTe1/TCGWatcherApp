@@ -2,8 +2,8 @@ package de.dkutzer.tcgwatcher
 
 
 
-import de.dkutzer.tcgwatcher.cards.control.toSearchItemEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.data.toSearchItemEntity
+import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 

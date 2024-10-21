@@ -1,13 +1,13 @@
 package de.dkutzer.tcgwatcher
 
-import de.dkutzer.tcgwatcher.cards.boundary.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.cards.control.CardmarketCardsSearchServiceAdapter
-import de.dkutzer.tcgwatcher.cards.control.cache.SearchCacheRepository
-import de.dkutzer.tcgwatcher.cards.entity.ProductItemEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchEntity
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultItemDto
-import de.dkutzer.tcgwatcher.cards.entity.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.cards.entity.SearchWithItemsEntity
+import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
+import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

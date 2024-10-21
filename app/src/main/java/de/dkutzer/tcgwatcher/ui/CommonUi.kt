@@ -28,7 +28,7 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.entity.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import java.time.OffsetDateTime
 
 

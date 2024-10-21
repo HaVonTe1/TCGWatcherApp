@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.cards.entity.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 
 @Composable
 fun ItemsOfInterestScreen(ioiList: List<ProductModel> = emptyList(), modifier: Modifier = Modifier) {
