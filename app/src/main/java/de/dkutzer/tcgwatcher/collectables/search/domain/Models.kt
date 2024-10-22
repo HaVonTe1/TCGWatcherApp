@@ -1,8 +1,11 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
 
+@Parcelize
 data class ProductModel(
     val id: String,
     val localName: String,
@@ -13,7 +16,7 @@ data class ProductModel(
     val price: String,
     val priceTrend: String,
     val timestamp: Long
-)
+) : Parcelable
 
 
 data class SearchResultsPage(

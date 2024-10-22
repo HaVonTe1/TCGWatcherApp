@@ -9,6 +9,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -37,9 +40,11 @@ fun ItemCardDetailLayout(
 ) {
     val innerPadding = 1.dp
 
+    val item by rememberSaveable (productModel) { mutableStateOf(productModel) }
+
     PullToRefreshLazyColumn(
         modifier = modifier,
-        onRefreshContent = { onRefreshItemDetailsContent(productModel) },
+        onRefreshContent = { onRefreshItemDetailsContent(item) },
         content = {
             LazyColumn(
                 modifier = Modifier
@@ -53,7 +58,7 @@ fun ItemCardDetailLayout(
 
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(productModel.imageUrl)
+                            .data(item.imageUrl)
                             .setHeader(USER_AGENT, userAgent)
                             .setHeader(
                                 REFERER,
@@ -61,7 +66,7 @@ fun ItemCardDetailLayout(
                             )
                             .build(),
 
-                        contentDescription = productModel.id,
+                        contentDescription = item.id,
                         modifier = Modifier
                             .padding(innerPadding)
                             .fillMaxWidth(),
@@ -81,26 +86,26 @@ fun ItemCardDetailLayout(
                         IconWithText(
                             painterResource(R.drawable.de_language_icon),
                             stringResource(id = R.string.nameLabel),
-                            productModel.localName,
-                            MaterialTheme.typography.headlineMedium
+                            item.localName,
+                            MaterialTheme.typography.headlineLarge
                         )
                         IconWithText(
                             painterResource(R.drawable.globe_line_icon),
                             stringResource(id = R.string.nameLabel),
-                            productModel.orgName,
-                            MaterialTheme.typography.headlineSmall
+                            item.orgName,
+                            MaterialTheme.typography.bodyMedium
                         )
                         IconWithText(
                             painterResource(R.drawable.price_tag_euro_icon),
                             stringResource(id = R.string.priceLabel),
-                            productModel.price,
+                            item.price,
                             MaterialTheme.typography.headlineLarge
                         )
                         IconWithText(
                             painterResource(R.drawable.stock_market_icon),
                             stringResource(id = R.string.priceLabel),
-                            productModel.priceTrend,
-                            MaterialTheme.typography.headlineSmall
+                            item.priceTrend,
+                            MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -116,13 +121,13 @@ fun ItemCardDetailLayoutPreview(modifier: Modifier = Modifier) {
         ItemCardDetailLayout(
             productModel = ProductModel(
                 "test",
-                "test",
-                "test",
-                "test",
-                "test",
-                "test",
-                "test",
-                "test",
+                "Blitza",
+                "blitza-1234",
+                "Jolteon",
+                "https://havonte.ddns.net/core/img/logo/logo.svg",
+                "https://havonte.ddns.net/core/img/logo/logo.svg",
+                "12.34",
+                "56.78",
                 Instant.now().epochSecond,),
             onRefreshItemDetailsContent = {}
         )

@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -15,20 +13,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
+import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.presentation.components.IconWithText
+import java.time.Instant
 import java.time.OffsetDateTime
 
 
@@ -70,7 +71,7 @@ fun ItemOfInterestCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(1.dp)
+                .padding(4.dp)
                 .fillMaxWidth()
         ) {
             AsyncImage(
@@ -84,7 +85,7 @@ fun ItemOfInterestCard(
                 contentDescription = productModel.id,
                 modifier = Modifier
                     .weight(.3f, true)
-                    .padding(1.dp),
+                    .padding(4.dp),
                 contentScale = ContentScale.FillWidth,
                 imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger()).build()
             )
@@ -92,7 +93,7 @@ fun ItemOfInterestCard(
                 modifier = Modifier
                     .weight(.7f, false)
                     .fillMaxWidth()
-                    .padding(1.dp),
+                    .padding(4.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
                 ItemDetailsTable(
@@ -123,55 +124,49 @@ fun ItemDetailsTable(
 
     Column(modifier = modifier.padding(1.dp))
     {
-        Row(
-            modifier = Modifier.padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier
-                    .width(32.dp)
-                    .height(32.dp)
-                    .padding(4.dp),
-                painter = painterResource(R.drawable.de_language_icon),
-                contentDescription = stringResource(id = R.string.nameLabel)
+
+            IconWithText(
+                icon = painterResource(R.drawable.de_language_icon),
+                desc = stringResource(id = R.string.nameLabel),
+                text = localName,
+                testStyle = MaterialTheme.typography.headlineLarge,
+                iconHeigh = 32
             )
-            Text(text = localName, style = MaterialTheme.typography.headlineMedium)
-        }
-        Row(
-            modifier = Modifier.padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+
             Text(text = " ($code)", style = MaterialTheme.typography.bodySmall)
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier
-                    .width(32.dp)
-                    .height(32.dp)
-                    .padding(4.dp),
-                painter = painterResource(R.drawable.price_tag_euro_icon),
-                contentDescription = stringResource(id = R.string.nameLabel)
+
+            IconWithText(
+                icon = painterResource(R.drawable.price_tag_euro_icon),
+                desc = stringResource(id = R.string.nameLabel),
+                text = price,
+                testStyle = MaterialTheme.typography.headlineLarge,
+                iconHeigh = 32
+
             )
-            Text(text = price, style = MaterialTheme.typography.headlineLarge)
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier
-                    .width(32.dp)
-                    .height(32.dp)
-                    .padding(4.dp),
-                painter = painterResource(R.drawable.stock_market_icon),
-                contentDescription = stringResource(id = R.string.nameLabel)
-            )
-            Text(text = priceTrend, style = MaterialTheme.typography.headlineLarge)
-        }
+            Text(text = " ($priceTrend)", style = MaterialTheme.typography.bodySmall)
+
     }
 }
 
 
 
-
+@PreviewLightDark()
+@Composable
+fun ItemOfInterestCardPreview() {
+    TCGWatcherTheme {
+        val sampleProduct = ProductModel(
+            "test",
+            "Blitza",
+            "blitza-1234",
+            "Jolteon",
+            "https://havonte.ddns.net/core/img/logo/logo.svg",
+            "https://havonte.ddns.net/core/img/logo/logo.svg",
+            "12.34",
+            "56.78",
+            Instant.now().epochSecond,)
+        ItemOfInterestCard(productModel = sampleProduct,
+            showLastUpdated = true,
+            iconRowContent = {}
+        )
+    }
+}
