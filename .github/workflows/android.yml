@@ -2,8 +2,11 @@ name: Build & Publish Release APK
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '*'
+
 
 jobs:
   Gradle:
@@ -19,8 +22,34 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build Release APK
         run: ./gradlew assembleRelease
-      - name: Releasing using Hub
-        uses: sangatdesai/release-apk@main
+      - name: Upload artifact Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: apk
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Download APK
+        uses: actions/download-artifact@v1
+        with:
+          name: apk
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          APP_FOLDER: app
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release APK
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./apk/app-release.apk
+          asset_name: TCGWatcherApp
+          asset_content_type: application/vnd.android.package-archive
