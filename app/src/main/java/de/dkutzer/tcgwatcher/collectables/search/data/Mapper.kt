@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+
 import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
