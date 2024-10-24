@@ -27,9 +27,9 @@ import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.search.data.REFERER
 import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
+import de.dkutzer.tcgwatcher.collectables.search.data.referrer
+import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.ui.referrer
-import okhttp3.internal.userAgent
 import java.time.Instant
 
 @Composable

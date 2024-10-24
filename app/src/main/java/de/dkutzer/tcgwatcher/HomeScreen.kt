@@ -1,4 +1,4 @@
-package de.dkutzer.tcgwatcher.ui
+package de.dkutzer.tcgwatcher
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,7 +18,6 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
-import de.dkutzer.tcgwatcher.R
 
 @Composable
 fun HomeScreen(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {

@@ -36,7 +36,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchScreen
-import de.dkutzer.tcgwatcher.ui.HomeScreen
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
