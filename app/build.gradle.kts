@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 
 plugins {
     id("com.android.application")
@@ -18,6 +19,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        archivesName = "TCGWatcherApp"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -26,6 +29,8 @@ android {
 
     buildTypes {
         release {
+
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
