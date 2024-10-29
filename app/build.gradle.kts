@@ -156,12 +156,12 @@ dependencies {
     //Testing
 
     testImplementation ("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.0.20")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.0.21")
 
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
