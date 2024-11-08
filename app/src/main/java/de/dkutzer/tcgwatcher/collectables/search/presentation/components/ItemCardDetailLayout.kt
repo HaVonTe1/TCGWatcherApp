@@ -23,13 +23,13 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.search.data.REFERER
 import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import java.time.Instant
 
 @Composable

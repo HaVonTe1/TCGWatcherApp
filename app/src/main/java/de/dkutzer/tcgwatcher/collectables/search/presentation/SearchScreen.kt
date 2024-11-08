@@ -22,13 +22,13 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.collectables.search.presentation.components.SearchView
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 

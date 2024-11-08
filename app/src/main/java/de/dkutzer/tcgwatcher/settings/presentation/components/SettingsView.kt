@@ -7,10 +7,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.settings.domain.Languages
 import de.dkutzer.tcgwatcher.settings.presentation.SettingsState
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 
 @Composable
 fun SettingsView(

@@ -16,8 +16,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 
 @Composable
 fun IconWithText(

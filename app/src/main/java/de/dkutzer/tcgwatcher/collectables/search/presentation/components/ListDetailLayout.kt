@@ -17,8 +17,8 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import kotlinx.coroutines.flow.flowOf
 import java.time.Instant
 
