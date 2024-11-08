@@ -18,10 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.collectables.search.domain.HistorySearchItem
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.QuickSearchItem
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.flowOf
 import java.time.Instant

@@ -5,12 +5,12 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
-
+    id("com.google.android.gms.oss-licenses-plugin")
 }
 
 android {
     namespace = "de.dkutzer.tcgwatcher"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "de.dkutzer.tcgwatcher"
@@ -99,27 +99,28 @@ val lifecycleVersion: String by rootProject.extra
 val pagingVersion: String by rootProject.extra
 
 dependencies {
+    implementation("com.google.android.gms:play-services-oss-licenses:17.1.0")
 
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.activity:activity-ktx:1.9.3")
-    implementation("androidx.fragment:fragment-ktx:1.8.4")
-    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation(platform("androidx.compose:compose-bom:2024.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material:1.7.4")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.compose.material:material:1.7.5")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.navigation:navigation-compose:2.8.3")
     implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
     implementation("com.google.accompanist:accompanist-permissions:0.36.0")
 
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.1")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0")
 
 
@@ -135,10 +136,10 @@ dependencies {
     //Parsing HTML
     implementation("org.htmlunit:htmlunit3-android:4.3.0")
     implementation("org.jsoup:jsoup:1.18.1")
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.test.ext:junit-ktx:1.2.1")
     implementation("androidx.test:runner:1.6.2")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
 
 //    logging
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
@@ -164,7 +165,7 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
 

@@ -7,7 +7,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.compose.TCGWatcherTheme
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.data.SettingsRepositoryImpl
@@ -15,6 +14,7 @@ import de.dkutzer.tcgwatcher.settings.domain.Engines
 import de.dkutzer.tcgwatcher.settings.domain.Languages
 import de.dkutzer.tcgwatcher.settings.domain.SettingsRepository
 import de.dkutzer.tcgwatcher.settings.presentation.components.SettingsView
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}

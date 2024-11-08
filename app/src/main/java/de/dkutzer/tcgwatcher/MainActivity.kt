@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -16,26 +17,36 @@ import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.compose.TCGWatcherTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchScreen
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
@@ -153,19 +164,19 @@ private fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-//            NavigationBar(
-//                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-//                contentColor = MaterialTheme.colorScheme.secondary,
-//                tonalElevation = 2.dp
-//            ) {
-//                val navBackStackEntry by navController.currentBackStackEntryAsState()
-//                val currentDestination = navBackStackEntry?.destination
-//
-//               // MyBottomNavigationItem(currentDestination, navController, Screen.HomeScreen)
-//                //MyBottomNavigationItem(currentDestination, navController, Screen.ItemsOfInterestScreen)
-//                MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
-//                //MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
-//            }
+            NavigationBar(
+                containerColor = Color.Transparent,
+                contentColor = Color.Transparent,
+                tonalElevation = 2.dp
+            ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+
+                MyBottomNavigationItem(currentDestination, navController, Screen.HomeScreen)
+                //MyBottomNavigationItem(currentDestination, navController, Screen.ItemsOfInterestScreen)
+                MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
+                //MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -179,4 +190,21 @@ private fun MainScreen() {
             //composable(Screen.SettingsScreen.route) { SettingsScreen() }
         }
     }
+}
+@Composable
+private fun RowScope.MyBottomNavigationItem(
+    currentDestination: NavDestination?,
+    navController: NavHostController,
+    screen: Screen
+) {
+    NavigationBarItem(
+        icon = { Icon(screen.icon, contentDescription = null) },
+        label = { Text(stringResource(screen.resourceId)) },
+        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+        onClick = {
+            navController.navigate(screen.route) {
+                launchSingleTop = true
+            }
+        }
+    )
 }
