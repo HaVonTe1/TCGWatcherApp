@@ -15,10 +15,6 @@ import de.dkutzer.tcgwatcher.settings.domain.Languages
 import de.dkutzer.tcgwatcher.settings.domain.SettingsRepository
 import de.dkutzer.tcgwatcher.settings.presentation.components.SettingsView
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import io.github.oshai.kotlinlogging.KotlinLogging
-
-private val logger = KotlinLogging.logger {}
-
 
 @Composable
 fun SettingsScreen() {
@@ -45,9 +41,9 @@ fun SettingsScreen() {
         }
     )
 
-    val setingsState = settingsViewModel.uiState.collectAsState()
+    val settingsState = settingsViewModel.uiState.collectAsState()
     SettingsView(
-        settingsState = setingsState.value,
+        settingsState = settingsState.value,
         availableLanguages = availableLanguages,
         availableEngines = availableEngines,
         onLanguageChanged = {

@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
-    id("com.google.android.gms.oss-licenses-plugin")
+    id("com.mikepenz.aboutlibraries.plugin")
 }
 
 android {
@@ -97,10 +97,9 @@ val roomVersion: String by rootProject.extra
 val ktorVersion: String by rootProject.extra
 val lifecycleVersion: String by rootProject.extra
 val pagingVersion: String by rootProject.extra
+val latestAboutLibsRelease: String by rootProject.extra
 
 dependencies {
-    implementation("com.google.android.gms:play-services-oss-licenses:17.1.0")
-
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
@@ -123,6 +122,7 @@ dependencies {
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.1")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0")
 
+    implementation("com.mikepenz:aboutlibraries-compose-m3:$latestAboutLibsRelease")
 
     //image download and caching
     implementation("io.coil-kt:coil-compose:2.7.0")
