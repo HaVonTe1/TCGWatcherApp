@@ -4,19 +4,14 @@ plugins {
     id("com.android.application") version "8.7.2" apply false
     id("org.jetbrains.kotlin.android") version "1.9.24" apply false
     id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
+    id("com.mikepenz.aboutlibraries.plugin") version "11.2.3" apply false
 }
 
 
-buildscript {
-    repositories {
-        google()
-    }
-    dependencies {
-        classpath("com.google.android.gms:oss-licenses-plugin:0.10.6")
-    }
-}
 
 
+
+val latestAboutLibsRelease by extra { "11.2.3" }
 val roomVersion by extra { "2.6.1" }
 val ktorVersion by extra { "3.0.0" }
 val lifecycleVersion by extra { "2.8.7" }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.twotone.Info
 import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material.icons.twotone.Settings
@@ -46,6 +47,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchScreen
+import de.dkutzer.tcgwatcher.help.presentation.HelpScreen
+import de.dkutzer.tcgwatcher.settings.presentation.SettingsScreen
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import org.slf4j.impl.HandroidLoggerAdapter
 
@@ -76,6 +79,7 @@ sealed class Screen(
 
     data object SearchScreen : Screen("search", R.string.search, icon = Icons.TwoTone.Search)
     data object SettingsScreen : Screen("settings", R.string.settings, icon = Icons.TwoTone.Settings)
+    data object HelpScreen : Screen("help", R.string.help, icon = Icons.TwoTone.Info)
 
 }
 
@@ -175,7 +179,7 @@ private fun MainScreen() {
                 MyBottomNavigationItem(currentDestination, navController, Screen.HomeScreen)
                 //MyBottomNavigationItem(currentDestination, navController, Screen.ItemsOfInterestScreen)
                 MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
-                //MyBottomNavigationItem(currentDestination, navController, Screen.SettingsScreen)
+                MyBottomNavigationItem(currentDestination, navController, Screen.HelpScreen)
             }
         }
     ) { innerPadding ->
@@ -187,7 +191,8 @@ private fun MainScreen() {
             composable(Screen.HomeScreen.route) { HomeScreen(snackbarHostState) }
             //composable(Screen.ItemsOfInterestScreen.route) { ItemsOfInterestScreen() }
             composable(Screen.SearchScreen.route) { SearchScreen(snackbarHostState) }
-            //composable(Screen.SettingsScreen.route) { SettingsScreen() }
+//            composable(Screen.SettingsScreen.route) { SettingsScreen() }
+            composable(Screen.HelpScreen.route) { HelpScreen() }
         }
     }
 }
