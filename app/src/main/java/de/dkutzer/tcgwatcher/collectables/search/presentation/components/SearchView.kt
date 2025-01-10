@@ -121,7 +121,7 @@ fun SearchView(
                     searchResultPagingItems,
                     historyItems,
                     quickSearchItems,
-                    onHistorieItemClicked = {
+                    onSearchHistoryItemClicked = {
                         logger.debug { "SearchBar:content:historyItemClick: $it" }
                         query = it
                         onSearchSubmit(it)
