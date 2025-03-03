@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.search.domain
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
+import java.util.UUID
 
 
 @Parcelize
@@ -27,15 +28,15 @@ data class SearchResultsPage(
 val cmBasePath  = "/de/Pokemon/Products/Singles/"
 
 data class QuickSearchItem(
-    val id: String,
-    override  val displayName: String,
+    override val id: String,
+    override val displayName: String,
     val nameDe: String,
     val nameEn: String,
     val nameFr: String,
     val code: String,
     val cmSetId: String,
     val cmCardId: String,
-): SearchSuggestionItem(displayName) {
+): SearchSuggestionItem(id, displayName) {
     fun toProductModel(): ProductModel {
         return ProductModel(
             id = id,
@@ -52,10 +53,11 @@ data class QuickSearchItem(
 }
 
 data class HistorySearchItem(
+    override val id: String = UUID.randomUUID().toString(),
     override val displayName: String,
-): SearchSuggestionItem(displayName)
+): SearchSuggestionItem(id, displayName)
 
-open class SearchSuggestionItem(open val displayName: String)
+open class SearchSuggestionItem(open val  id: String, open val displayName: String)
 
 
 data class RefreshWrapper(

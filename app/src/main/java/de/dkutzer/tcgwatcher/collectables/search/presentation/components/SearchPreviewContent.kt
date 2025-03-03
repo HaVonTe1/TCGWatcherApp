@@ -43,7 +43,10 @@ fun SearchPreviewContent(
     logger.debug { "SearchBar:Content:itemCount: ${products.itemCount}" }
     if (active) {
         LazyColumn {
-            items(searchHistory.size) { index ->
+            items(
+                count = searchHistory.size,
+                key = { index -> searchHistory[index].id })
+            { index ->
                 val item = searchHistory[index]
                 SearchItem(
                     icon = Icons.Default.Search,
@@ -51,7 +54,10 @@ fun SearchPreviewContent(
                     onClick = { onSearchHistoryItemClicked(item.displayName) }
                 )
             }
-            items(quickSearches.size) { index ->
+            items(
+                count = quickSearches.size,
+                key = { index -> quickSearches[index].id})
+            { index ->
                 val item = quickSearches[index]
                 SearchItem(
                     icon = Icons.Default.Star,
@@ -105,7 +111,7 @@ fun SearchPreviewContentPreview(modifier: Modifier = Modifier) {
     )
 
     val historySearchItem = HistorySearchItem(
-        "test"
+        displayName = "test"
     )
     TCGWatcherTheme {
         SearchPreviewContent(
