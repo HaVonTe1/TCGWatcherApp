@@ -3,6 +3,8 @@ package de.dkutzer.tcgwatcher.collectables.search.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.SnackbarHostState
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
@@ -109,6 +112,7 @@ fun SearchScreen(
 
 
     SearchView(
+        modifier = Modifier.fillMaxSize().padding(0.dp),
         searchResultPagingItems = searchResultPagingItems,
         historyList = searchViewModel.historyList,
         quickSearchList = searchViewModel.quickSearchList,

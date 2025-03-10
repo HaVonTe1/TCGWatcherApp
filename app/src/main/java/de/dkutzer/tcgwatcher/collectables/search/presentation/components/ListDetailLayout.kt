@@ -77,7 +77,25 @@ fun ListDetailLayout(
                 AnimatedPane {
                     ItemCardDetailLayout(
                         productModel = content as ProductModel,
-                        onRefreshItemDetailsContent = { onRefreshDetails(content) }
+                        onRefreshItemDetailsContent = { onRefreshDetails(content) },
+                        onImageClick = {
+                            navigator.navigateTo(
+                                pane = ListDetailPaneScaffoldRole.Extra,
+                                content = it
+                            )
+                        }
+                    )
+                }
+
+            }
+        },
+        extraPane = {
+            val content = navigator.currentDestination?.content //productModel
+            if (content != null) {
+                AnimatedPane {
+                    CardImage (
+                        productModel = content as ProductModel,
+                        onImageClick = {}
                     )
                 }
 

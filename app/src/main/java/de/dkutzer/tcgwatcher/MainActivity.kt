@@ -6,8 +6,10 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -18,7 +20,6 @@ import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -48,7 +49,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchScreen
 import de.dkutzer.tcgwatcher.help.presentation.HelpScreen
-import de.dkutzer.tcgwatcher.settings.presentation.SettingsScreen
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import org.slf4j.impl.HandroidLoggerAdapter
 
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             HandroidLoggerAdapter.APP_NAME = "TCGWatcher"
@@ -169,8 +170,8 @@ private fun MainScreen() {
     Scaffold(
         bottomBar = {
             NavigationBar(
+                modifier = Modifier.height(56.dp), // Adjust height (default is 80.dp)
                 containerColor = Color.Transparent,
-                contentColor = Color.Transparent,
                 tonalElevation = 2.dp
             ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -203,8 +204,12 @@ private fun RowScope.MyBottomNavigationItem(
     screen: Screen
 ) {
     NavigationBarItem(
-        icon = { Icon(screen.icon, contentDescription = null) },
-        label = { Text(stringResource(screen.resourceId)) },
+        modifier = Modifier.padding(vertical = 4.dp), // Reduced vertical padding
+        icon = {
+            Icon(
+                screen.icon, contentDescription = null)
+               },
+        //label = { Text(fontSize = 12.sp, text= stringResource(screen.resourceId)) },
         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
         onClick = {
             navController.navigate(screen.route) {

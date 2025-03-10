@@ -3,8 +3,8 @@ package de.dkutzer.tcgwatcher.collectables.history.data
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
@@ -13,6 +13,16 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 
 
+/**
+ * `PokemonPager` is an abstract class responsible for providing a `Pager` instance
+ * for fetching and managing a paginated list of `ProductItemEntity` objects,
+ * representing Pokemon card data.
+ *
+ * This class utilizes the Highlander pattern to ensure that only a single `Pager`
+ * instance is created and shared throughout the application. It handles different
+ * types of data retrieval, such as searching by a term, refreshing a specific item,
+ * or performing a quick search.
+ */
 abstract class PokemonPager {
     //Highlander Pattern
     companion object {

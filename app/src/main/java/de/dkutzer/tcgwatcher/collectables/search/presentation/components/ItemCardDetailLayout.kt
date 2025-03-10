@@ -11,23 +11,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
-import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.R
-import de.dkutzer.tcgwatcher.collectables.search.data.REFERER
-import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
-import de.dkutzer.tcgwatcher.collectables.search.data.referrer
-import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import java.time.Instant
@@ -37,10 +27,11 @@ fun ItemCardDetailLayout(
     productModel: ProductModel,
     modifier: Modifier = Modifier,
     onRefreshItemDetailsContent: (item: ProductModel) -> Unit,
+    onImageClick: (item: ProductModel) -> Unit = {}
 ) {
-    val innerPadding = 1.dp
 
-    val item by rememberSaveable (productModel) { mutableStateOf(productModel) }
+
+    val item by remember(productModel) { mutableStateOf(productModel) }
 
     PullToRefreshLazyColumn(
         modifier = modifier,
@@ -48,7 +39,7 @@ fun ItemCardDetailLayout(
         content = {
             LazyColumn(
                 modifier = Modifier
-                    .padding(innerPadding)
+                    .padding(1.dp)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.Top,
             ) {
@@ -56,31 +47,12 @@ fun ItemCardDetailLayout(
                     count = 1
                 ) {
 
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .setHeader(USER_AGENT, userAgent)
-                            .setHeader(
-                                REFERER,
-                                referrer
-                            )
-                            .build(),
-
-                        contentDescription = item.id,
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .fillMaxWidth(),
-
-                        contentScale = ContentScale.FillWidth,
-                        imageLoader = LocalContext.current.imageLoader.newBuilder()
-                            .logger(DebugLogger())
-                            .build()
-                    )
+                    CardImage(item, onImageClick)
 
                     Card(
                         modifier = Modifier
-                            .padding(innerPadding)
-                            .fillMaxSize(),
+                            .padding(1.dp)
+                            .fillMaxWidth(),
                         elevation = CardDefaults.cardElevation()
                     ) {
                         IconWithText(
@@ -128,7 +100,8 @@ fun ItemCardDetailLayoutPreview(modifier: Modifier = Modifier) {
                 "https://havonte.ddns.net/core/img/logo/logo.svg",
                 "12.34",
                 "56.78",
-                Instant.now().epochSecond,),
+                Instant.now().epochSecond,
+            ),
             onRefreshItemDetailsContent = {}
         )
     }

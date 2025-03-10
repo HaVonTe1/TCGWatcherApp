@@ -2,7 +2,10 @@ package de.dkutzer.tcgwatcher.collectables.search.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -51,6 +54,7 @@ fun SearchView(
     onRefreshSearch: () -> Unit,
     onRefreshSingleItem: (item: ProductModel) -> Unit,
     onQuicksearchItemClick: (item: ProductModel) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -65,14 +69,22 @@ fun SearchView(
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val isLoading = searchResultPagingItems.loadState.refresh is LoadState.Loading
+    val itemCount = if (!isLoading) searchResultPagingItems.itemCount else 0
+
+
     Column(
-        modifier = Modifier
+        modifier = Modifier.padding(1.dp)
             .fillMaxSize()
     ) {
 
         SearchBar(
+            windowInsets = WindowInsets(top = 0.dp),
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp, bottom = 4.dp), // Minimal vertical padding // Reduced horizontal padding
             inputField = {
+
                 SearchBarDefaults.InputField(
+                    modifier = Modifier.height(30.dp),
                     query = query,
                     onQueryChange = { text ->
                         logger.debug { "SearchBar::OnQueryChange: $text" }
@@ -134,28 +146,31 @@ fun SearchView(
                 )
             }
         )
+
+
         Column(
-            modifier = Modifier.fillMaxSize(),
-            Arrangement.Center,
-            Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(0.dp),
+            verticalArrangement = if (isLoading) Arrangement.Center else Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (searchResultPagingItems.loadState.refresh is LoadState.Loading) {
+            if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.width(128.dp),
                     color = MaterialTheme.colorScheme.secondary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
             } else {
-                when (searchResultPagingItems.itemCount) {
+                when (itemCount) {
                     0 -> NoSearchResults()
                     1 -> ItemCardDetailLayout(
                         productModel = searchResultPagingItems[0]!!,
                         onRefreshItemDetailsContent = { onRefreshSingleItem(searchResultPagingItems[0]!!) },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
                     )
 
                     else -> {
                         ListDetailLayout(
+                            modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
                             onRefreshDetails = { item -> onRefreshSingleItem(item) },
