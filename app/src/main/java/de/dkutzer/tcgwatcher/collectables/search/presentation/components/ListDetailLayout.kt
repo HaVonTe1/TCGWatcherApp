@@ -83,6 +83,9 @@ fun ListDetailLayout(
                                 pane = ListDetailPaneScaffoldRole.Extra,
                                 content = it
                             )
+                        },
+                        onBackClick = {
+                            navigator.navigateBack()
                         }
                     )
                 }
