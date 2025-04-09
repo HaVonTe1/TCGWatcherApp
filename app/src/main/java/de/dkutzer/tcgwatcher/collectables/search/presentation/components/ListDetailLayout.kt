@@ -37,10 +37,10 @@ fun ListDetailLayout(
         navigator = navigator,
         listPane = {
 
-            PullToRefreshLazyColumn(
-                modifier = modifier,
-                onRefreshContent = { onRefreshList() },
-                content = {
+//            PullToRefreshLazyColumn(
+//                modifier = modifier,
+//                onRefreshContent = { onRefreshList() },
+//                content = {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -67,8 +67,8 @@ fun ListDetailLayout(
                             )
                         }
                     }
-                }
-            )
+                //}
+           // )
 
         },
         detailPane = {

@@ -22,9 +22,7 @@ import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-
 import java.time.Instant
-import java.time.OffsetDateTime
 
 @Composable
 fun ItemOfInterestCard(
@@ -67,16 +65,11 @@ fun ItemOfInterestCard(
                 verticalArrangement = Arrangement.Bottom
             ) {
                 ItemDetailsTable(
-                    localName = productModel.localName,
-                    code = productModel.code,
-                    price = productModel.price,
-                    priceTrend = productModel.priceTrend,
-                    showLastUpdated = showLastUpdated,
-                    lastUpdated = OffsetDateTime.now(),
+                    productModel,
                     modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxHeight(.9f)
-                )
+                    .padding(4.dp)
+                    .fillMaxHeight(.9f))
+
                 iconRowContent()
             }
         }

@@ -1,6 +1,9 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
+import de.dkutzer.tcgwatcher.collectables.search.domain.OrgNameType
+import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 
@@ -11,30 +14,30 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
         val resultItemList = listOf(
             SearchResultItemDto(
                 displayName = "Blaues Pokemon",
-                code = "TST 1",
-                orgName = "Blue Pokemon",
+                code = CodeType("TST 1", true),
+                orgName = OrgNameType("Blue Pokemon",true),
                 cmLink = "https://localhost:8080/test/bluepoke",
                 imgLink = "https://havonte.ddns.net/test/card_blue.png",
                 price = "1.00 €",
-                priceTrend = "2.00 €"
+                priceTrend = PriceTrendType("2.00 €", true)
             ),
             SearchResultItemDto(
                 displayName = "Braunes Pokemon",
-                code = "TST 2",
-                orgName = "Brown Pokemon",
+                code = CodeType("TST 2", true),
+                orgName = OrgNameType("Brown Pokemon",true),
                 cmLink = "https://localhost:8080/test/brownpoke",
                 imgLink = "https://havonte.ddns.net/test/card_braun.png",
                 price = "2.00 €",
-                priceTrend = "1.00 €"
+                priceTrend =  PriceTrendType("1.00 €",true)
             ),
             SearchResultItemDto(
                 displayName = "Grünes Pokemon",
-                code = "TST 3",
-                orgName = "Green Pokemon",
+                code = CodeType("TST 3",true),
+                orgName = OrgNameType("Green Pokemon",true),
                 cmLink = "https://localhost:8080/test/greenpoke",
                 imgLink = "https://havonte.ddns.net/test/card_green.png",
                 price = "3.00 €",
-                priceTrend = "1.00 €"
+                priceTrend = PriceTrendType("1.00 €",true)
             ),
             SearchResultItemDto(
                 displayName = "Rotes Pokemon",

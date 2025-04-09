@@ -1,9 +1,12 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
+import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
+import de.dkutzer.tcgwatcher.collectables.search.domain.OrgNameType
+import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Document
 
@@ -51,12 +54,12 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
             val itemDto = SearchResultItemDto(
                 displayName = name ?: localName,
-                code = code ?: "",
-                orgName = "---",
+                code = CodeType( code ?: "", code != null),
+                orgName = OrgNameType(  "---", false),
                 cmLink = cmLink,
                 imgLink = imageLink,
                 price = intPrice,
-                priceTrend = "?"
+                priceTrend = PriceTrendType( "?", false)
             )
 
             searchResultItemDtos.add(itemDto)
@@ -136,6 +139,6 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         }
 
-        return CardDetailsDto(displayName =name ?: displayName, code = code ?: "", orgName =orgName, imageUrl,link, localPrice, localPriceTrend)
+        return CardDetailsDto(displayName =name ?: displayName, code = CodeType(code ?: "", code != null), orgName =OrgNameType(orgName, true), imageUrl,link, localPrice, PriceTrendType(localPriceTrend, true))
     }
 }

@@ -12,12 +12,12 @@ import java.time.Instant
 fun SearchResultItemDto.toSearchItemEntity(searchId: Long = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.displayName,
-        code = this.code,
+        code = if (this.code.valid) this.code.value else "",
         imgLink = this.imgLink,
-        orgName = this.orgName,
+        orgName = if (this.orgName.valid) this.orgName.value else "",
         price = this.price,
         cmLink = this.cmLink,
-        priceTrend = this.priceTrend,
+        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
         lastUpdated = Instant.now().epochSecond
     )
@@ -68,12 +68,12 @@ fun CardDetailsDto.toSearchResultItemDto(): SearchResultItemDto {
 fun CardDetailsDto.toProductModel(): ProductModel {
     return ProductModel(
         localName = this.displayName,
-        code = this.code,
-        orgName = this.orgName,
+        code = if (this.code.valid) this.code.value else "",
+        orgName = if (this.orgName.valid) this.orgName.value else "",
         detailsUrl = this.detailsUrl,
         imageUrl = this.imageUrl,
         price = this.price,
-        priceTrend = this.priceTrend,
+        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         id = Uri.parse(this.detailsUrl).lastPathSegment!!,
         timestamp = Instant.now().epochSecond
     )

@@ -6,45 +6,48 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import de.dkutzer.tcgwatcher.R
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import java.time.OffsetDateTime
 
 @Composable
 fun ItemDetailsTable(
-    localName: String,
-    code: String,
-    price : String,
-    priceTrend: String,
-    showLastUpdated: Boolean,
-    lastUpdated: OffsetDateTime,
+    productModel: ProductModel,
     modifier: Modifier = Modifier
 ) {
 
     Column(modifier = modifier.padding(1.dp))
     {
+        Text(text = productModel.localName, style = MaterialTheme.typography.headlineLarge)
+        if(productModel.code.isNotBlank()) {
+            Text(text = " (${productModel.code})", style = MaterialTheme.typography.bodySmall)
+        }
+        Text(text = productModel.price, style = MaterialTheme.typography.headlineLarge)
+        if(productModel.priceTrend.isNotBlank()) {
+            Text(text = " (${productModel.priceTrend})", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
 
-        IconWithText(
-            icon = painterResource(R.drawable.de_language_icon),
-            desc = stringResource(id = R.string.nameLabel),
-            text = localName,
-            testStyle = MaterialTheme.typography.headlineLarge,
-            iconHeigh = 32
+@PreviewLightDark
+@Composable
+fun ItemDetailsTablePreview() {
+    TCGWatcherTheme {
+        ItemDetailsTable(
+            ProductModel(
+                id = "test",
+                localName = "Blitza",
+                code = "1234",
+                price = "12.34",
+                priceTrend = "56.78",
+                imageUrl = "",
+                detailsUrl = "",
+                timestamp = OffsetDateTime.now().toEpochSecond(),
+                orgName = "kein ahnung"
+            )
         )
-
-        Text(text = " ($code)", style = MaterialTheme.typography.bodySmall)
-
-        IconWithText(
-            icon = painterResource(R.drawable.price_tag_euro_icon),
-            desc = stringResource(id = R.string.nameLabel),
-            text = price,
-            testStyle = MaterialTheme.typography.headlineLarge,
-            iconHeigh = 32
-
-        )
-        Text(text = " ($priceTrend)", style = MaterialTheme.typography.bodySmall)
 
     }
 }

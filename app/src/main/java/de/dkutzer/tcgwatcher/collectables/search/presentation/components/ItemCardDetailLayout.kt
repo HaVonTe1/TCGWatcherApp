@@ -44,10 +44,10 @@ fun ItemCardDetailLayout(
 
     val item by remember(productModel) { mutableStateOf(productModel) }
 
-    PullToRefreshLazyColumn(
-        modifier = modifier,
-        onRefreshContent = { onRefreshItemDetailsContent(item) },
-        content = {
+//    PullToRefreshLazyColumn(
+//        modifier = modifier,
+//        onRefreshContent = { onRefreshItemDetailsContent(item) },
+//        content = {
             LazyColumn(
                 modifier = Modifier
                     .padding(1.dp)
@@ -109,8 +109,8 @@ fun ItemCardDetailLayout(
                     }
                 }
             }
-        }
-    )
+       // }
+   // )
 }
 
 @Composable

@@ -209,16 +209,13 @@ class SearchViewModel(
     }
 
     fun onBack() : Boolean {
-        logger.debug { "SearchViewModel::onBack: state: ${_refreshItem.value.state}" }
+        logger.debug { "SearchViewModel::onBack: state: ${refreshItem.value.state}" }
 
-        _quicksearchItem.value = null
-        if(_refreshItem.value.state == RefreshState.REFRESH_ITEM) {
-            _refreshItem.value =
-                RefreshWrapper(item = null, query = _query.value, state = RefreshState.IDLE)
-            return false
-        }
-        return  true
-
+        return if (refreshItem.value.state == RefreshState.REFRESH_ITEM) {
+            _quicksearchItem.value = null;
+            _refreshItem.value = RefreshWrapper(item = null, query = query.value, state = RefreshState.IDLE);
+            false
+        } else true
     }
 
 
