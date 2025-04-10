@@ -10,6 +10,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,7 @@ import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import java.time.Instant
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -32,6 +34,8 @@ fun ListDetailLayout(
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
+    val coroutineScope = rememberCoroutineScope() // Get a CoroutineScope tied to this composable
+
     NavigableListDetailPaneScaffold(
         modifier = modifier,
         navigator = navigator,
@@ -59,10 +63,12 @@ fun ListDetailLayout(
                                 modifier = Modifier
                                     .fillParentMaxWidth()
                                     .clickable {
-                                        navigator.navigateTo(
-                                            pane = ListDetailPaneScaffoldRole.Detail,
-                                            content = productModel
-                                        )
+                                        coroutineScope.launch {
+                                            navigator.navigateTo(
+                                                ListDetailPaneScaffoldRole.Detail,
+                                                productModel
+                                            )
+                                        }
                                     }
                             )
                         }
@@ -72,32 +78,34 @@ fun ListDetailLayout(
 
         },
         detailPane = {
-            val content = navigator.currentDestination?.content //productModel
-            if (content != null) {
+            navigator.currentDestination?.contentKey?.let {
                 AnimatedPane {
                     ItemCardDetailLayout(
-                        productModel = content as ProductModel,
-                        onRefreshItemDetailsContent = { onRefreshDetails(content) },
+                        productModel = it as ProductModel,
+                        onRefreshItemDetailsContent = { onRefreshDetails(it) },
                         onImageClick = {
-                            navigator.navigateTo(
-                                pane = ListDetailPaneScaffoldRole.Extra,
-                                content = it
-                            )
+                            coroutineScope.launch {
+                                navigator.navigateTo(
+                                    ListDetailPaneScaffoldRole.Extra,
+                                    it
+                                )
+                            }
                         },
                         onBackClick = {
-                            navigator.navigateBack()
+                            coroutineScope.launch {
+                                navigator.navigateBack()
+                            }
                         }
                     )
                 }
-
             }
+
         },
         extraPane = {
-            val content = navigator.currentDestination?.content //productModel
-            if (content != null) {
+           navigator.currentDestination?.contentKey?.let {
                 AnimatedPane {
                     CardImage (
-                        productModel = content as ProductModel,
+                        productModel = it as ProductModel,
                         onImageClick = {}
                     )
                 }

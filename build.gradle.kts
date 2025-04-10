@@ -8,11 +8,3 @@ plugins {
 }
 
 
-
-
-
-val latestAboutLibsRelease by extra { "11.2.3" }
-val roomVersion by extra { "2.6.1" }
-val ktorVersion by extra { "3.0.0" }
-val lifecycleVersion by extra { "2.8.7" }
-val pagingVersion by extra { "3.3.2" }

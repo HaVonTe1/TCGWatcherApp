@@ -30,7 +30,7 @@ class MapperTest {
 
         // Assert
         assertEquals(dto.displayName, entity.displayName)
-        assertEquals(dto.orgName, entity.orgName)
+        assertEquals(dto.orgName.value, entity.orgName)
         assertEquals(dto.cmLink, entity.cmLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
@@ -58,7 +58,7 @@ class MapperTest {
 
         // Then
         assertEquals(dto.displayName, entity.displayName)
-        assertEquals(dto.orgName, entity.orgName)
+        assertEquals(dto.orgName.value, entity.orgName)
         assertEquals(dto.cmLink, entity.cmLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)

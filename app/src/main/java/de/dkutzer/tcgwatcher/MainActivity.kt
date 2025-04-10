@@ -1,10 +1,10 @@
 package de.dkutzer.tcgwatcher
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
@@ -93,7 +92,7 @@ private fun MainTheme() {
         android.Manifest.permission.INTERNET // default - no permission needed
     )
 
-    val activity = (LocalContext.current as? Activity)
+    val activity = (LocalActivity.current)
 
     TCGWatcherTheme {
 
