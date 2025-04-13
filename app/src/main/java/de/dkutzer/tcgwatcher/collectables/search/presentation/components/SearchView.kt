@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -46,7 +45,6 @@ fun SearchView(
     historyList: StateFlow<List<HistorySearchItem>>,
     quickSearchList: StateFlow<List<QuickSearchItem>>,
     isSearching: StateFlow<Boolean>,
-
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onActiveChanged: (String, Boolean) -> Unit,
@@ -60,7 +58,7 @@ fun SearchView(
     val historyListState = historyList.collectAsState()
     val quickSearchListState = quickSearchList.collectAsState()
 
-    var query: String by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
     val active by isSearching.collectAsState(initial = false)
 
     val historyItems by remember(historyListState.value) { mutableStateOf(historyListState.value) }
@@ -84,7 +82,7 @@ fun SearchView(
             inputField = {
 
                 SearchBarDefaults.InputField(
-                    modifier = Modifier.height(30.dp),
+                    //modifier = Modifier.height(30.dp),
                     query = query,
                     onQueryChange = { text ->
                         logger.debug { "SearchBar::OnQueryChange: $text" }
