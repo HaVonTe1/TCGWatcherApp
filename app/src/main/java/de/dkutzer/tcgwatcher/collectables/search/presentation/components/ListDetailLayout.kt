@@ -104,7 +104,7 @@ fun ListDetailLayout(
         extraPane = {
            navigator.currentDestination?.contentKey?.let {
                 AnimatedPane {
-                    CardImage (
+                    ZoomableCardImage (
                         productModel = it as ProductModel,
                         onImageClick = {}
                     )

@@ -24,6 +24,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import java.time.Instant
 
+
 @Composable
 fun ItemOfInterestCard(
     productModel: ProductModel,
@@ -57,6 +58,7 @@ fun ItemOfInterestCard(
                 imageLoader = LocalContext.current.imageLoader.newBuilder().logger(DebugLogger())
                     .build()
             )
+
             Column(
                 modifier = Modifier
                     .weight(.7f, false)
