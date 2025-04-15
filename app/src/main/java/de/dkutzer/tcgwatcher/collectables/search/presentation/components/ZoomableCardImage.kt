@@ -43,6 +43,7 @@ fun ZoomableCardImage(
     var offset by remember { mutableStateOf(Offset(0f, 0f)) }
 
 
+
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(productModel.imageUrl)
@@ -89,6 +90,8 @@ fun ZoomableCardImage(
             .logger(DebugLogger())
             .build()
     )
+
+
 }
 
 @Composable

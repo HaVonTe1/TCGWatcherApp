@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -26,7 +29,7 @@ import java.time.Instant
 
 
 @Composable
-fun ItemOfInterestCard(
+fun ProductListViewItemView(
     productModel: ProductModel,
     showLastUpdated: Boolean,
     iconRowContent: @Composable () -> Unit,
@@ -66,7 +69,7 @@ fun ItemOfInterestCard(
                     .padding(4.dp),
                 verticalArrangement = Arrangement.Bottom
             ) {
-                ItemDetailsTable(
+                ProductDetailsTable(
                     productModel,
                     modifier = Modifier
                     .padding(4.dp)
@@ -79,6 +82,7 @@ fun ItemOfInterestCard(
 }
 
 @PreviewLightDark()
+@PreviewScreenSizes
 @Composable
 fun ItemOfInterestCardPreview() {
     TCGWatcherTheme {
@@ -92,9 +96,28 @@ fun ItemOfInterestCardPreview() {
             "12.34",
             "56.78",
             Instant.now().epochSecond,)
-        ItemOfInterestCard(productModel = sampleProduct,
+        ProductListViewItemView(productModel = sampleProduct,
             showLastUpdated = true,
             iconRowContent = {}
         )
+    }
+}
+
+@Composable
+fun ProductDetailsTable(
+    productModel: ProductModel,
+    modifier: Modifier = Modifier
+) {
+
+    Column(modifier = modifier.padding(1.dp))
+    {
+        Text(text = productModel.localName, style = MaterialTheme.typography.headlineLarge)
+        if(productModel.code.isNotBlank()) {
+            Text(text = " (${productModel.code})", style = MaterialTheme.typography.bodySmall)
+        }
+        Text(text = productModel.price, style = MaterialTheme.typography.headlineLarge)
+        if(productModel.priceTrend.isNotBlank()) {
+            Text(text = " (${productModel.priceTrend})", style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

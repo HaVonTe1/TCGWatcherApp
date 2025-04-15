@@ -20,8 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,9 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -42,20 +43,28 @@ import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import java.time.Instant
 
+/**
+ * Composable function that displays the detailed information of a product item in a card layout.
+ *
+ * @param product The [ProductModel] object containing the details of the product to be displayed.
+ * @param modifier Optional [Modifier] for customizing the layout.
+ * @param refreshProductDetails Callback function to refresh the product details.  It takes the current [ProductModel] as a parameter.
+ */
 @Composable
-fun ItemCardDetailLayout(
-    productModel: ProductModel,
+fun ProductDetailsView(
+    products: LazyPagingItems<ProductModel>,
+    index: Int,
     modifier: Modifier = Modifier,
-    onRefreshItemDetailsContent: (item: ProductModel) -> Unit,
-    onImageClick: (item: ProductModel) -> Unit = {},
+    refreshProductDetails: (product: ProductModel) -> Unit,
+    onImageClick: (product: ProductModel) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
 
+    val productModel = products[index]
 
-    val item by remember(productModel) { mutableStateOf(productModel) }
+    var currentProductModel by remember(productModel!!) { mutableStateOf(productModel) }
+    var currentIndex by remember(index) { mutableIntStateOf(index) }
 
     LazyColumn(
         modifier = Modifier
@@ -83,7 +92,7 @@ fun ItemCardDetailLayout(
                 )
 
                 Text(
-                    text = "${item.localName} (${item.code})",
+                    text = "${currentProductModel.localName} (${currentProductModel.code})",
                     style = MaterialTheme.typography.headlineLarge,
                     color = Color.Blue,
                     textDecoration = TextDecoration.Underline,
@@ -98,7 +107,7 @@ fun ItemCardDetailLayout(
                 )
                 Icon(
                     modifier = Modifier
-                        .clickable { onRefreshItemDetailsContent(item) }
+                        .clickable { refreshProductDetails(currentProductModel) }
                         .align(Alignment.CenterVertically)
                         .padding(4.dp)
                         .size(24.dp),
@@ -107,31 +116,36 @@ fun ItemCardDetailLayout(
                 )
             }
             Row {
-                Icon(
-                    modifier = Modifier
-                        .clickable { }
-                        .align(Alignment.CenterVertically)
-                        .padding(4.dp)
-                        .size(24.dp),
-                    imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowLeft,
-                    contentDescription = "Previous"
-                )
+                if(currentIndex-1 >= 0) {
+                    Icon(
+                        modifier = Modifier
+                            .clickable {
+                                currentProductModel = products[currentIndex - 1]!!
+                                currentIndex--
+                            }
+                            .align(Alignment.CenterVertically)
+                            .padding(4.dp)
+                            .size(24.dp),
+                        imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowLeft,
+                        contentDescription = "Previous"
+                    )
+                }
 
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(item.imageUrl)
+                        .data(currentProductModel.imageUrl)
                         .setHeader(USER_AGENT, userAgent)
                         .setHeader(
                             REFERER,
                             referrer
                         )
                         .build(),
-                    contentDescription = item.id,
+                    contentDescription = currentProductModel.id,
                     modifier = modifier
                         .padding(1.dp)
                         .weight(1f)
                         //.aspectRatio(15 / 16F)
-                        .clickable { onImageClick(item) },
+                        .clickable { onImageClick(currentProductModel) },
 
                     contentScale = ContentScale.FillWidth,
                     imageLoader = LocalContext.current.imageLoader.newBuilder()
@@ -139,15 +153,20 @@ fun ItemCardDetailLayout(
                         .build()
                 )
 
-                Icon(
-                    modifier = Modifier
-                        .clickable { }
-                        .align(Alignment.CenterVertically)
-                        .padding(4.dp)
-                        .size(24.dp),
-                    imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowRight,
-                    contentDescription = "Next"
-                )
+                if(currentIndex+1 < products.itemCount) {
+                    Icon(
+                        modifier = Modifier
+                            .clickable {
+                                currentProductModel = products[currentIndex+1]!!
+                                currentIndex++
+                            }
+                            .align(Alignment.CenterVertically)
+                            .padding(4.dp)
+                            .size(24.dp),
+                        imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowRight,
+                        contentDescription = "Next"
+                    )
+                }
 
 
             }
@@ -162,13 +181,13 @@ fun ItemCardDetailLayout(
                     horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
                 ) {
                     Text(
-                        text = "€ ${item.price}",
+                        text = "€ ${currentProductModel.price}",
                         style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier
                             .padding(4.dp)
                     )
                     Text(
-                        text = "( ~ ${item.priceTrend})",
+                        text = "( ~ ${currentProductModel.priceTrend})",
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier
                             .padding(4.dp)
@@ -192,24 +211,5 @@ fun ItemCardDetailLayout(
 
 }
 
-@Composable
-@PreviewLightDark()
-@Preview(name = "Light", showBackground = true)
-fun ItemCardDetailLayoutPreview(modifier: Modifier = Modifier) {
-    TCGWatcherTheme {
-        ItemCardDetailLayout(
-            productModel = ProductModel(
-                "test",
-                "Blitza",
-                "blitza-1234",
-                "Jolteon",
-                "https://havonte.ddns.net/core/img/logo/logo.svg",
-                "https://havonte.ddns.net/core/img/logo/logo.svg",
-                "12.34",
-                "56.78",
-                Instant.now().epochSecond,
-            ),
-            onRefreshItemDetailsContent = {}
-        )
-    }
-}
+
+

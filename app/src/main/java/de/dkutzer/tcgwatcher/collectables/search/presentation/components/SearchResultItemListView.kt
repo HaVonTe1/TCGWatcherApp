@@ -26,7 +26,7 @@ import java.time.Instant
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun ListDetailLayout(
+fun SearchResultItemListView(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
     onRefreshList: () -> Unit,
@@ -41,10 +41,10 @@ fun ListDetailLayout(
         navigator = navigator,
         listPane = {
 
-//            PullToRefreshLazyColumn(
-//                modifier = modifier,
-//                onRefreshContent = { onRefreshList() },
-//                content = {
+            PullToRefreshLazyColumn(
+                modifier = modifier,
+                onRefreshContent = { onRefreshList() },
+                content = {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -56,7 +56,7 @@ fun ListDetailLayout(
                         )
                         { index ->
                             val productModel = productPagingItems[index]
-                            ItemOfInterestCard(
+                            ProductListViewItemView(
                                 productModel = productModel!!,
                                 showLastUpdated = false,
                                 iconRowContent = { },
@@ -66,23 +66,25 @@ fun ListDetailLayout(
                                         coroutineScope.launch {
                                             navigator.navigateTo(
                                                 ListDetailPaneScaffoldRole.Detail,
-                                                productModel
+                                                index
                                             )
                                         }
                                     }
                             )
                         }
                     }
-                //}
-           // )
+                }
+            )
 
         },
         detailPane = {
             navigator.currentDestination?.contentKey?.let {
                 AnimatedPane {
-                    ItemCardDetailLayout(
-                        productModel = it as ProductModel,
-                        onRefreshItemDetailsContent = { onRefreshDetails(it) },
+                    val index = it as Int;
+                    ProductDetailsView(
+                        products = productPagingItems,
+                        index = index,
+                        refreshProductDetails = { onRefreshDetails(it) },
                         onImageClick = {
                             coroutineScope.launch {
                                 navigator.navigateTo(
@@ -137,7 +139,7 @@ fun ListDetailLayoutPreview(modifier: Modifier = Modifier) {
 
             )
         )
-        ListDetailLayout(
+        SearchResultItemListView(
             modifier = modifier,
             productPagingItems = flowOf(productModelPagingData).collectAsLazyPagingItems(),
             onRefreshList = {},
