@@ -20,9 +20,13 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.time.Instant
+
+
+private val logger = KotlinLogging.logger {}
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -34,7 +38,7 @@ fun SearchResultItemListView(
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
-    val coroutineScope = rememberCoroutineScope() // Get a CoroutineScope tied to this composable
+    val coroutineScope = rememberCoroutineScope()
 
     NavigableListDetailPaneScaffold(
         modifier = modifier,
@@ -55,6 +59,7 @@ fun SearchResultItemListView(
                             key = productPagingItems.itemKey { it.id }
                         )
                         { index ->
+                            logger.debug { "ProductListViewItemView: $index" }
                             val productModel = productPagingItems[index]
                             ProductListViewItemView(
                                 productModel = productModel!!,
@@ -79,6 +84,7 @@ fun SearchResultItemListView(
         },
         detailPane = {
             navigator.currentDestination?.contentKey?.let {
+                logger.debug { "DetailPane: $it" }
                 AnimatedPane {
                     val index = it as Int;
                     ProductDetailsView(
@@ -86,6 +92,7 @@ fun SearchResultItemListView(
                         index = index,
                         refreshProductDetails = { onRefreshDetails(it) },
                         onImageClick = {
+                            logger.debug { "DetailPane:onImageClick: $it" }
                             coroutineScope.launch {
                                 navigator.navigateTo(
                                     ListDetailPaneScaffoldRole.Extra,
@@ -94,27 +101,36 @@ fun SearchResultItemListView(
                             }
                         },
                         onBackClick = {
+                            logger.debug { "DetailPane:onBackClick: $it" }
                             coroutineScope.launch {
                                 navigator.navigateBack()
                             }
+                        },
+                        onIndexChange = { newIndex ->
+                            coroutineScope.launch {
+                                // Navigate to the new index within the detail pane
+                                navigator.navigateTo(
+                                    ListDetailPaneScaffoldRole.Detail,
+                                    newIndex
+                                )
+                            }
                         }
+
                     )
                 }
             }
-
         },
         extraPane = {
            navigator.currentDestination?.contentKey?.let {
+               logger.debug { "ExtraPane: $it" }
                 AnimatedPane {
+                    val index = it as Int;
                     ZoomableCardImage (
-                        productModel = it as ProductModel,
-                        onImageClick = {}
+                        productModel = productPagingItems[index]!!
                     )
                 }
-
             }
         }
-
     )
 }
 
