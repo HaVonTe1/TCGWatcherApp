@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.presentation.components
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.paging.compose.LazyPagingItems
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -66,6 +68,10 @@ fun ProductDetailsView(
     var currentProductModel by remember(productModel!!) { mutableStateOf(productModel) }
     var currentIndex by remember(index) { mutableIntStateOf(index) }
 
+    val context = LocalContext.current
+    val intent = remember { Intent(Intent.ACTION_VIEW, (referrer + productModel.detailsUrl).toUri()) }
+
+
     LazyColumn(
         modifier = Modifier
             .padding(1.dp)
@@ -98,7 +104,9 @@ fun ProductDetailsView(
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier
                         .padding(4.dp)
-                        .clickable {  } //TODO
+                        .clickable {
+                            context.startActivity(intent)
+                        }
                         .align(Alignment.CenterVertically)
                         .weight(1f),  // Takes remaining space
                     textAlign = TextAlign.Center,  // Centers text within allocated space
