@@ -1,0 +1,26 @@
+name: Build & Test
+on:
+  push:
+    branches: ['**']  # Runs on any branch push (except tags)
+    tags-ignore: ['*'] # Explicitly ignore tags
+jobs:
+  build:
+    runs-on: [self-hosted]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2    
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+                  ~/gradle/wrapper  
+      - name: setup-cache            
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - run: ./gradlew build --no-daemon

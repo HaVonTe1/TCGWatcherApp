@@ -1,14 +1,11 @@
 name: Build & Publish Release APK
-
 on:
   push:
     tags:
       - '*'
-
-
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     steps:
       - name: checkout code
         uses: actions/checkout@v2    
@@ -44,31 +41,20 @@ jobs:
         with:
           name: apk
           path: .
-      - name: Release
+      - name: Check if tag is a prerelease
+        id: check-tag
+        run: |
+          if [[ $GITHUB_REF == *"-alpha"* || $GITHUB_REF == *"-beta"* || $GITHUB_REF == *"-rc"* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          prerelease: true     
-          token: ${{ secrets.TOKEN }}
-          files: |
-            *.apk
-#      - name: Create Release
-#        id: create_release
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-#        with:
-#          tag_name: ${{ github.ref }}
-#          release_name: Release ${{ github.ref }}
-#          draft: false
-#          prerelease: false
+          prerelease: ${{ steps.check-tag.outputs.prerelease }}  # Auto-set based on tag
+          tag_name: ${{ github.ref_name }}  # Use the pushed tag
+          name: Release ${{ github.ref_name }}
+          files: app/build/outputs/apk/release/*.apk
 
- #     - name: Upload Release APK
- #       id: upload_release_asset
- #       uses: actions/upload-release-asset@v1
- #       env:
- #         GITHUB_TOKEN: ${{ secrets.TOKEN }}
- #       with:
- #         upload_url: ${{ steps.create_release.outputs.upload_url }}
- #         asset_path: ./apk/app-release.apk
- #         asset_name: TCGWatcherApp
- #         asset_content_type: application/vnd.android.package-archive
