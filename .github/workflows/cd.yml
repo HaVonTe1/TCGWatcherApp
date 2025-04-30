@@ -5,16 +5,19 @@ on:
       - '*'
 jobs:
   build:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - name: checkout code
         uses: actions/checkout@v2    
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
+      - name: setup-gradle-cache
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
-                  ~/gradle/wrapper  
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: setup-cache            
         uses: actions/setup-java@v4
         with:
