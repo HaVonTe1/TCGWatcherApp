@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -23,10 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -49,6 +53,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchScreen
 import de.dkutzer.tcgwatcher.help.presentation.HelpScreen
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.impl.HandroidLoggerAdapter
 
 class MainActivity : ComponentActivity() {
@@ -159,6 +164,7 @@ private fun PermissionsDialog(
 
 
 }
+private val logger = KotlinLogging.logger {}
 
 
 @Composable
@@ -166,7 +172,22 @@ private fun MainScreen() {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
 
+
+    LaunchedEffect(Unit) {
+        EventBus.events.collect { event ->
+            // Dismiss current Snackbar if shown and display new one
+            logger.debug { "Received Event: $event" }
+
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(
+                message = event,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
     Scaffold(
+        snackbarHost = {SnackbarHost(hostState = snackbarHostState)},
         bottomBar = {
             NavigationBar(
                 modifier = Modifier.height(56.dp), // Adjust height (default is 80.dp)
@@ -181,7 +202,8 @@ private fun MainScreen() {
                 MyBottomNavigationItem(currentDestination, navController, Screen.SearchScreen)
                 MyBottomNavigationItem(currentDestination, navController, Screen.HelpScreen)
             }
-        }
+        },
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         NavHost(
             navController,

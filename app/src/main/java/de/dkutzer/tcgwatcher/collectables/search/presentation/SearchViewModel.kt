@@ -78,6 +78,7 @@ class SearchViewModel(
     private val _quicksearchItem: MutableStateFlow<ProductModel?> = MutableStateFlow(null)
     private val quicksearchItem: StateFlow<ProductModel?> = _quicksearchItem.asStateFlow()
 
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
         combine(
@@ -167,7 +168,6 @@ class SearchViewModel(
     fun onSearchQueryChange(newQuery: String) {
         logger.debug { "SearchViewModel::onSearchQueryChange: $newQuery" }
 
-
         _quicksearchItem.value=null
         _historyList.value =
             if (newQuery.isBlank()) { //return the entire list of items if not is typed
@@ -235,6 +235,7 @@ class SearchViewModel(
     fun onSearchSubmit(searchString: String) {
         logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
         _quicksearchItem.value = null
+
         if (searchString.isEmpty()) {
             logger.debug { "Empty search" }
             return

@@ -20,46 +20,48 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
     private val nameAndCodePattern = "^(.*?)\\s*\\((.*?)\\)$".toRegex()
 
     fun parseGallerySearchResults(document: Document, page: Int): SearchResultsPageDto {
-       logger.debug { "Parsing a tags with class card and a href" }
-        val tiles = document.getElementsByTag("a").filter { element ->  element.hasClass("card") && element.hasAttr("href") }
-       logger.debug { "Found: ${tiles.size}" }
+
+        logger.debug { "Parsing a tags with class card and a href" }
+        val tiles = document.getElementsByTag("a")
+            .filter { element -> element.hasClass("card") && element.hasAttr("href") }
+        logger.debug { "Found: ${tiles.size}" }
 
         val searchResultItemDtos = ArrayList<SearchResultItemDto>(tiles.size)
 
         tiles.forEach {
-           logger.debug { "Parsing: $it" }
+            logger.debug { "Parsing: $it" }
             val cmLink = it.attr("href")
-           logger.debug { "link: $cmLink" }
+            logger.debug { "link: $cmLink" }
 
             val imgTag = it.getElementsByTag("img")
-           logger.debug { "ImgTag: $imgTag" }
+            logger.debug { "ImgTag: $imgTag" }
             val imageLink = imgTag.attr("data-echo")
-           logger.debug { "Image Link: $imageLink" }
+            logger.debug { "Image Link: $imageLink" }
 
             val titleTag = it.getElementsByTag("h2")
-           logger.debug { "TitleTag: $titleTag" }
+            logger.debug { "TitleTag: $titleTag" }
             val localName = titleTag.text()
             logger.debug { "Local Name: $localName" }
 
             val matchResult = nameAndCodePattern.find(localName)
             val name = matchResult?.groupValues?.getOrNull(1)
             val code = matchResult?.groupValues?.getOrNull(2)
-            logger.debug { "name: $name code: $code"  }
+            logger.debug { "name: $name code: $code" }
 
 
             val intPriceTag = it.getElementsByTag("b")
-           logger.debug { "Found intPriceTag: $intPriceTag" }
+            logger.debug { "Found intPriceTag: $intPriceTag" }
             val intPrice = intPriceTag.text()
-           logger.debug { "Price: $intPrice" }
+            logger.debug { "Price: $intPrice" }
 
             val itemDto = SearchResultItemDto(
                 displayName = name ?: localName,
-                code = CodeType( code ?: "", code != null),
-                orgName = OrgNameType(  "---", false),
+                code = CodeType(code ?: "", code != null),
+                orgName = OrgNameType("---", false),
                 cmLink = cmLink,
                 imgLink = imageLink,
                 price = intPrice,
-                priceTrend = PriceTrendType( "?", false)
+                priceTrend = PriceTrendType("?", false)
             )
 
             searchResultItemDtos.add(itemDto)
@@ -73,25 +75,25 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
     }
 
     private fun parsePagination(document: Document): Int {
-       logger.debug { "Looking for Pagination info" }
+        logger.debug { "Looking for Pagination info" }
         val paginationDiv = document.getElementById("pagination")
-       logger.debug { paginationDiv }
+        logger.debug { paginationDiv }
         val paginationSpans = paginationDiv?.getElementsByTag("span")
-       logger.debug { "Spans: $paginationSpans" }
+        logger.debug { "Spans: $paginationSpans" }
         val paginationSpan = paginationSpans?.first { s -> s.hasClass("mx-1") }
-       logger.debug { "mxSpan: $paginationSpan" }
+        logger.debug { "mxSpan: $paginationSpan" }
 
-        var groupValue:  String? = null
-        if(paginationSpan!=null) {
+        var groupValue: String? = null
+        if (paginationSpan != null) {
             val text = paginationSpan.text()
-           logger.debug { "Text: $text" }
+            logger.debug { "Text: $text" }
             val matchResult = paginationRegex.find(text)
             groupValue = matchResult?.groupValues?.getOrNull(1)
-           logger.debug { "$groupValue" }
+            logger.debug { "$groupValue" }
         }
 
         val totalPages = groupValue?.toInt() ?: 0
-       logger.debug { "Found: $totalPages" }
+        logger.debug { "Found: $totalPages" }
         return totalPages
     }
 
@@ -112,7 +114,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         val matchResult = nameAndCodePattern.find(displayName)
         val name = matchResult?.groupValues?.getOrNull(1)
         val code = matchResult?.groupValues?.getOrNull(2)
-        logger.debug { "name: $name code: $code"  }
+        logger.debug { "name: $name code: $code" }
 
 
         val orgName = link.split("/").last()
@@ -139,6 +141,14 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         }
 
-        return CardDetailsDto(displayName =name ?: displayName, code = CodeType(code ?: "", code != null), orgName =OrgNameType(orgName, true), imageUrl,link, localPrice, PriceTrendType(localPriceTrend, true))
+        return CardDetailsDto(
+            displayName = name ?: displayName,
+            code = CodeType(code ?: "", code != null),
+            orgName = OrgNameType(orgName, true),
+            imageUrl,
+            link,
+            localPrice,
+            PriceTrendType(localPriceTrend, true)
+        )
     }
 }

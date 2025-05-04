@@ -1,11 +1,15 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.EventBus
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import de.dkutzer.tcgwatcher.settings.domain.Engines
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.htmlunit.BrowserVersion
 import org.htmlunit.NicelyResynchronizingAjaxController
 import org.htmlunit.WebClient
@@ -43,9 +47,13 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
 
      */
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
+
+        val applicationScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+        EventBus.postEventFromAnywhere("Performing Search for $searchString with page: $page", applicationScope)
+
         logger.debug { "Searching for $searchString with page: $page" }
         try {
-            WebClient(BrowserVersion.CHROME).use { webClient ->
+            WebClient(BrowserVersion.BEST_SUPPORTED).use { webClient ->
                 modifyWebClient(webClient)
                 val params = mapOf(
                     "searchString" to searchString,
@@ -76,6 +84,8 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
                     val document = Jsoup.parse(it.asXml())
 
                     if(url.path.contains("Singles")) {
+                        EventBus.postEventFromAnywhere("Found one item ... reading", applicationScope)
+
                         val productDetails = parseProductDetails(document, url.path)
                         val searchResultsPageDto = SearchResultsPageDto(
                             listOf(productDetails.toSearchResultItemDto()),
@@ -137,7 +147,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
     override suspend fun getProductDetails(link: String): CardDetailsDto {
         logger.debug { "CMHtmlUnitApiClientImpl: getProductDetails: $link" }
         try {
-            WebClient(BrowserVersion.CHROME).use { webClient ->
+            WebClient(BrowserVersion.BEST_SUPPORTED).use { webClient ->
                 modifyWebClient(webClient)
 
                 val targetUri = if(!link.startsWith("http")) {
