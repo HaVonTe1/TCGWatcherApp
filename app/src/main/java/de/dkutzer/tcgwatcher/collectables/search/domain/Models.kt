@@ -69,3 +69,26 @@ data class RefreshWrapper(
 enum class RefreshState {
     REFRESH_ITEM, REFRESH_SEARCH, ERROR, IDLE
 }
+
+
+enum class SortField {
+    PRICE, CONDITION, SELLER_NAME, SELLER_COUNTRY, LANGUAGE
+}
+
+enum class SortOrder {
+    ASCENDING, DESCENDING
+}
+
+enum class Condition(val displayName: String) {
+    MINT("Mint"),NEAR_MINT("Near Mint"), EXCELLENT("Excellent"), GOOD("Goog"), LIGHT_PLAYED("Light Played"), PLAYED("Played"), POOR("Poor")
+}
+
+data class OfferFilters(
+    val sellerName: String = "",
+    val sellerCountries: Set<String> = emptySet(),
+    val languages: Set<String> = emptySet(),
+    val conditions: Set<Condition> = emptySet(),
+    val priceRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
+    val sortBy: SortField = SortField.PRICE,
+    val sortOrder: SortOrder = SortOrder.ASCENDING
+)
