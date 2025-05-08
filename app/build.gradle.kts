@@ -52,9 +52,7 @@ android {
         compose = true
         buildConfig = true
     }
-//    composeOptions {
-//        kotlinCompilerExtensionVersion = "1.5.15"
-//    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -84,15 +82,7 @@ android {
         }
     }
 
-//    configurations.all {
-//        resolutionStrategy {
-//            force("org.slf4j:log4j-over-slf4j:1.7.30")
-//            force("ch.qos.logback:logback-classic:1.2.3")
-//        }
-//    }
 }
-
-
 
 
 dependencies {
@@ -109,7 +99,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material)
+    implementation(libs.androidx.material.icons)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.fragment.ktx)

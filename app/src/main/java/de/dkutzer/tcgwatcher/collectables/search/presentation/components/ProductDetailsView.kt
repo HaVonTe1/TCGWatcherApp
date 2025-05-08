@@ -24,8 +24,8 @@ import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.automirrored.twotone.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.twotone.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,10 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,10 +55,12 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.util.DebugLogger
+import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.search.data.REFERER
 import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
+import de.dkutzer.tcgwatcher.collectables.search.domain.OfferFilters
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import kotlin.math.roundToInt
 
@@ -272,15 +276,34 @@ fun ProductDetailsView(
                             .padding(4.dp)
                             .align(Alignment.CenterVertically)
                     )
-                    Icon(
-                        modifier = Modifier
-                            .clickable { }
-                            .align(Alignment.CenterVertically)
-                            .padding(4.dp)
-                            .size(36.dp),
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Filter"
-                    )
+                    var showFilterDialog by remember { mutableStateOf(false) }
+                    var currentFilters by remember { mutableStateOf(OfferFilters()) }
+
+                    IconButton(onClick = {
+                        showFilterDialog = true
+                    }) {
+                        Icon(
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(4.dp)
+                                .size(36.dp),
+                            imageVector = ImageVector.vectorResource(id =R.drawable.filter_solid),
+                            contentDescription = "Filter"
+                        )
+                    }
+
+                    if (showFilterDialog) {
+                        FilterDialog(
+                            initialFilters = currentFilters,
+                            availableCountries = listOf("US", "UK", "DE", "JP"), // Replace with actual countries
+                            availableLanguages = listOf("English", "Japanese", "French"), // Replace with actual langs
+                            onFiltersApplied = { newFilters ->
+                                currentFilters = newFilters
+                                // Trigger your filtering/sorting here
+                            },
+                            onDismiss = { showFilterDialog = false }
+                        )
+                    }
                 }
 
             }
