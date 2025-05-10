@@ -7,6 +7,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.OrgNameType
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Document
 
@@ -140,6 +141,54 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             }
 
         }
+        val sellOfferDtos = ArrayList<SellOfferDto>()
+
+        val sellOfferRows = document.getElementsByClass("article-row")
+        logger.debug { "Sell Offer Rows: $sellOfferRows" }
+        sellOfferRows.forEach { sellOfferRow ->
+            val sellerCol = sellOfferRow.getElementsByClass("col-seller").first()
+            val sellerHrefTag = sellerCol?.getElementsByTag("a")
+            val sellerName = sellerHrefTag?.text()
+
+            val productLocationTag = sellerCol?.getElementsByClass("icon")
+            val productLocation = productLocationTag?.first()?.attr("title")
+
+            val productAttributesDiv = sellOfferRow?.getElementsByClass("product-attributes")
+
+            val productCondition = productAttributesDiv?.first()?.getElementsByClass("article-condition")?.first()
+                ?.attr("title")
+
+            val productAttributIcons = productAttributesDiv?.first()?.getElementsByClass("icon")
+            val productLanguage = productAttributIcons?.first()
+                ?.attr("title")
+            var productSpeciol = ""
+            productAttributIcons?.size?.let {
+                if(it>1) {
+                    productSpeciol = productAttributIcons[1]
+                        .attr("title")
+                }
+            }
+
+            val priceContainer = sellOfferRow.getElementsByClass("price-container").first()
+            val price = priceContainer?.getElementsByTag("span")?.text()
+
+
+            val productAmount = sellOfferRow?.getElementsByClass("amount-container")?.first()?.getElementsByTag("span")?.first()?.text()
+
+
+            if(sellerName!=null && productLocation!=null && productLanguage!=null && price!=null && productAmount!=null && productCondition!=null) {
+                sellOfferDtos.add(SellOfferDto(
+                    sellerName = sellerName,
+                    sellerLocation = productLocation,
+                    productLanguage = productLanguage,
+                    special = productSpeciol,
+                    condition = productCondition,
+                    amount = productAmount,
+                    price = price
+                ))
+
+            }
+        }
 
         return CardDetailsDto(
             displayName = name ?: displayName,
@@ -148,7 +197,8 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             imageUrl,
             link,
             localPrice,
-            PriceTrendType(localPriceTrend, true)
+            PriceTrendType(localPriceTrend, true),
+            sellOffers = sellOfferDtos
         )
     }
 }

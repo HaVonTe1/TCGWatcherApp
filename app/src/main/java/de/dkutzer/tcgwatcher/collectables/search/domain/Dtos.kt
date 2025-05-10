@@ -46,7 +46,8 @@ data class CardDetailsDto(
     val imageUrl: String,
     val detailsUrl: String,
     val price: String,
-    val priceTrend: PriceTrendType
+    val priceTrend: PriceTrendType,
+    val sellOffers: List<SellOfferDto> = emptyList()
 ){
     constructor(
         displayName: String,
@@ -55,7 +56,8 @@ data class CardDetailsDto(
         imageUrl: String,
         detailsUrl: String,
         price: String,
-        priceTrend: String
+        priceTrend: String,
+        sellOffers: List<SellOfferDto> = emptyList()
     ) : this(
         displayName = displayName,
         code = CodeType(code, code.isNotEmpty()),
@@ -63,6 +65,17 @@ data class CardDetailsDto(
         imageUrl = imageUrl,
         detailsUrl = detailsUrl,
         price = price,
-        priceTrend = PriceTrendType(priceTrend, priceTrend.isNotEmpty())
+        priceTrend = PriceTrendType(priceTrend, priceTrend.isNotEmpty()),
+        sellOffers = sellOffers
     )
 }
+
+data class SellOfferDto(
+    val sellerName: String,
+    val sellerLocation: String,
+    val productLanguage: String,
+    val special: String,
+    val condition: String,
+    val amount: String,
+    val price: String,
+)
