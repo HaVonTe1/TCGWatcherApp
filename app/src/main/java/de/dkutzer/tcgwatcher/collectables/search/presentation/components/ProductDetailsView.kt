@@ -306,6 +306,8 @@ fun ProductDetailsView(
                     }
                 }
 
+                //add selling table
+
             }
             //TODO: add a row for inventory management
         }
