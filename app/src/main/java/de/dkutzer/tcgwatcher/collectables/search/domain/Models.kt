@@ -9,15 +9,51 @@ import java.util.UUID
 @Parcelize
 data class ProductModel(
     val id: String,
-    val localName: String,
+    val name: NameModel,
+    val type: TypeEnum = TypeEnum.CARD,
     val code: String,
-    val orgName: String,
     val imageUrl: String,
     val detailsUrl: String,
+    val rarity: RarityType,
+    val set: SetModel,
     val price: String,
     val priceTrend: String,
     val timestamp: Long
 ) : Parcelable
+
+@Parcelize
+data class SetModel(
+    val id: String,
+    val name: String,
+    val imageUrl: String
+): Parcelable
+
+enum class RarityType {
+    COMMON, UNCOMMON, RARE, DOUBLE_RARE, SECRET_RARE, ILLUSTRATION_RARE,SPECIAL_ILLUSTRATION_RARE, PROMO, FIXED, ULTRA_RARE, OTHER
+
+    fun fromString(value: String): RarityType {
+        return when (value) {
+            "Common" -> COMMON
+            "Uncommon" -> UNCOMMON
+            "Rare" -> RARE
+            "Double Rare" -> DOUBLE_RARE
+            "Secret Rare" -> SECRET_RARE
+            "Illustration Rare" -> ILLUSTRATION_RARE
+            "Special Illustration Rare" -> SPECIAL_ILLUSTRATION_RARE
+            "Promo" -> PROMO
+            "Fixed" -> FIXED
+            "Ultra Rare" -> ULTRA_RARE
+            else -> OTHER
+        }
+    }
+}
+
+enum class TypeEnum {
+    CARD, BOOSTER, DISPLAY,THEME_DECK, TRAINER_KIT, TIN, BOX_SET, ELITE_TRAINER_BOX, BLISTER
+}
+
+@Parcelize
+data class NameModel(val value: String, val languageCode: String, val i18n: String): Parcelable
 
 
 data class SearchResultsPage(
@@ -40,9 +76,8 @@ data class QuickSearchItem(
     fun toProductModel(): ProductModel {
         return ProductModel(
             id = id,
-            localName = displayName,
+            name = NameModel(displayName, "de", this.nameEn),
             code = code,
-            orgName = this.nameEn,
             imageUrl = "",
             detailsUrl = "$cmBasePath$cmSetId/$cmCardId",
             price = "",

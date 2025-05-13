@@ -7,7 +7,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
-import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -41,7 +41,7 @@ class CardmarketCardsSearchServiceAdapterTest {
 
 
 
-    private fun createResultItemDto() = SearchResultItemDto(
+    private fun createResultItemDto() = ProductGallaryItemDto(
         displayName = "Vincent Le",
         code = "TST 1",
         orgName = "Miranda Pitts",

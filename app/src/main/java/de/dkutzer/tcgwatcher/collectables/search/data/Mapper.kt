@@ -3,13 +3,13 @@ package de.dkutzer.tcgwatcher.collectables.search.data
 
 import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
 import java.time.Instant
 
 
-fun SearchResultItemDto.toSearchItemEntity(searchId: Long = 0) : ProductItemEntity {
+fun ProductGallaryItemDto.toSearchItemEntity(searchId: Long = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.displayName,
         code = if (this.code.valid) this.code.value else "",
@@ -53,9 +53,9 @@ fun ProductModel.toSearchResultItemEntity(searchId: Int = 0) : ProductItemEntity
 }
 
 
-fun CardDetailsDto.toSearchResultItemDto(): SearchResultItemDto {
+fun ProductDetailsDto.toSearchResultItemDto(): ProductGallaryItemDto {
 
-    return SearchResultItemDto(
+    return ProductGallaryItemDto(
         displayName = this.displayName,
         code = this.code,
         orgName = this.orgName,
@@ -65,7 +65,7 @@ fun CardDetailsDto.toSearchResultItemDto(): SearchResultItemDto {
         priceTrend = this.priceTrend)
 }
 
-fun CardDetailsDto.toProductModel(): ProductModel {
+fun ProductDetailsDto.toProductModel(): ProductModel {
     return ProductModel(
         localName = this.displayName,
         code = if (this.code.valid) this.code.value else "",

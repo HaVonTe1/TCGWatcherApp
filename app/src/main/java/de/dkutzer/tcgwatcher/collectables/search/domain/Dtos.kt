@@ -1,32 +1,32 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
 data class SearchResultsPageDto(
-    val results: List<SearchResultItemDto>,
+    val results: List<ProductGallaryItemDto>,
     val page: Int,
     val totalPages: Int
 )
 
-data class SearchResultItemDto(
-    val displayName: String,
+data class ProductGallaryItemDto(
+    val name: NameDto,
     val code: CodeType,
-    val orgName: OrgNameType,
+    val genre: String,
     val cmLink: String,
     val imgLink: String,
     val price: String,
     val priceTrend: PriceTrendType
 ) {
     constructor(
-        displayName: String,
+        name: NameDto,
         code: String,
-        orgName: String,
+        genre: String,
         cmLink: String,
         imgLink: String,
         price: String,
         priceTrend: String
     ) : this(
-        displayName = displayName,
+        name = name,
         code = CodeType(code, code.isNotEmpty()),
-        orgName = OrgNameType(orgName, orgName.isNotEmpty()),
+        genre = genre,
         cmLink = cmLink,
         imgLink = imgLink,
         price = price,
@@ -34,41 +34,53 @@ data class SearchResultItemDto(
     )
 }
 
-data class OrgNameType(val value: String, val valid: Boolean)
 data class CodeType(val value: String, val valid: Boolean)
 data class PriceTrendType(val value: String, val valid: Boolean)
+data class NameDto(val value: String, val languageCode: String, val i18n: String = "")
+data class SetDto(val name: String, val link: String)
 
 
-data class CardDetailsDto(
-    val displayName: String,
+data class ProductDetailsDto(
+    val name: NameDto,
+    val type: String,
+    val genre: String,
     val code: CodeType,
-    val orgName: OrgNameType,
     val imageUrl: String,
     val detailsUrl: String,
-    val price: String,
-    val priceTrend: PriceTrendType,
+    val rarity: String = "",
+    val set: SetDto = SetDto("", ""),
+    val price: String = "0,00 €",
+    val priceTrend: PriceTrendType = PriceTrendType("?", false),
     val sellOffers: List<SellOfferDto> = emptyList()
 ){
     constructor(
-        displayName: String,
+        name: NameDto,
+        type: String,
+        genre: String,
         code: String,
         orgName: String,
         imageUrl: String,
         detailsUrl: String,
+        rarity: String,
+        set: SetDto,
         price: String,
         priceTrend: String,
         sellOffers: List<SellOfferDto> = emptyList()
     ) : this(
-        displayName = displayName,
+        name = name,
+        type = type,
+        genre = genre,
         code = CodeType(code, code.isNotEmpty()),
-        orgName = OrgNameType(orgName, orgName.isNotEmpty()),
         imageUrl = imageUrl,
         detailsUrl = detailsUrl,
+        rarity = rarity,
+        set = set,
         price = price,
         priceTrend = PriceTrendType(priceTrend, priceTrend.isNotEmpty()),
         sellOffers = sellOffers
     )
 }
+
 
 data class SellOfferDto(
     val sellerName: String,

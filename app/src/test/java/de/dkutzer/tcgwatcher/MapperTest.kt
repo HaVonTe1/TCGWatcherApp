@@ -3,7 +3,7 @@ package de.dkutzer.tcgwatcher
 
 
 import de.dkutzer.tcgwatcher.collectables.search.data.toSearchItemEntity
-import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
@@ -15,7 +15,7 @@ class MapperTest {
     fun should_create_search_result_item_entity_with_valid_input() {
         // Arrange
         val searchId = 1L
-        val dto = SearchResultItemDto(
+        val dto = ProductGallaryItemDto(
             displayName = "Item 1",
             code = "TST 1",
             orgName = "Org 1",
@@ -43,7 +43,7 @@ class MapperTest {
     fun should_create_search_result_item_entity_with_valid_input_and_non_zero_search_id() {
         // Given
         val searchId = 10L
-        val dto = SearchResultItemDto(
+        val dto = ProductGallaryItemDto(
             displayName = "Item 2",
             code = "TST 2",
             orgName = "Org 2",
