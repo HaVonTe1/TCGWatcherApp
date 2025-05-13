@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.adapter.api
 
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
@@ -14,8 +14,8 @@ class BaseCardmarketApiClientTest {
             return SearchResultsPageDto(results = listOf(), page = 9609, totalPages = 4163)
         }
 
-        override suspend fun getProductDetails(link: String): CardDetailsDto {
-            return CardDetailsDto(
+        override suspend fun getProductDetails(link: String): ProductDetailsDto {
+            return ProductDetailsDto(
                 imageUrl = "https://duckduckgo.com/?q=finibus",
                 price = "interdum",
                 priceTrend = "aptent",

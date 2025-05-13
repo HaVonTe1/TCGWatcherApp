@@ -5,5 +5,5 @@ interface CardsApiClient {
     suspend fun search(searchString: String, offset: Int , limit: Int): SearchResultsPageDto {
         return search(searchString, (offset + limit).floorDiv(limit))
     }
-    suspend fun getProductDetails(link: String): CardDetailsDto
+    suspend fun getProductDetails(link: String): ProductDetailsDto
 }

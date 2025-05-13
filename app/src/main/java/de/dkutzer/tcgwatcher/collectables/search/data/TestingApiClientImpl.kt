@@ -1,10 +1,10 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
 import de.dkutzer.tcgwatcher.collectables.search.domain.OrgNameType
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
-import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 
 class TestingApiClientImpl : BaseCardmarketApiClient() {
@@ -12,7 +12,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
 
         //Hint: I use "python3 -m http.server" in the "sampledata" folder to make this work
         val resultItemList = listOf(
-            SearchResultItemDto(
+            ProductGallaryItemDto(
                 displayName = "Blaues Pokemon",
                 code = CodeType("TST 1", true),
                 orgName = OrgNameType("Blue Pokemon",true),
@@ -21,7 +21,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 price = "1.00 €",
                 priceTrend = PriceTrendType("2.00 €", true)
             ),
-            SearchResultItemDto(
+            ProductGallaryItemDto(
                 displayName = "Braunes Pokemon",
                 code = CodeType("TST 2", true),
                 orgName = OrgNameType("Brown Pokemon",true),
@@ -30,7 +30,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 price = "2.00 €",
                 priceTrend =  PriceTrendType("1.00 €",true)
             ),
-            SearchResultItemDto(
+            ProductGallaryItemDto(
                 displayName = "Grünes Pokemon",
                 code = CodeType("TST 3",true),
                 orgName = OrgNameType("Green Pokemon",true),
@@ -39,7 +39,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 price = "3.00 €",
                 priceTrend = PriceTrendType("1.00 €",true)
             ),
-            SearchResultItemDto(
+            ProductGallaryItemDto(
                 displayName = "Rotes Pokemon",
                 orgName = "Red Pokemon",
                 code = "TST 4",
@@ -60,7 +60,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
 
 
 
-    override suspend fun getProductDetails(link: String): CardDetailsDto {
+    override suspend fun getProductDetails(link: String): ProductDetailsDto {
         TODO("Not yet implemented")
     }
 
