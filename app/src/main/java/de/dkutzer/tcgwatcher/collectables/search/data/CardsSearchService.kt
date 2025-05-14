@@ -63,7 +63,7 @@ class CardmarketCardsSearchServiceAdapter(
 
         //make sure the refreshed data is mirrored to all search items with this link
         //TODO: another nested table which stores the items and the searchitems_table just references to it
-        cache.updateItemByLink(searchItem.detailsUrl, productModel.toSearchResultItemEntity())
+        cache.updateItemByLink(searchItem.detailsUrl, productModel.toProductItemEntity())
 
         logger.debug { "Adapter: Returning cached results: $result" }
         return result
@@ -79,7 +79,7 @@ class CardmarketCardsSearchServiceAdapter(
                 lastUpdated = Instant.now().epochSecond,
                 history = false
             ),
-            results = listOf(productModel.toSearchResultItemEntity())
+            results = listOf(productModel.toProductItemEntity())
         )
         return searchWithItemsEntity
     }
@@ -147,7 +147,7 @@ class CardmarketCardsSearchServiceAdapter(
                         lastUpdated = Instant.now().epochSecond,
                         history = true
                     ),
-                    results = mergedResults.results.map { it.toSearchItemEntity() }.toList()
+                    results = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
                 logger.debug { "Persisting cache: $searchWithItemsEntity" }
                 cache.persistsSearchWithItems(searchWithItemsEntity)

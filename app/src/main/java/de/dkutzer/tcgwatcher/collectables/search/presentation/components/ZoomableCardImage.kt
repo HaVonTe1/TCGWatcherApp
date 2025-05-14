@@ -76,23 +76,3 @@ fun ZoomableCardImage(
 
 
 }
-
-@Composable
-@PreviewLightDark
-@PreviewScreenSizes
-fun ZoomableCardImagePreview() {
-    TCGWatcherTheme {
-        ZoomableCardImage(
-            productModel = ProductModel(
-                "test",
-                "Blitza",
-                "blitza-1234",
-                "Jolteon",
-                "https://havonte.ddns.net/core/img/logo/logo.svg",
-                "https://havonte.ddns.net/core/img/logo/logo.svg",
-                "12.34",
-                "56.78",
-                Instant.now().epochSecond,
-            ))
-    }
-}

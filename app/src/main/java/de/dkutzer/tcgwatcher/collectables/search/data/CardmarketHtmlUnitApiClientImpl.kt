@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.EventBus
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import de.dkutzer.tcgwatcher.settings.domain.Engines
@@ -88,7 +88,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
 
                         val productDetails = parseProductDetails(document, url.path)
                         val searchResultsPageDto = SearchResultsPageDto(
-                            listOf(productDetails.toSearchResultItemDto()),
+                            listOf(productDetails.toProductGallaryItemDto()),
                             page,
                             1
                         )
@@ -144,7 +144,7 @@ class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketAp
         return webRequest
     }
 
-    override suspend fun getProductDetails(link: String): ProductDetailsDto {
+    override suspend fun getProductDetails(link: String): CardmarketProductDetailsDto {
         logger.debug { "CMHtmlUnitApiClientImpl: getProductDetails: $link" }
         try {
             WebClient(BrowserVersion.BEST_SUPPORTED).use { webClient ->

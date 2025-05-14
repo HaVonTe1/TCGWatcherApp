@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -55,7 +55,7 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
 
 
 
-    override suspend fun getProductDetails(link: String): ProductDetailsDto {
+    override suspend fun getProductDetails(link: String): CardmarketProductDetailsDto {
         HttpClient(OkHttp) {
             followRedirects = true
 

@@ -7,7 +7,8 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -41,15 +42,15 @@ class CardmarketCardsSearchServiceAdapterTest {
 
 
 
-    private fun createResultItemDto() = ProductGallaryItemDto(
-        displayName = "Vincent Le",
+    private fun createResultItemDto() = CardmarketProductGallaryItemDto(
+        name = NameDto("xx","de","yy"),
         code = "TST 1",
-        orgName = "Miranda Pitts",
+        genre = "xx",
+        type = "xx",
         cmLink = "https://www.cardmarket.com/de/Pokemon/jhghj/fames",
         imgLink = "instructior",
         price = "hac",
-        priceTrend = "dfsgdff"
-
+        priceTrend = "dfsgdff",
     )
 
     private fun createSearchResultItemEntity() = ProductItemEntity(

@@ -1,8 +1,12 @@
 package de.dkutzer.tcgwatcher.collectables.adapter.api
 
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
+import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.SetDto
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -14,15 +18,19 @@ class BaseCardmarketApiClientTest {
             return SearchResultsPageDto(results = listOf(), page = 9609, totalPages = 4163)
         }
 
-        override suspend fun getProductDetails(link: String): ProductDetailsDto {
-            return ProductDetailsDto(
+        override suspend fun getProductDetails(link: String): CardmarketProductDetailsDto {
+            return CardmarketProductDetailsDto(
                 imageUrl = "https://duckduckgo.com/?q=finibus",
                 price = "interdum",
-                priceTrend = "aptent",
+                priceTrend = PriceTrendType("0.00", false),
                 detailsUrl = "https://duckduckgo.com/?q=interdum",
-                orgName = "dfsdfsdf",
-                displayName = "sfsdf",
-                code = "TST 1",
+                name = NameDto("xxx","de","yy"),
+                set = SetDto("xxx","de"),
+                genre = "xxx",
+                type = "xxx",
+                rarity = "xxx",
+
+                code = CodeType("xxx", false),
             )
         }
     }
