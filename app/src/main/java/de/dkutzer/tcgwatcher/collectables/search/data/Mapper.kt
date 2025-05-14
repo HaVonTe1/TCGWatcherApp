@@ -54,7 +54,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
         code = this.code,
         type = TypeEnum.fromString(this.type),
         genre = GenreType.fromString(this.genre),
-        rarity = RarityType.valueOf(this.rarity),
+        rarity = RarityType.fromString(this.rarity),
         set = SetModel(this.genre, ""),
         detailsUrl = this.cmLink,
         imageUrl = this.imgLink,
