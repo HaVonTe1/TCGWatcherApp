@@ -4,10 +4,10 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductDetailsDto
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.nodes.Document
@@ -22,28 +22,22 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
     //Knospi (PRE 004) --> Name: Knospi   code: (PRE-004)
     private val nameAndCodePattern = "^(.*?)\\s*\\((.*?)\\)$".toRegex()
 
-    //  /de/pokemon /en/magic etc
-    private val languageAndTypePattern = "//(.*?)/\\((.*?)\\)".toRegex()
 
     fun parseGallerySearchResults(document: Document, page: Int): SearchResultsPageDto {
 
-        val typePath =
-            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.first()?.attr("href")
-        val matchResult1 = languageAndTypePattern.find(typePath ?: "")
-        val language = matchResult1?.groupValues?.getOrNull(1)
-        val type = matchResult1?.groupValues?.getOrNull(2)
 
         logger.debug { "Parsing a tags with class card and a href" }
         val tiles = document.getElementsByTag("a")
             .filter { element -> element.hasClass("card") && element.hasAttr("href") }
         logger.debug { "Found: ${tiles.size}" }
 
-        val productGallaryItemDtos = ArrayList<ProductGallaryItemDto>(tiles.size)
+        val cardmarketProductGallaryItemDtos = ArrayList<CardmarketProductGallaryItemDto>(tiles.size)
 
         tiles.forEach {
             logger.debug { "Parsing: $it" }
             val cmLink = it.attr("href")
             logger.debug { "link: $cmLink" }
+            val triple = parseLink(cmLink)
 
             val imgTag = it.getElementsByTag("img")
             logger.debug { "ImgTag: $imgTag" }
@@ -66,23 +60,24 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             val intPrice = intPriceTag.text()
             logger.debug { "Price: $intPrice" }
 
-            val itemDto = ProductGallaryItemDto(
-                name = NameDto(name ?: localName, language ?: "", localName),
+            val itemDto = CardmarketProductGallaryItemDto(
+                name = NameDto(name ?: localName, triple.first?:"", localName),
                 code = CodeType(code ?: "", code != null),
-                genre = type ?: "",
+                genre = triple.second?:"",
+                type = triple.third?:"",
                 cmLink = cmLink,
                 imgLink = imageLink,
                 price = intPrice,
                 priceTrend = PriceTrendType("?", false)
             )
 
-            productGallaryItemDtos.add(itemDto)
+            cardmarketProductGallaryItemDtos.add(itemDto)
 
         }
         val totalPages = parsePagination(document)
 
 
-        return SearchResultsPageDto(productGallaryItemDtos, page, totalPages)
+        return SearchResultsPageDto(cardmarketProductGallaryItemDtos, page, totalPages)
 
     }
 
@@ -109,7 +104,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         return totalPages
     }
 
-    fun parseProductDetails(document: Document, link: String): ProductDetailsDto {
+    fun parseProductDetails(document: Document, link: String): CardmarketProductDetailsDto {
         val imageTags = document.getElementsByTag("img")
         val frontImageTag =
             imageTags.first { img -> img.classNames().size == 1 } //filter out "lazy" img tags
@@ -131,12 +126,10 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         val orgName = link.split("/").last()
         logger.debug { "Org Name: $orgName" }
 
-        //TODO: get the genre AND the productType from the pre-last breadcrump
         val typePath =
-            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.first()?.attr("href")
-        val matchResult1 = languageAndTypePattern.find(typePath ?: "")
-        val language = matchResult1?.groupValues?.getOrNull(1)
-        val type = matchResult1?.groupValues?.getOrNull(2)
+            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
+
+        val triple = parseLink(typePath)
 
         val infoDivs = document.getElementsByClass("info-list-container")
         var localPrice = "0,00 €"
@@ -173,7 +166,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         }
 
 
-        val sellOfferDtos = ArrayList<SellOfferDto>()
+        val cardmarketSellOfferDtos = ArrayList<CardmarketSellOfferDto>()
 
         val sellOfferRows = document.getElementsByClass("article-row")
         logger.debug { "Sell Offer Rows: $sellOfferRows" }
@@ -207,7 +200,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             val productAmount = sellOfferRow?.getElementsByClass("amount-container")?.first()?.getElementsByTag("span")?.first()?.text()
 
             if(sellerName!=null && productLocation!=null && productLanguage!=null && price!=null && productAmount!=null && productCondition!=null) {
-                val sellOfferDto = SellOfferDto(
+                val cardmarketSellOfferDto = CardmarketSellOfferDto(
                     sellerName = sellerName,
                     sellerLocation = productLocation,
                     productLanguage = productLanguage,
@@ -216,23 +209,41 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
                     amount = productAmount,
                     price = price
                 )
-                logger.debug { "Sell Offer: $sellOfferDto" }
-                sellOfferDtos.add(sellOfferDto)
+                logger.debug { "Sell Offer: $cardmarketSellOfferDto" }
+                cardmarketSellOfferDtos.add(cardmarketSellOfferDto)
 
             }
         }
 
-        return ProductDetailsDto(
-            name = NameDto(name ?: displayName, language ?: "", displayName),
+        return CardmarketProductDetailsDto(
+            name = NameDto(name ?: displayName, triple.first ?: "", displayName),
             code = CodeType(code ?: "", code != null),
-            type = type ?: "",
+            type = triple.third ?: "",
+            genre = triple.second ?: "",
             rarity = rarityText?:"",
             set = SetDto(setName ?: "", setLink ?: ""),
             detailsUrl = link,
             imageUrl = imageUrl,
             price =  localPrice,
             priceTrend =  PriceTrendType(localPriceTrend, true),
-            sellOffers = sellOfferDtos
+            sellOffers = cardmarketSellOfferDtos
         )
     }
+}
+
+//  /de/pokemon /en/magic etc
+private val languageAndGenreAndTypePattern = "//(.*?)/\\((.*?)/\\((.*?)\\)".toRegex()
+
+//private fun extractBreadCrump(document: Document): Triple<String?, String?, String?> {
+//    val typePath =
+//        document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
+//    return parseLink(typePath)
+//}
+
+private fun parseLink(typePath: String?): Triple<String?, String?, String?> {
+    val matchResult = languageAndGenreAndTypePattern.find(typePath ?: "")
+    val language = matchResult?.groupValues?.getOrNull(1)
+    val genre = matchResult?.groupValues?.getOrNull(2)
+    val type = matchResult?.groupValues?.getOrNull(3)
+    return Triple(language, genre, type)
 }

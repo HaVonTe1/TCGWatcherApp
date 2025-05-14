@@ -125,7 +125,7 @@ fun ProductDetailsView(
                 )
 
                 Text(
-                    text = "${currentProductModel.localName} (${currentProductModel.code})",
+                    text = "${currentProductModel.name.value} (${currentProductModel.code})",
                     style = MaterialTheme.typography.headlineLarge,
                     color = Color.Blue,
                     textDecoration = TextDecoration.Underline,

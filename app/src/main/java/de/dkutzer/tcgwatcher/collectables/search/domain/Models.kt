@@ -11,6 +11,7 @@ data class ProductModel(
     val id: String,
     val name: NameModel,
     val type: TypeEnum = TypeEnum.CARD,
+    val genre: GenreType,
     val code: String,
     val imageUrl: String,
     val detailsUrl: String,
@@ -25,32 +26,70 @@ data class ProductModel(
 data class SetModel(
     val id: String,
     val name: String,
-    val imageUrl: String
 ): Parcelable
 
-enum class RarityType {
-    COMMON, UNCOMMON, RARE, DOUBLE_RARE, SECRET_RARE, ILLUSTRATION_RARE,SPECIAL_ILLUSTRATION_RARE, PROMO, FIXED, ULTRA_RARE, OTHER
+enum class GenreType  {
+    POKEMON, MAGIC, YUGIOH, OTHER;
 
-    fun fromString(value: String): RarityType {
-        return when (value) {
-            "Common" -> COMMON
-            "Uncommon" -> UNCOMMON
-            "Rare" -> RARE
-            "Double Rare" -> DOUBLE_RARE
-            "Secret Rare" -> SECRET_RARE
-            "Illustration Rare" -> ILLUSTRATION_RARE
-            "Special Illustration Rare" -> SPECIAL_ILLUSTRATION_RARE
-            "Promo" -> PROMO
-            "Fixed" -> FIXED
-            "Ultra Rare" -> ULTRA_RARE
-            else -> OTHER
+
+    override fun toString() : String {
+            return when (this) {
+                POKEMON -> "Pokemon"
+                MAGIC -> "Magic the Gathering"
+                YUGIOH -> "Yu-Gi-Oh!"
+                else -> "Other"
+            }
+        }
+
+    companion object
+}
+
+enum class RarityType  {
+    COMMON, UNCOMMON, RARE, DOUBLE_RARE, SECRET_RARE, ILLUSTRATION_RARE,SPECIAL_ILLUSTRATION_RARE, PROMO, FIXED, ULTRA_RARE, OTHER;
+
+
+    override fun toString(): String {
+        return when (this) {
+            COMMON -> "Common"
+            UNCOMMON -> "Uncommon"
+            RARE -> "Rare"
+            DOUBLE_RARE -> "Double Rare"
+            SECRET_RARE -> "Secret Rare"
+            ILLUSTRATION_RARE -> "Illustration Rare"
+            SPECIAL_ILLUSTRATION_RARE -> "Special Illustration Rare"
+            PROMO -> "Promo"
+            FIXED -> "Fixed"
+            ULTRA_RARE -> "Ultra Rare"
+            else -> "Other"
+        }
+
+    }
+
+    companion object
+}
+
+enum class TypeEnum  {
+    CARD, BOOSTER, DISPLAY,THEME_DECK, TRAINER_KIT, TIN, BOX_SET, ELITE_TRAINER_BOX, BLISTER, OTHER;
+
+    override fun toString(): String {
+
+        return when (this) {
+            CARD -> "Card"
+            BOOSTER -> "Booster"
+            DISPLAY -> "Display"
+            THEME_DECK -> "Theme Deck"
+            TRAINER_KIT -> "Trainer Kit"
+            TIN -> "TIN"
+            BOX_SET -> "Box Set"
+            ELITE_TRAINER_BOX -> "Elite Trainer Box"
+            BLISTER -> "Blister"
+            else -> "Other"
         }
     }
+
+    companion object
 }
 
-enum class TypeEnum {
-    CARD, BOOSTER, DISPLAY,THEME_DECK, TRAINER_KIT, TIN, BOX_SET, ELITE_TRAINER_BOX, BLISTER
-}
 
 @Parcelize
 data class NameModel(val value: String, val languageCode: String, val i18n: String): Parcelable
@@ -78,6 +117,10 @@ data class QuickSearchItem(
             id = id,
             name = NameModel(displayName, "de", this.nameEn),
             code = code,
+            type = TypeEnum.CARD,
+            rarity = RarityType.OTHER,
+            set = SetModel(cmSetId, ""),
+            genre = GenreType.OTHER,
             imageUrl = "",
             detailsUrl = "$cmBasePath$cmSetId/$cmCardId",
             price = "",

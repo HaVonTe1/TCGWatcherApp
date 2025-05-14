@@ -12,18 +12,12 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 
 private val logger = KotlinLogging.logger {}
@@ -132,35 +126,4 @@ fun SearchResultItemListView(
             }
         }
     )
-}
-
-@Composable
-@PreviewLightDark
-fun ListDetailLayoutPreview(modifier: Modifier = Modifier) {
-    TCGWatcherTheme {
-
-        val productModelPagingData = PagingData.from(
-            listOf(
-                ProductModel(
-                    detailsUrl = "detailsUrl",
-                    id = "1",
-                    localName = "df",
-                    code = "dfg",
-                    orgName = "dfg",
-                    imageUrl = "dfg",
-                    price = "34r",
-                    priceTrend = "df",
-                    timestamp = Instant.now().epochSecond,
-                )
-
-            )
-        )
-        SearchResultItemListView(
-            modifier = modifier,
-            productPagingItems = flowOf(productModelPagingData).collectAsLazyPagingItems(),
-            onRefreshList = {},
-            onRefreshDetails = {},
-        )
-
-    }
 }

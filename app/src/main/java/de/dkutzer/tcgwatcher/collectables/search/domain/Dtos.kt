@@ -1,15 +1,16 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
 data class SearchResultsPageDto(
-    val results: List<ProductGallaryItemDto>,
+    val results: List<CardmarketProductGallaryItemDto>,
     val page: Int,
     val totalPages: Int
 )
 
-data class ProductGallaryItemDto(
+data class CardmarketProductGallaryItemDto(
     val name: NameDto,
     val code: CodeType,
     val genre: String,
+    val type: String,
     val cmLink: String,
     val imgLink: String,
     val price: String,
@@ -19,6 +20,7 @@ data class ProductGallaryItemDto(
         name: NameDto,
         code: String,
         genre: String,
+        type: String,
         cmLink: String,
         imgLink: String,
         price: String,
@@ -26,6 +28,7 @@ data class ProductGallaryItemDto(
     ) : this(
         name = name,
         code = CodeType(code, code.isNotEmpty()),
+        type = type,
         genre = genre,
         cmLink = cmLink,
         imgLink = imgLink,
@@ -40,7 +43,7 @@ data class NameDto(val value: String, val languageCode: String, val i18n: String
 data class SetDto(val name: String, val link: String)
 
 
-data class ProductDetailsDto(
+data class CardmarketProductDetailsDto(
     val name: NameDto,
     val type: String,
     val genre: String,
@@ -51,7 +54,7 @@ data class ProductDetailsDto(
     val set: SetDto = SetDto("", ""),
     val price: String = "0,00 €",
     val priceTrend: PriceTrendType = PriceTrendType("?", false),
-    val sellOffers: List<SellOfferDto> = emptyList()
+    val sellOffers: List<CardmarketSellOfferDto> = emptyList()
 ){
     constructor(
         name: NameDto,
@@ -65,7 +68,7 @@ data class ProductDetailsDto(
         set: SetDto,
         price: String,
         priceTrend: String,
-        sellOffers: List<SellOfferDto> = emptyList()
+        sellOffers: List<CardmarketSellOfferDto> = emptyList()
     ) : this(
         name = name,
         type = type,
@@ -82,7 +85,7 @@ data class ProductDetailsDto(
 }
 
 
-data class SellOfferDto(
+data class CardmarketSellOfferDto(
     val sellerName: String,
     val sellerLocation: String,
     val productLanguage: String,
@@ -91,3 +94,4 @@ data class SellOfferDto(
     val amount: String,
     val price: String,
 )
+

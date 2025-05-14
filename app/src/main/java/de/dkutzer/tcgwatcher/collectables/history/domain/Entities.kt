@@ -5,6 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import java.time.Instant
 
 class Entities {
@@ -28,6 +29,10 @@ data class ProductItemEntity(
     @ColumnInfo(index = true)
     var searchId: Int,
     val displayName: String,
+    val language: String = "en",
+    val genre: String = "",
+    val type: String = "",
+    val rarity: String = "",
     val code: String,
     val orgName: String,
     val cmLink: String,
@@ -35,11 +40,7 @@ data class ProductItemEntity(
     val price: String,
     val priceTrend: String,
     val lastUpdated: Long
-) {
-    fun isOlderThan(seconds: Long): Boolean {
-        return Instant.ofEpochSecond(this.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
-    }
-}
+)
 
 @Entity("remote_key")
 data class RemoteKeyEntity(
@@ -61,3 +62,4 @@ data class SearchWithItemsEntity(
         return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
     }
 }
+

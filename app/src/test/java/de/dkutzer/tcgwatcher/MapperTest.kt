@@ -2,8 +2,9 @@ package de.dkutzer.tcgwatcher
 
 
 
-import de.dkutzer.tcgwatcher.collectables.search.data.toSearchItemEntity
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.data.toProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
@@ -15,10 +16,11 @@ class MapperTest {
     fun should_create_search_result_item_entity_with_valid_input() {
         // Arrange
         val searchId = 1L
-        val dto = ProductGallaryItemDto(
-            displayName = "Item 1",
+        val dto = CardmarketProductGallaryItemDto(
+            name = NameDto("xx","de","yy"),
             code = "TST 1",
-            orgName = "Org 1",
+            genre = "xx",
+            type = "xx",
             cmLink = "https://example.com/item1",
             imgLink = "https://example.com/item1.jpg",
             price = "$10",
@@ -26,11 +28,11 @@ class MapperTest {
         )
 
         // Act
-        val entity = dto.toSearchItemEntity(searchId)
+        val entity = dto.toProductItemEntity(searchId)
 
         // Assert
-        assertEquals(dto.displayName, entity.displayName)
-        assertEquals(dto.orgName.value, entity.orgName)
+        assertEquals(dto.name.value, entity.displayName)
+        assertEquals(dto.name.i18n, entity.orgName)
         assertEquals(dto.cmLink, entity.cmLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
@@ -43,22 +45,23 @@ class MapperTest {
     fun should_create_search_result_item_entity_with_valid_input_and_non_zero_search_id() {
         // Given
         val searchId = 10L
-        val dto = ProductGallaryItemDto(
-            displayName = "Item 2",
-            code = "TST 2",
-            orgName = "Org 2",
-            cmLink = "https://example.com/item2",
-            imgLink = "https://example.com/item2.jpg",
-            price = "$20",
-            priceTrend = "sf"
+        val dto = CardmarketProductGallaryItemDto(
+            name = NameDto("xx","de","yy"),
+            code = "TST 1",
+            genre = "xx",
+            type = "xx",
+            cmLink = "https://example.com/item1",
+            imgLink = "https://example.com/item1.jpg",
+            price = "$10",
+            priceTrend = "sdf"
         )
 
         // When
-        val entity = dto.toSearchItemEntity(searchId)
+        val entity = dto.toProductItemEntity(searchId)
 
         // Then
-        assertEquals(dto.displayName, entity.displayName)
-        assertEquals(dto.orgName.value, entity.orgName)
+        assertEquals(dto.name.value, entity.displayName)
+        assertEquals(dto.name.i18n, entity.orgName)
         assertEquals(dto.cmLink, entity.cmLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
