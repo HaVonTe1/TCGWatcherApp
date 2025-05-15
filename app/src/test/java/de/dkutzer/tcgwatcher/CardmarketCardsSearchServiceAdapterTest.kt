@@ -63,6 +63,8 @@ class CardmarketCardsSearchServiceAdapterTest {
         imgLink = "molestiae",
         price = "dictum",
         priceTrend = "sfds",
+        setName = "sdfsdf",
+        setLink = "sdfsdf",
         lastUpdated = OffsetDateTime.now().toEpochSecond()
     )
 
@@ -88,7 +90,7 @@ class CardmarketCardsSearchServiceAdapterTest {
                 size = 1,
                 history = true,
                 lastUpdated = OffsetDateTime.now().toEpochSecond()
-            ), results = listOf(createSearchResultItemEntity())
+            ), products = listOf(createSearchResultItemEntity())
         )
         coEvery { cacheRepoMock.persistsSearchWithItems(any()) }.returns( searchWithItemsEntity)
 

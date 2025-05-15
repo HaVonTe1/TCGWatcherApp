@@ -24,7 +24,7 @@ data class ProductModel(
 
 @Parcelize
 data class SetModel(
-    val id: String,
+    val link: String,
     val name: String,
 ): Parcelable
 
