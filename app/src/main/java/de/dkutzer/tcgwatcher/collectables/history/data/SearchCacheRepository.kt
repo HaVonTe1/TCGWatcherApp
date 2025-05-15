@@ -24,7 +24,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
                 limit,
                 (page - 1) * limit
             )
-            return SearchWithItemsEntity(search = search, results =  resultItemEntities)
+            return SearchWithItemsEntity(search = search, products =  resultItemEntities)
         }
         return null
 
@@ -32,18 +32,28 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity): SearchWithItemsEntity {
 
-        val persistedSearchId = searchCacheDao.persistSearch(results.search)
-        results.results.forEach { it.searchId = persistedSearchId.toInt() }
+        var searchId = searchCacheDao.getSearchIdBySearchTerm(results.search.searchTerm)
+        val lastUpdated = Instant.now().epochSecond
+        if(searchId!=null) {
 
-        searchCacheDao.persistItems(results.results)
+            searchCacheDao.updateLastUpdated(searchId, lastUpdated)
+
+        } else
+        {
+            val persistedSearchId = searchCacheDao.persistSearch(results.search)
+            results.products.forEach { it.searchId = persistedSearchId.toInt() }
+
+            searchCacheDao.persistItems(results.products)
+            searchId = persistedSearchId.toInt()
+        }
         return SearchWithItemsEntity(
             SearchEntity(
-                searchId =  persistedSearchId.toInt(),
+                searchId =  searchId,
                 searchTerm = results.search.searchTerm,
-                lastUpdated = Instant.now().epochSecond,
-                size = results.results.size,
+                lastUpdated = lastUpdated,
+                size = results.products.size,
                 history = results.search.history),
-            results.results)
+            results.products)
     }
 
     override suspend fun persistSearchItems(results: List<ProductItemEntity>) {
@@ -75,7 +85,16 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         itemEntity: ProductItemEntity
     ) {
         //alle search items mit diesem link mit den daten aus der entity aktualisiern
-        searchCacheDao.updateItemsByLink(detailsUrl, price = itemEntity.price, priceTrend = itemEntity.priceTrend, orgName = itemEntity.orgName, lastUpdated = itemEntity.lastUpdated)
+        searchCacheDao.updateItemsByLink(
+            detailsUrl = detailsUrl,
+            price = itemEntity.price,
+            priceTrend = itemEntity.priceTrend,
+            orgName = itemEntity.orgName,
+            setName = itemEntity.setName,
+            setLink = itemEntity.setLink,
+            rarity = itemEntity.rarity,
+            type = itemEntity.type,
+            lastUpdated = itemEntity.lastUpdated)
     }
 
 }

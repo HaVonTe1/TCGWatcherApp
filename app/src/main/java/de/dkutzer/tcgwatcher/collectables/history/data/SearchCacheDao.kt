@@ -15,6 +15,9 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 interface SearchCacheDao {
 
 
+    @Query("SELECT searchId FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
+    fun getSearchIdBySearchTerm(searchTerm: String) : Int?
+
     @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
     fun findSearch(searchTerm: String) : SearchEntity?
 
@@ -33,6 +36,9 @@ interface SearchCacheDao {
     @Upsert
     fun persistSearch( search: SearchEntity) : Long
 
+    @Query("UPDATE search SET lastUpdated = :lastUpdated WHERE searchId = :searchId")
+    fun updateLastUpdated(searchId: Int, lastUpdated: Long)
+
     @Delete
     fun removeSearch(search: SearchEntity)
 
@@ -42,8 +48,17 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE cmLink = :link")
     fun findItemsByLink(link: String) : List<ProductItemEntity>
 
-    @Query("UPDATE search_result_item SET price = :price, priceTrend = :priceTrend, orgName = :orgName, lastUpdated = :lastUpdated WHERE cmLink = :detailsUrl")
-    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, orgName: String, lastUpdated: Long)
+    @Query("UPDATE search_result_item SET " +
+            "price = :price, " +
+            "priceTrend = :priceTrend, " +
+            "orgName = :orgName, " +
+            "setName = :setName, " +
+            "setLink = :setLink, " +
+            "rarity = :rarity, " +
+            "type = :type, " +
+            "lastUpdated = :lastUpdated WHERE " +
+            "cmLink = :detailsUrl")
+    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, orgName: String,setName: String,setLink:String,rarity:String,type:String, lastUpdated: Long)
 
 
 }

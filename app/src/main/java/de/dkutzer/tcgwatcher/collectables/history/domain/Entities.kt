@@ -5,11 +5,9 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import java.time.Instant
 
-class Entities {
-}
+
 
 @Entity(tableName = "search")
 data class SearchEntity(
@@ -28,7 +26,7 @@ data class ProductItemEntity(
     val id: Int = 0,
     @ColumnInfo(index = true)
     var searchId: Int,
-    val displayName: String,
+    val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
     val language: String = "en",
     val genre: String = "",
     val type: String = "",
@@ -39,6 +37,8 @@ data class ProductItemEntity(
     val imgLink: String,
     val price: String,
     val priceTrend: String,
+    val setName: String, //TODO: normalize the setName into seperate Entity to make is multilangual
+    val setLink: String,
     val lastUpdated: Long
 )
 
@@ -54,7 +54,7 @@ data class SearchWithItemsEntity(
         parentColumn = "searchId",
         entityColumn = "searchId"
     )
-    val results: List<ProductItemEntity>
+    val products: List<ProductItemEntity>
 
 ) {
     fun isOlderThan(seconds: Long): Boolean {

@@ -40,6 +40,8 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0) : Pr
         rarity = RarityType.OTHER.name,
         price = this.price,
         cmLink = this.cmLink,
+        setName = "",
+        setLink = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
         lastUpdated = Instant.now().epochSecond
@@ -55,7 +57,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
         type = TypeEnum.fromString(this.type),
         genre = GenreType.fromString(this.genre),
         rarity = RarityType.fromString(this.rarity),
-        set = SetModel(this.genre, ""),
+        set = SetModel(link = this.setLink, name = this.setName),
         detailsUrl = this.cmLink,
         imageUrl = this.imgLink,
         price = this.price,
@@ -79,6 +81,8 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0) : ProductItemEntity {
         cmLink = this.detailsUrl,
         priceTrend = this.priceTrend,
         lastUpdated = this.timestamp,
+        setName = this.set.name,
+        setLink = this.set.link,
         searchId = searchId)
 }
 
@@ -101,7 +105,7 @@ fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
         name = this.name.toModel(),
         type = TypeEnum.fromString(this.type),
         genre = GenreType.fromString(this.genre),
-        set = SetModel(this.set.name, this.set.link),
+        set = SetModel(name = this.set.name,link = this.set.link),
         rarity = RarityType.fromString(this.rarity),
         code = if (this.code.valid) this.code.value else "",
         detailsUrl = this.detailsUrl,

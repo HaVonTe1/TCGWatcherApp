@@ -1,12 +1,12 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPage
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 import kotlin.system.measureTimeMillis
@@ -58,7 +58,7 @@ class CardmarketCardsSearchServiceAdapter(
             cache.persistsSearchWithItems(newSearch)
         }
 
-        val productModel = searchWithItemsEntity.results.first().toProductModel()
+        val productModel = searchWithItemsEntity.products.first().toProductModel()
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         //make sure the refreshed data is mirrored to all search items with this link
@@ -79,7 +79,7 @@ class CardmarketCardsSearchServiceAdapter(
                 lastUpdated = Instant.now().epochSecond,
                 history = false
             ),
-            results = listOf(productModel.toProductItemEntity())
+            products = listOf(productModel.toProductItemEntity())
         )
         return searchWithItemsEntity
     }
@@ -92,7 +92,7 @@ class CardmarketCardsSearchServiceAdapter(
         logger.debug { "Adapter: Looking in the Cache for: $searchString" }
 
         var searchWithResults = cache.findSearchWithItemsByQuery(searchString, page)
-        logger.debug { "Adapter: Found: ${searchWithResults?.results?.size}" }
+        logger.debug { "Adapter: Found: ${searchWithResults?.products?.size}" }
         val lastUpdated = searchWithResults?.search?.lastUpdated
         if(lastUpdated!=null)
             logger.debug { "TTL: ${Instant.ofEpochSecond(lastUpdated)}" }
@@ -100,12 +100,12 @@ class CardmarketCardsSearchServiceAdapter(
         if(searchWithResults!=null && searchWithResults.isOlderThan(threeDaysSeconds)) {
             logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(lastUpdated!!)}" }
 
-            cache.deleteSearchItems(searchWithResults.results)
+            cache.deleteSearchItems(searchWithResults.products)
             cache.deleteSearch(searchWithResults.search)
             searchWithResults = null
         }
         if(searchWithResults!=null && !searchWithResults.isOlderThan(threeDaysSeconds)) {
-            val searchItems = searchWithResults.results.map { it.toProductModel() }
+            val searchItems = searchWithResults.products.map { it.toProductModel() }
             result = SearchResultsPage(
                 searchItems,
                 page,
@@ -147,7 +147,7 @@ class CardmarketCardsSearchServiceAdapter(
                         lastUpdated = Instant.now().epochSecond,
                         history = true
                     ),
-                    results = mergedResults.results.map { it.toProductItemEntity() }.toList()
+                    products = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
                 logger.debug { "Persisting cache: $searchWithItemsEntity" }
                 cache.persistsSearchWithItems(searchWithItemsEntity)
@@ -156,7 +156,7 @@ class CardmarketCardsSearchServiceAdapter(
                 val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)
 
 
-                val searchItems = updatedSearchResult?.results?.map { it.toProductModel() }
+                val searchItems = updatedSearchResult?.products?.map { it.toProductModel() }
                 result = SearchResultsPage(
                     searchItems ?: listOf(),
                     page,
