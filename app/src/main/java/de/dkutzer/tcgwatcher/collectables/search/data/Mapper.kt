@@ -6,26 +6,24 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
-import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType.MAGIC
-import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType.POKEMON
-import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType.YUGIOH
+import de.dkutzer.tcgwatcher.collectables.search.domain.KeyedEnum
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.BLISTER
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.BOOSTER
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.BOX_SET
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.CARD
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.DISPLAY
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.ELITE_TRAINER_BOX
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.OTHER
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.THEME_DECK
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.TIN
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum.TRAINER_KIT
+import java.net.URI
 import java.time.Instant
+
+
+inline fun <reified T> fromString(value: String): T
+        where T : Enum<T>, T : KeyedEnum
+{
+    return enumValues<T>()
+        .firstOrNull { it.cmCode.equals(value, ignoreCase = true) }
+        ?: enumValues<T>().first { it.cmCode == "" } // Fallback to "other"
+}
 
 
 fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0) : ProductItemEntity {
@@ -51,12 +49,12 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0) : Pr
 
 fun ProductItemEntity.toProductModel() : ProductModel {
     return ProductModel(
-        id = Uri.parse(this.cmLink).lastPathSegment!!,
+        id = URI(cmLink).path.split("/").last(),
         name = NameModel(this.displayName, this.language, this.orgName),
         code = this.code,
-        type = TypeEnum.fromString(this.type),
-        genre = GenreType.fromString(this.genre),
-        rarity = RarityType.fromString(this.rarity),
+        type = fromString<TypeEnum>(this.type) ,
+        genre = fromString<GenreType>(this.genre) ,
+        rarity = fromString<RarityType>(this.rarity) ,
         set = SetModel(link = this.setLink, name = this.setName),
         detailsUrl = this.cmLink,
         imageUrl = this.imgLink,
@@ -72,9 +70,9 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0) : ProductItemEntity {
         displayName = this.name.value,
         code = this.code,
         language = this.name.languageCode,
-        genre = this.genre.name,
-        type = this.type.name,
-        rarity = this.rarity.name,
+        genre = this.genre.cmCode,
+        type = this.type.cmCode,
+        rarity = this.rarity.cmCode,
         imgLink = this.imageUrl,
         orgName = this.name.i18n,
         price = this.price,
@@ -103,10 +101,10 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
 fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
     return ProductModel(
         name = this.name.toModel(),
-        type = TypeEnum.fromString(this.type),
-        genre = GenreType.fromString(this.genre),
+        type = fromString<TypeEnum>(this.type) ,
+        genre = fromString<GenreType>(this.genre) ,
         set = SetModel(name = this.set.name,link = this.set.link),
-        rarity = RarityType.fromString(this.rarity),
+        rarity = fromString<RarityType>(this.rarity) ,
         code = if (this.code.valid) this.code.value else "",
         detailsUrl = this.detailsUrl,
         imageUrl = this.imageUrl,
@@ -116,51 +114,6 @@ fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
         timestamp = Instant.now().epochSecond
     )
 }
-
-
-fun TypeEnum.Companion.fromString(value : String): TypeEnum {
-    return when (value) {
-        "Card" -> CARD
-        "Booster" -> BOOSTER
-        "Display" -> DISPLAY
-        "Theme Deck" -> THEME_DECK
-        "Trainer Kit" -> TRAINER_KIT
-        "Tin" -> TIN
-        "Box Set" -> BOX_SET
-        "Elite Trainer Box" -> ELITE_TRAINER_BOX
-        "Blister" -> BLISTER
-        else -> OTHER
-    }
-
-}
-fun GenreType.Companion.fromString(value: String): GenreType {
-    return when (value) {
-        "Pokemon" -> POKEMON
-        "Magic" -> MAGIC
-        "YuGiOh" -> YUGIOH
-        else -> GenreType.OTHER
-    }
-
-}
-
-fun RarityType.Companion.fromString(value: String): RarityType {
-    return when (value) {
-        "Common" -> RarityType.COMMON
-        "Uncommon" -> RarityType.UNCOMMON
-        "Rare" -> RarityType.RARE
-
-        "Double Rare" -> RarityType.DOUBLE_RARE
-        "Secret Rare" -> RarityType.SECRET_RARE
-        "Illustration Rare" -> RarityType.ILLUSTRATION_RARE
-        "Special Illustration Rare" -> RarityType.SPECIAL_ILLUSTRATION_RARE
-        "Promo" -> RarityType.PROMO
-        "Fixed" -> RarityType.FIXED
-        "Ultra Rare" -> RarityType.ULTRA_RARE
-        else -> RarityType.OTHER
-    }
-
-}
-
 
 
 private fun NameDto.toModel(): NameModel {

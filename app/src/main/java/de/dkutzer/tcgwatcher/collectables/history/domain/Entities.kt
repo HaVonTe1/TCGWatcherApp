@@ -48,6 +48,13 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
+/*
+TODO: currently every search is persisted with NEW ProductItemEntities.
+        Even  the SingleItem Search and the Refreshing of a single item
+        leads to a new search entitie and even worst a new set of ProductItemEntities.
+        This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
+        It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
+*/
 data class SearchWithItemsEntity(
     @Embedded val search: SearchEntity,
     @Relation(
