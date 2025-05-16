@@ -22,7 +22,7 @@ class CardmarketCardsSearchServiceAdapter(
     private val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
 
 
-    override suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean): SearchResultsPage {
+    override suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean, language: String): SearchResultsPage {
 
         /*
         This use case is different from the search by query.
@@ -40,11 +40,11 @@ class CardmarketCardsSearchServiceAdapter(
             if(cachedSearch==null || cachedSearch.isOlderThan(threeDaysSeconds)){
                 logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(cachedSearch?.search?.lastUpdated!!)}" }
                 val newSearch =
-                    createNewSearchModelViaRemoteRequestByProductModel(searchItem)
+                    createNewSearchModelViaRemoteRequestByProductModel(searchItem, language)
 
                 logger.debug { "Adapter: Persisting cache: $newSearch" }
 
-                cache.persistsSearchWithItems(newSearch)
+                cache.persistsSearchWithItems(newSearch, language)
             } else {
                 logger.debug { "Adapter: Returning cached results: $cachedSearch" }
                 cachedSearch
@@ -52,10 +52,10 @@ class CardmarketCardsSearchServiceAdapter(
         }
         else {
             logger.debug { "Adapter: no cache - Start a new Search: ${searchItem.detailsUrl}" }
-            val newSearch = createNewSearchModelViaRemoteRequestByProductModel(searchItem)
+            val newSearch = createNewSearchModelViaRemoteRequestByProductModel(searchItem, language)
             logger.debug { "Adapter: Persisting cache: $newSearch" }
 
-            cache.persistsSearchWithItems(newSearch)
+            cache.persistsSearchWithItems(newSearch, language)
         }
 
         val productModel = searchWithItemsEntity.products.first().toProductModel()
@@ -69,14 +69,15 @@ class CardmarketCardsSearchServiceAdapter(
         return result
     }
 
-    private suspend fun createNewSearchModelViaRemoteRequestByProductModel(searchItem: ProductModel) : SearchWithItemsEntity {
+    private suspend fun createNewSearchModelViaRemoteRequestByProductModel(searchItem: ProductModel, language: String) : SearchWithItemsEntity {
         val productDetails = client.getProductDetails(searchItem.detailsUrl)
-        val productModel = productDetails.toProductModel()
+        val productModel = productDetails.toProductModel(language)
         val searchWithItemsEntity = SearchWithItemsEntity(
             search = SearchEntity(
                 searchTerm = searchItem.detailsUrl,
                 size = 1,
                 lastUpdated = Instant.now().epochSecond,
+                language = language,
                 history = false
             ),
             products = listOf(productModel.toProductItemEntity())
@@ -84,7 +85,7 @@ class CardmarketCardsSearchServiceAdapter(
         return searchWithItemsEntity
     }
 
-    override suspend fun searchByPage(searchString: String, page: Int, limit: Int): SearchResultsPage {
+    override suspend fun searchByPage(searchString: String, page: Int, limit: Int, language: String): SearchResultsPage {
         logger.debug { "Adapter: New Search by searchTerm: $searchString}" }
         if(searchString.isEmpty())
             return SearchResultsPage(emptyList(), 1, 1)
@@ -145,12 +146,13 @@ class CardmarketCardsSearchServiceAdapter(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
                         lastUpdated = Instant.now().epochSecond,
+                        language = language,
                         history = true
                     ),
                     products = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
                 logger.debug { "Persisting cache: $searchWithItemsEntity" }
-                cache.persistsSearchWithItems(searchWithItemsEntity)
+                cache.persistsSearchWithItems(searchWithItemsEntity, language)
 
                 logger.debug { "Now fetching paged results from newly cache" }
                 val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)

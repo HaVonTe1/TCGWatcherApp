@@ -117,6 +117,7 @@ fun SearchScreen(
         historyList = searchViewModel.historyList,
         quickSearchList = searchViewModel.quickSearchList,
         isSearching = searchViewModel.showHistoryContent,
+        settings = searchViewModel.settings,
         onSearchQueryChange = { searchViewModel.onSearchQueryChange(it) },
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
         onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },

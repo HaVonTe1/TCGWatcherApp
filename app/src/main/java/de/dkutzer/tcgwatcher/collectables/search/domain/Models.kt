@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.search.domain
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 
 
@@ -19,6 +20,7 @@ data class ProductModel(
     val set: SetModel,
     val price: String,
     val priceTrend: String,
+    val sellOffers: List<SellOfferModel>,
     val timestamp: Long
 ) : Parcelable
 
@@ -28,10 +30,86 @@ data class SetModel(
     val name: String,
 ): Parcelable
 
+@Parcelize
+data class SellOfferModel(
+    val sellerName: String,
+    val sellerLocation: LocationModel,
+    val productLanguage: LanguageModel,
+    val special: SpecialType,
+    val condition: ConditionType,
+    val amount: Int,
+    val price: String,
+): Parcelable
+
+@Parcelize
+data class LocationModel(
+    val country: String,
+    val code: String
+): Parcelable {
+
+    companion object {
+        fun fromSellerLocation(
+            sellerLocationString: String, // Renamed for clarity
+            language: String
+        ): LocationModel {
+            // Safer extraction of country name
+            val parts = sellerLocationString.split(": ")
+            if (parts.size < 2) {
+                // Handle cases where the format is unexpected
+                println("Warning: sellerLocationString '$sellerLocationString' does not match expected format 'Prefix: CountryName'")
+                return LocationModel(country = "unknown", code = "")
+            }
+            val countryName = parts.last().lowercase() // Lowercase once here
+
+            val targetDisplayLocale = when (language.lowercase()) {
+                "de" -> Locale.GERMAN
+                "en" -> Locale.ENGLISH
+                else -> null // Handle unsupported languages
+            }
+
+            if (targetDisplayLocale == null) {
+                println("Warning: Unsupported language '$language'")
+                return LocationModel(country = "unknown", code = "")
+            }
+
+            // Find the matching locale once
+            val foundLocale = Locale.getAvailableLocales()
+                .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == countryName }
+
+            return if (foundLocale != null) {
+                LocationModel(
+                    country = foundLocale.getDisplayCountry(targetDisplayLocale), // Use the determined display locale
+                    code = foundLocale.country.lowercase()
+                )
+            } else {
+                println("Warning: Could not find locale for country '$countryName' in language '${targetDisplayLocale.language}'")
+                LocationModel(country = "unknown", code = "")
+            }
+        }
+    }
+}
+
+
+
+
+@Parcelize
+data class LanguageModel(
+    val code: String,
+    val displayName: String
+): Parcelable {
+    companion object
+}
+
+
 interface KeyedEnum {
     val cmCode: String
 
 }
+
+enum class SpecialType(override val cmCode: String) : KeyedEnum {
+    REVERSED("Reverse Holo"),
+}
+
 
 enum class GenreType(override val cmCode: String, val displayName: String) : KeyedEnum  {
     POKEMON("Pokemon", "Pokemon"),
@@ -69,6 +147,9 @@ enum class TypeEnum(override val cmCode: String, val displayName: String) : Keye
     OTHER("","Other");
 
 }
+enum class ConditionType(override val cmCode: String): KeyedEnum {
+    MINT("Mint"),NEAR_MINT("Near Mint"), EXCELLENT("Excellent"), GOOD("Goog"), LIGHT_PLAYED("Light Played"), PLAYED("Played"), POOR("Poor")
+}
 
 @Parcelize
 data class NameModel(val value: String, val languageCode: String, val i18n: String): Parcelable
@@ -79,7 +160,7 @@ data class SearchResultsPage(
     val currentPage: Int,
     val pages: Int
 )
-val cmBasePath  = "/de/Pokemon/Products/Singles/"
+
 
 data class QuickSearchItem(
     override val id: String,
@@ -90,20 +171,22 @@ data class QuickSearchItem(
     val code: String,
     val cmSetId: String,
     val cmCardId: String,
+    //TODO: add genre as soon as more than one genre is supported
 ): SearchSuggestionItem(id, displayName) {
-    fun toProductModel(): ProductModel {
+    fun toProductModel( currentLanguageCode : String = "de"): ProductModel {
         return ProductModel(
             id = id,
-            name = NameModel(displayName, "de", this.nameEn),
+            name = NameModel(displayName, currentLanguageCode, this.nameEn),
             code = code,
             type = TypeEnum.CARD,
             rarity = RarityType.OTHER,
             set = SetModel(cmSetId, ""),
-            genre = GenreType.OTHER,
+            genre = GenreType.POKEMON, //TODO: fix this as soon as more than one genre is supported
             imageUrl = "",
-            detailsUrl = "$cmBasePath$cmSetId/$cmCardId",
+            detailsUrl = "${currentLanguageCode}/${GenreType.POKEMON.cmCode}/Products/${TypeEnum.CARD.cmCode}/${cmSetId}/${cmCardId}",
             price = "",
             priceTrend = "",
+            sellOffers = emptyList(),
             timestamp = Instant.now().epochSecond
         )
     }
@@ -136,15 +219,12 @@ enum class SortOrder {
     ASCENDING, DESCENDING
 }
 
-enum class Condition(val displayName: String) {
-    MINT("Mint"),NEAR_MINT("Near Mint"), EXCELLENT("Excellent"), GOOD("Goog"), LIGHT_PLAYED("Light Played"), PLAYED("Played"), POOR("Poor")
-}
 
 data class OfferFilters(
     val sellerName: String = "",
     val sellerCountries: Set<String> = emptySet(),
     val languages: Set<String> = emptySet(),
-    val conditions: Set<Condition> = emptySet(),
+    val conditions: Set<ConditionType> = emptySet(),
     val priceRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
     val sortBy: SortField = SortField.PRICE,
     val sortOrder: SortOrder = SortOrder.ASCENDING

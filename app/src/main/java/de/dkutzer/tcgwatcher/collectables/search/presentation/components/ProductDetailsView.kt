@@ -295,8 +295,8 @@ fun ProductDetailsView(
                     if (showFilterDialog) {
                         FilterDialog(
                             initialFilters = currentFilters,
-                            availableCountries = listOf("US", "UK", "DE", "JP"), // Replace with actual countries
-                            availableLanguages = listOf("English", "Japanese", "French"), // Replace with actual langs
+                            availableCountries = listOf("US", "UK", "DE", "JP"), // TODO: Replace with actual countries
+                            availableLanguages = listOf("English", "Japanese", "French"), //TODO:  Replace with actual langs
                             onFiltersApplied = { newFilters ->
                                 currentFilters = newFilters
                                 // Trigger your filtering/sorting here
@@ -307,7 +307,10 @@ fun ProductDetailsView(
                 }
 
                 //add selling table
-
+                if(productModel.sellOffers.isNotEmpty())
+                {
+                    OffersTable(productModel.sellOffers)
+                }
             }
             //TODO: add a row for inventory management
         }

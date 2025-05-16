@@ -60,7 +60,7 @@ class SearchViewModel(
             engine = Engines.KTOR
         )
     )
-    private val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
+    val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
 
     private val _showHistoryContent = MutableStateFlow(false)
     val showHistoryContent = _showHistoryContent.asStateFlow()
