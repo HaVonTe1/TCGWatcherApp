@@ -38,7 +38,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
             It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
     */
-    override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity): SearchWithItemsEntity {
+    override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity, language: String): SearchWithItemsEntity {
 
         var searchId = searchCacheDao.getSearchIdBySearchTerm(results.search.searchTerm)
         val lastUpdated = Instant.now().epochSecond
@@ -60,6 +60,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
                 searchTerm = results.search.searchTerm,
                 lastUpdated = lastUpdated,
                 size = results.products.size,
+                language = language,
                 history = results.search.history),
             results.products)
     }

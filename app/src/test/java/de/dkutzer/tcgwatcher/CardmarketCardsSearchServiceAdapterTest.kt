@@ -89,10 +89,11 @@ class CardmarketCardsSearchServiceAdapterTest {
                 searchTerm = "Ramalama",
                 size = 1,
                 history = true,
+                language = "en",
                 lastUpdated = OffsetDateTime.now().toEpochSecond()
             ), products = listOf(createSearchResultItemEntity())
         )
-        coEvery { cacheRepoMock.persistsSearchWithItems(any()) }.returns( searchWithItemsEntity)
+        coEvery { cacheRepoMock.persistsSearchWithItems(any(), any()) }.returns( searchWithItemsEntity)
 
         coEvery { cacheRepoMock.findSearchWithItemsByQuery(eq("Ramalama"), 1) }.returns(
             null

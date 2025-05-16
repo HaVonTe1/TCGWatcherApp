@@ -16,6 +16,7 @@ data class SearchEntity(
     @ColumnInfo(index = true)
     val searchTerm: String,
     val size: Int,
+    val language: String,
     val lastUpdated: Long,
     val history: Boolean
 )

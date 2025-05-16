@@ -1,20 +1,26 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 
-import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import de.dkutzer.tcgwatcher.collectables.search.domain.KeyedEnum
+import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
+import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import java.net.URI
 import java.time.Instant
+import java.util.Locale
 
 
 inline fun <reified T> fromString(value: String): T
@@ -60,6 +66,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
         imageUrl = this.imgLink,
         price = this.price,
         priceTrend = this.priceTrend,
+        sellOffers = listOf(),
         timestamp = this.lastUpdated
 
     )
@@ -98,7 +105,7 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
         priceTrend = this.priceTrend)
 }
 
-fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
+fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
     return ProductModel(
         name = this.name.toModel(),
         type = fromString<TypeEnum>(this.type) ,
@@ -110,13 +117,63 @@ fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
         imageUrl = this.imageUrl,
         price = this.price,
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
-        id = Uri.parse(this.detailsUrl).lastPathSegment!!,
+        id = URI(this.detailsUrl).path.split("/").last(),
+        sellOffers = this.sellOffers.map { it.toSellOfferModel(language) },
         timestamp = Instant.now().epochSecond
     )
 }
 
+private fun CardmarketSellOfferDto.toSellOfferModel(language: String): SellOfferModel {
+    return SellOfferModel(
+        sellerName = this.sellerName,
+        sellerLocation = LocationModel.fromSellerLocation(this.sellerLocation, language),
+        productLanguage = LanguageModel.fromProductLanguage(this.productLanguage, language),
+        special = fromString<SpecialType>(this.special),
+        condition = fromString<ConditionType>(this.condition),
+        amount = this.amount.toInt(),
+        price = this.price
+    )
 
-private fun NameDto.toModel(): NameModel {
+}
+
+
+
+
+
+fun LanguageModel.Companion.fromProductLanguage(
+    productLanguage: String,
+    searchLanguage: String
+): LanguageModel {
+    when (searchLanguage.lowercase()) {
+        "de" -> {
+
+            val locale = Locale.getAvailableLocales()
+                .first { it.getDisplayLanguage(Locale.GERMAN).lowercase() == productLanguage.lowercase() }
+            return LanguageModel(
+                code = locale.country,
+                displayName = locale.getDisplayLanguage(Locale.GERMAN)
+            )
+        }
+        "en" -> {
+            val locale = Locale.getAvailableLocales()
+                .first { it.getDisplayLanguage(Locale.ENGLISH).lowercase() == productLanguage.lowercase() }
+            return LanguageModel(
+                code = locale.country,
+                displayName = locale.getDisplayLanguage(Locale.ENGLISH)
+            )
+        }
+        else -> {
+            return LanguageModel(
+                code = "",
+                displayName = ""
+            )
+        }
+    }
+
+}
+
+
+fun NameDto.toModel(): NameModel {
     return NameModel(this.value, this.languageCode, this.i18n)
 }
 

@@ -19,18 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
+import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 
-data class Offer(
-    val sellerName: String,
-    val sellerLocation: String, // ISO 2-letter country code (e.g., "US")
-    val language: String,       // ISO 2-letter country code (e.g., "JP" for Japanese)
-    val condition: String,
-    val price: Double
-)
 
 @Composable
-fun OffersTable(offers: List<Offer>) {
+fun OffersTable(offers: List<SellOfferModel>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Table Header
         Row(
@@ -59,7 +57,7 @@ fun OffersTable(offers: List<Offer>) {
     }
 }
 @Composable
-private fun OfferRow(offer: Offer) {
+private fun OfferRow(offer: SellOfferModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -70,13 +68,14 @@ private fun OfferRow(offer: Offer) {
         TableCell(text = offer.sellerName, weight = 2f, maxLines = 2)
 
         // Location Flag
-        TableCell(text = countryCodeToFlag(offer.sellerLocation), weight = 1f)
+        TableCell(text = countryCodeToFlag(offer.sellerLocation.code), weight = 1f)
 
         // Language Flag
-        TableCell(text = countryCodeToFlag(offer.language), weight = 1f)
+        TableCell(text = countryCodeToFlag(offer.productLanguage.code), weight = 1f)
 
         // Condition
-        TableCell(text = offer.condition.replaceFirstChar { it.uppercase() }, weight = 1.5f)
+        // TODO: replace with an icon
+        TableCell(text = offer.condition.cmCode, weight = 1.5f)
 
         // Price
         TableCell(text = "$${"%.2f".format(offer.price)}", weight = 1f)
@@ -135,20 +134,24 @@ fun OffersTablePreview() {
 
     TCGWatcherTheme {
         val sampleOffers = listOf(
-            Offer(
+            SellOfferModel(
                 sellerName = "Card Kingdom",
-                sellerLocation = "US",
-                language = "EN",
-                condition = "near mint",
-                price = 24.99
+                sellerLocation = LocationModel("Germany", "de"),
+                productLanguage = LanguageModel("de", "Deutsch"),
+                condition = ConditionType.MINT,
+                amount = 1,
+                price = "24.99",
+                special = SpecialType.REVERSED
             ),
-            Offer(
-                sellerName = "Tokyo Collectibles",
-                sellerLocation = "JP",
-                language = "JP",
-                condition = "mint",
-                price = 42.50
-            )
+            SellOfferModel(
+                sellerName = "Card Kingdom",
+                sellerLocation = LocationModel("Germany", "de"),
+                productLanguage = LanguageModel("de", "Deutsch"),
+                condition = ConditionType.MINT,
+                amount = 1,
+                price = "24.99",
+                special = SpecialType.REVERSED
+            ),
         )
 
         OffersTable(offers = sampleOffers)

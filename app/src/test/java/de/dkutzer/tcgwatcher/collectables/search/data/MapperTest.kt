@@ -4,6 +4,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
+import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
@@ -11,7 +12,6 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
-import de.dkutzer.tcgwatcher.collectables.search.domain.cmBasePath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -118,7 +118,7 @@ class MapperTest {
     @Test
     fun `toProductModel from ProductItemEntity with valid cmLink`() {
         // Arrange
-        val cmLink = "${cmBasePath}set123/card456"
+        val cmLink = "/de/Pokemon/Products/Singles/set123/card456"
         val entity = createSampleProductItemEntity(cmLink = cmLink)
 
         // Act
@@ -247,6 +247,29 @@ class MapperTest {
         assertEquals(model.set.link, result.setLink)
     }
 
+    @Test
+    fun `test LocationModel fromSellerLocation`() {
+
+
+        var locationModel = LocationModel.fromSellerLocation("Artikelstandort: Deutschland", "de")
+        assertEquals("Deutschland", locationModel.country)
+        assertEquals("de", locationModel.code)
+
+
+        locationModel = LocationModel.fromSellerLocation("Item location: Germany", "en")
+        assertEquals("Germany", locationModel.country)
+        assertEquals("de", locationModel.code)
+
+        locationModel = LocationModel.fromSellerLocation("Artikelstandort: Italien", "de")
+        assertEquals("Italien", locationModel.country)
+        assertEquals("it", locationModel.code)
+
+
+        locationModel = LocationModel.fromSellerLocation("Item location: Italy", "en")
+        assertEquals("Italy", locationModel.country)
+        assertEquals("it", locationModel.code)
+    }
+
     // Helper functions to create sample data
     private fun createSampleGalleryItemDto(
         code: CodeType = CodeType("TEST123", true),
@@ -265,7 +288,7 @@ class MapperTest {
     }
 
     private fun createSampleProductItemEntity(
-        cmLink: String = "$cmBasePath/set123/card456",
+        cmLink: String = "/de/Pokemon/Products/Singles/set123/card456",
         type: String = "Singles",
         genre: String = "Pokemon",
         rarity: String = "Rare"
@@ -297,11 +320,12 @@ class MapperTest {
             genre = GenreType.POKEMON,
             code = "TEST123",
             imageUrl = "http://example.com/image.jpg",
-            detailsUrl = "$cmBasePath/set123/card456",
+            detailsUrl = "/en/Pokemon/Products/Singles/set123/card456",
             rarity = RarityType.RARE,
             set = SetModel("http://example.com/set", "Test Set"),
             price = "100.00",
             priceTrend = "+5%",
+            sellOffers = emptyList(),
             timestamp = Instant.now().epochSecond
         )
     }
