@@ -55,34 +55,7 @@ data class CardmarketProductDetailsDto(
     val price: String = "0,00 €",
     val priceTrend: PriceTrendType = PriceTrendType("?", false),
     val sellOffers: List<CardmarketSellOfferDto> = emptyList()
-){
-    constructor(
-        name: NameDto,
-        type: String,
-        genre: String,
-        code: String,
-        orgName: String,
-        imageUrl: String,
-        detailsUrl: String,
-        rarity: String,
-        set: SetDto,
-        price: String,
-        priceTrend: String,
-        sellOffers: List<CardmarketSellOfferDto> = emptyList()
-    ) : this(
-        name = name,
-        type = type,
-        genre = genre,
-        code = CodeType(code, code.isNotEmpty()),
-        imageUrl = imageUrl,
-        detailsUrl = detailsUrl,
-        rarity = rarity,
-        set = set,
-        price = price,
-        priceTrend = PriceTrendType(priceTrend, priceTrend.isNotEmpty()),
-        sellOffers = sellOffers
-    )
-}
+)
 
 
 data class CardmarketSellOfferDto(

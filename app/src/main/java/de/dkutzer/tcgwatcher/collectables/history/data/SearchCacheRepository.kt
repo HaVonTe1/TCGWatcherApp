@@ -30,6 +30,14 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
+
+    /*
+    TODO: currently every search is persited with NEW ProductItemEntities.
+            Even  the SingleItem Search and the Refreshing of a single item
+            leads to a new search entitie and even worst a new set of ProductItemEntities.
+            This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
+            It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
+    */
     override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity): SearchWithItemsEntity {
 
         var searchId = searchCacheDao.getSearchIdBySearchTerm(results.search.searchTerm)
