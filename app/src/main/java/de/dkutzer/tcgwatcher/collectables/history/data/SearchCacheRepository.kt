@@ -1,9 +1,9 @@
 package de.dkutzer.tcgwatcher.collectables.history.data
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 
@@ -14,7 +14,7 @@ private val logger = KotlinLogging.logger {}
 class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     SearchCacheRepository {
 
-    override suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithItemsEntity?  {
+    override suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit: Int ): SearchAndProductsEntity?  {
 
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
         val search = searchCacheDao.findSearch(searchTerm)
@@ -24,7 +24,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
                 limit,
                 (page - 1) * limit
             )
-            return SearchWithItemsEntity(search = search, products =  resultItemEntities)
+            return SearchAndProductsEntity(search = search, products =  resultItemEntities)
         }
         return null
 
@@ -38,7 +38,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
             It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
     */
-    override suspend fun persistsSearchWithItems(results: SearchWithItemsEntity, language: String): SearchWithItemsEntity {
+    override suspend fun persistsSearchWithItems(results: SearchAndProductsEntity, language: String): SearchAndProductsEntity {
 
         var searchId = searchCacheDao.getSearchIdBySearchTerm(results.search.searchTerm)
         val lastUpdated = Instant.now().epochSecond
@@ -54,7 +54,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             searchCacheDao.persistItems(results.products)
             searchId = persistedSearchId.toInt()
         }
-        return SearchWithItemsEntity(
+        return SearchAndProductsEntity(
             SearchEntity(
                 searchId =  searchId,
                 searchTerm = results.search.searchTerm,

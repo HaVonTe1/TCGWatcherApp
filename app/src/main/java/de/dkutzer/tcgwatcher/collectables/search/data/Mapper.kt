@@ -1,7 +1,9 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 
+import de.dkutzer.tcgwatcher.collectables.history.domain.Product
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
@@ -32,7 +34,7 @@ inline fun <reified T> fromString(value: String): T
 }
 
 
-fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0) : ProductItemEntity {
+fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.name.value,
         code = if (this.code.valid) this.code.value else "",
@@ -48,6 +50,7 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0) : Pr
         setLink = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
+        productId = productId,
         lastUpdated = Instant.now().epochSecond
     )
 }
@@ -72,7 +75,7 @@ fun ProductItemEntity.toProductModel() : ProductModel {
     )
 }
 
-fun ProductModel.toProductItemEntity(searchId: Int = 0) : ProductItemEntity {
+fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.name.value,
         code = this.code,
@@ -88,8 +91,30 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0) : ProductItemEntity {
         lastUpdated = this.timestamp,
         setName = this.set.name,
         setLink = this.set.link,
+        productId = productId,
         searchId = searchId)
 }
+
+fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : Product {
+    return Product(
+        productItemEntity = this.toProductItemEntity(searchId, productId),
+        offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
+    )
+}
+
+fun SellOfferModel.toSellOfferEntity(productId: Int): SellOfferEntity {
+    return SellOfferEntity(
+        productId = productId,
+        sellerName = this.sellerName,
+        sellerLocation = this.sellerLocation.code,
+        productLanguage = this.productLanguage.code,
+        condition = this.condition.cmCode,
+        amount = this.amount,
+        price = this.price,
+        special = this.special.cmCode
+    )
+}
+
 
 
 fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGallaryItemDto {
