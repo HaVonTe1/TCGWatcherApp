@@ -27,6 +27,8 @@ data class ProductItemEntity(
     val id: Int = 0,
     @ColumnInfo(index = true)
     var searchId: Int,
+    @ColumnInfo(index = true)
+    var productId: Int,
     val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
     val language: String = "en",
     val genre: String = "",
@@ -43,6 +45,22 @@ data class ProductItemEntity(
     val lastUpdated: Long
 )
 
+@Entity(tableName = "product_offer")
+data class SellOfferEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(index = true)
+    var productId: Int,
+
+    val sellerName: String,
+    val sellerLocation: String,
+    val productLanguage: String,
+    val condition: String,
+    val amount: Int,
+    val price: String,
+    val special: String,
+)
+
 @Entity("remote_key")
 data class RemoteKeyEntity(
     @PrimaryKey val id: String,
@@ -56,7 +74,7 @@ TODO: currently every search is persisted with NEW ProductItemEntities.
         This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
         It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
 */
-data class SearchWithItemsEntity(
+data class SearchAndProductsEntity(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "searchId",
@@ -70,4 +88,24 @@ data class SearchWithItemsEntity(
         return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
     }
 }
+
+data class SearchAndProductsAndSelloffersEntity(
+    @Embedded val search: SearchEntity,
+    @Relation(
+        parentColumn = "searchId",
+        entityColumn = "searchId"
+    )
+    val products: List<Product>
+
+)
+
+data class Product(
+    @Embedded val productItemEntity: ProductItemEntity,
+    @Relation(
+        parentColumn = "productId",
+        entityColumn = "productId"
+    )
+    val offers: List<SellOfferEntity>
+)
+
 

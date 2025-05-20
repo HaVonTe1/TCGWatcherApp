@@ -10,6 +10,7 @@ import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 
 @Dao
 interface SearchCacheDao {
@@ -32,6 +33,11 @@ interface SearchCacheDao {
 
     @Upsert
     fun persistItems(results: List<ProductItemEntity>): List<Long>
+    @Upsert
+    fun persistSellOffers(offers: List<SellOfferEntity>): List<Long>
+
+    @Query("SELECT * FROM product_offer WHERE productId = :productId")
+    fun findSellOfferByProductId(productId: Int): List<SellOfferEntity>
 
     @Upsert
     fun persistSearch( search: SearchEntity) : Long

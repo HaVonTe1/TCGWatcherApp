@@ -4,7 +4,7 @@ import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
@@ -83,7 +83,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         )
 
 
-        val searchWithItemsEntity = SearchWithItemsEntity(
+        val searchAndProductsEntity = SearchAndProductsEntity(
             search = SearchEntity(
                 searchId = 1,
                 searchTerm = "Ramalama",
@@ -93,12 +93,12 @@ class CardmarketCardsSearchServiceAdapterTest {
                 lastUpdated = OffsetDateTime.now().toEpochSecond()
             ), products = listOf(createSearchResultItemEntity())
         )
-        coEvery { cacheRepoMock.persistsSearchWithItems(any(), any()) }.returns( searchWithItemsEntity)
+        coEvery { cacheRepoMock.persistsSearchWithItems(any(), any()) }.returns( searchAndProductsEntity)
 
         coEvery { cacheRepoMock.findSearchWithItemsByQuery(eq("Ramalama"), 1) }.returns(
             null
         ).andThen(
-            searchWithItemsEntity
+            searchAndProductsEntity
         )
 
         val repositoryAdapter =

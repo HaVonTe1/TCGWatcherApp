@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
 import android.os.Parcelable
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
@@ -269,3 +270,4 @@ data class OfferFilters(
     val sortBy: SortField = SortField.PRICE,
     val sortOrder: SortOrder = SortOrder.ASCENDING
 )
+

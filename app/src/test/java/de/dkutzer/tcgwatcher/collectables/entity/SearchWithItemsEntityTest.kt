@@ -1,6 +1,6 @@
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
@@ -13,7 +13,7 @@ class SearchWithItemsEntityTest {
 
     private lateinit var searchEntity: SearchEntity
     private lateinit var productItemEntities: List<ProductItemEntity>
-    private lateinit var searchWithItemsEntity: SearchWithItemsEntity
+    private lateinit var searchAndProductsEntity: SearchAndProductsEntity
 
     @Before
     fun setUp() {
@@ -22,7 +22,7 @@ class SearchWithItemsEntityTest {
         productItemEntities = listOf(mockk<ProductItemEntity>())
 
         // Create an instance of SearchWithItemsEntity
-        searchWithItemsEntity = SearchWithItemsEntity(searchEntity, productItemEntities)
+        searchAndProductsEntity = SearchAndProductsEntity(searchEntity, productItemEntities)
     }
 
     @Test
@@ -31,7 +31,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().epochSecond
 
         // Test with a small number of seconds (e.g., 1 second)
-        assertFalse(searchWithItemsEntity.isOlderThan(1))
+        assertFalse(searchAndProductsEntity.isOlderThan(1))
     }
 
     @Test
@@ -40,7 +40,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(10).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithItemsEntity.isOlderThan(5))
+        assertTrue(searchAndProductsEntity.isOlderThan(5))
     }
 
     @Test
@@ -49,6 +49,6 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(5).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithItemsEntity.isOlderThan(5))
+        assertTrue(searchAndProductsEntity.isOlderThan(5))
     }
 }
