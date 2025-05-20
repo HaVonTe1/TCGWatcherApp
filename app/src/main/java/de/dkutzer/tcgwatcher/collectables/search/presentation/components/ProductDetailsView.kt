@@ -295,8 +295,8 @@ fun ProductDetailsView(
                     if (showFilterDialog) {
                         FilterDialog(
                             initialFilters = currentFilters,
-                            availableCountries = listOf("US", "UK", "DE", "JP"), // TODO: Replace with actual countries
-                            availableLanguages = listOf("English", "Japanese", "French"), //TODO:  Replace with actual langs
+                            availableCountries = productModel.getAvailableCountries(),
+                            availableLanguages = productModel.getAvailableLanguages(),
                             onFiltersApplied = { newFilters ->
                                 currentFilters = newFilters
                                 // Trigger your filtering/sorting here

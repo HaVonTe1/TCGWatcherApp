@@ -20,15 +20,15 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import java.net.URI
 import java.time.Instant
-import java.util.Locale
 
 
 inline fun <reified T> fromString(value: String): T
         where T : Enum<T>, T : KeyedEnum
 {
-    return enumValues<T>()
+    val enumValues = enumValues<T>()
+    return enumValues
         .firstOrNull { it.cmCode.equals(value, ignoreCase = true) }
-        ?: enumValues<T>().first { it.cmCode == "" } // Fallback to "other"
+        ?: enumValues.first { it.cmCode == "" } // Fallback to "other"
 }
 
 
@@ -133,42 +133,6 @@ private fun CardmarketSellOfferDto.toSellOfferModel(language: String): SellOffer
         amount = this.amount.toInt(),
         price = this.price
     )
-
-}
-
-
-
-
-
-fun LanguageModel.Companion.fromProductLanguage(
-    productLanguage: String,
-    searchLanguage: String
-): LanguageModel {
-    when (searchLanguage.lowercase()) {
-        "de" -> {
-
-            val locale = Locale.getAvailableLocales()
-                .first { it.getDisplayLanguage(Locale.GERMAN).lowercase() == productLanguage.lowercase() }
-            return LanguageModel(
-                code = locale.country,
-                displayName = locale.getDisplayLanguage(Locale.GERMAN)
-            )
-        }
-        "en" -> {
-            val locale = Locale.getAvailableLocales()
-                .first { it.getDisplayLanguage(Locale.ENGLISH).lowercase() == productLanguage.lowercase() }
-            return LanguageModel(
-                code = locale.country,
-                displayName = locale.getDisplayLanguage(Locale.ENGLISH)
-            )
-        }
-        else -> {
-            return LanguageModel(
-                code = "",
-                displayName = ""
-            )
-        }
-    }
 
 }
 

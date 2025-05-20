@@ -1,16 +1,22 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
+import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
+import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
+import de.dkutzer.tcgwatcher.collectables.search.domain.SetDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -270,7 +276,172 @@ class MapperTest {
         assertEquals("it", locationModel.code)
     }
 
+    @Test
+    fun `test LanguageModel fromProductLanguage`() {
+
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("Deutsch", "de")
+            assertEquals("de", fromProductLanguage.code)
+            assertEquals("Deutsch", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("Englisch", "de")
+            assertEquals("en", fromProductLanguage.code)
+            assertEquals("Englisch", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("Französisch", "de")
+            assertEquals("fr", fromProductLanguage.code)
+            assertEquals("Französisch", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("Koreanisch", "de")
+            assertEquals("kr", fromProductLanguage.code)
+            assertEquals("Koreanisch", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("German", "en")
+            assertEquals("de", fromProductLanguage.code)
+            assertEquals("German", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("English", "en")
+            assertEquals("en", fromProductLanguage.code)
+            assertEquals("English", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("French", "en")
+            assertEquals("fr", fromProductLanguage.code)
+            assertEquals("French", fromProductLanguage.displayName)
+
+        }
+        {
+            val fromProductLanguage = LanguageModel.fromProductLanguage("Korean", "en")
+            assertEquals("kr", fromProductLanguage.code)
+            assertEquals("Korean", fromProductLanguage.displayName)
+
+        }
+    }
+
+    @Test
+    fun `test ProductDetailsDto ToProductModel de`() {
+
+        val productDetailsDto = createSampleProductDetailsDto("de")
+        val productModel = productDetailsDto.toProductModel("de")
+        assertEquals("Test Produkt", productModel.name.value)
+        assertEquals("de", productModel.name.languageCode)
+        assertEquals("Test Product", productModel.name.i18n)
+        assertEquals("TEST123", productModel.code)
+        assertEquals("Pokemon", productModel.genre.cmCode)
+        assertEquals("Pokemon", productModel.genre.displayName)
+        assertEquals("Singles", productModel.type.cmCode)
+        assertEquals("Card", productModel.type.displayName)
+        assertEquals("Test Set", productModel.set.name)
+        assertEquals("https://product-images.s3.cardmarket.com/51/TR/274089/274089.jpg", productModel.imageUrl)
+        assertEquals("/de/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36", productModel.detailsUrl)
+        assertEquals("Rare", productModel.rarity.cmCode)
+        assertEquals("Rare", productModel.rarity.displayName)
+        assertEquals("100.00", productModel.price)
+        assertEquals("+5%", productModel.priceTrend)
+        assertEquals(1, productModel.sellOffers.size)
+        assertEquals("Seller 1", productModel.sellOffers[0].sellerName)
+        assertEquals("Deutschland", productModel.sellOffers[0].sellerLocation.country)
+        assertEquals("de", productModel.sellOffers[0].sellerLocation.code)
+        assertEquals("Deutsch", productModel.sellOffers[0].productLanguage.displayName)
+        assertEquals("de", productModel.sellOffers[0].productLanguage.code)
+        assertEquals(SpecialType.REVERSED, productModel.sellOffers[0].special)
+        assertEquals(ConditionType.NEAR_MINT, productModel.sellOffers[0].condition)
+        assertEquals(10, productModel.sellOffers[0].amount)
+        assertEquals("50.00", productModel.sellOffers[0].price)
+    }
+
+
+    @Test
+    fun `test ProductDetailsDto ToProductModel en`() {
+
+        val productDetailsDto = createSampleProductDetailsDto("en")
+        val productModel = productDetailsDto.toProductModel("en")
+        assertEquals("Test Produkt", productModel.name.value)
+        assertEquals("en", productModel.name.languageCode)
+        assertEquals("Test Product", productModel.name.i18n)
+        assertEquals("TEST123", productModel.code)
+        assertEquals("Pokemon", productModel.genre.cmCode)
+        assertEquals("Pokemon", productModel.genre.displayName)
+        assertEquals("Singles", productModel.type.cmCode)
+        assertEquals("Card", productModel.type.displayName)
+        assertEquals("Test Set", productModel.set.name)
+        assertEquals("https://product-images.s3.cardmarket.com/51/TR/274089/274089.jpg", productModel.imageUrl)
+        assertEquals("/en/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36", productModel.detailsUrl)
+        assertEquals("Rare", productModel.rarity.cmCode)
+        assertEquals("Rare", productModel.rarity.displayName)
+        assertEquals("100.00", productModel.price)
+        assertEquals("+5%", productModel.priceTrend)
+        assertEquals(1, productModel.sellOffers.size)
+        assertEquals("Seller 1", productModel.sellOffers[0].sellerName)
+        assertEquals("Germany", productModel.sellOffers[0].sellerLocation.country)
+        assertEquals("de", productModel.sellOffers[0].sellerLocation.code)
+        assertEquals("German", productModel.sellOffers[0].productLanguage.displayName)
+        assertEquals("de", productModel.sellOffers[0].productLanguage.code)
+        assertEquals(SpecialType.REVERSED, productModel.sellOffers[0].special)
+        assertEquals(ConditionType.NEAR_MINT, productModel.sellOffers[0].condition)
+        assertEquals(10, productModel.sellOffers[0].amount)
+        assertEquals("50.00", productModel.sellOffers[0].price)
+    }
+
+    //------------------------------------
+
     // Helper functions to create sample data
+
+    private fun createSampleProductDetailsDto(lang: String): CardmarketProductDetailsDto {
+        return CardmarketProductDetailsDto(
+            name = NameDto("Test Produkt", lang,"Test Product"),
+            code = CodeType("TEST123", true),
+            genre = "Pokemon",
+            type = "Singles",
+            rarity = "Rare",
+            detailsUrl = "/$lang/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36",
+            imageUrl = "https://product-images.s3.cardmarket.com/51/TR/274089/274089.jpg",
+            price = "100.00",
+            priceTrend = PriceTrendType("+5%", true),
+            set = SetDto("Test Set", "/$lang/Pokemon/Products/Singles/Team-Rocket/"),
+            sellOffers = listOf(
+                when(lang) {
+                    "de" -> createSampleSellOfferDtoDe()
+                    "en" -> createSampleSellOfferDtoEn()
+                    else -> throw IllegalArgumentException("Unsupported language: $lang")
+                }
+            )
+        )
+
+    }
+
+    private fun createSampleSellOfferDtoDe(): CardmarketSellOfferDto = CardmarketSellOfferDto(
+        sellerName = "Seller 1",
+        sellerLocation = "Artikelstandort: Deutschland",
+        productLanguage = "Deutsch",
+        special = "Reverse Holo",
+        condition = "Near Mint",
+        amount = "10",
+        price = "50.00"
+
+    )
+
+    private fun createSampleSellOfferDtoEn(): CardmarketSellOfferDto = CardmarketSellOfferDto(
+        sellerName = "Seller 1",
+        sellerLocation = "Location: Germany",
+        productLanguage = "German",
+        special = "Reverse Holo",
+        condition = "Near Mint",
+        amount = "10",
+        price = "50.00"
+
+    )
     private fun createSampleGalleryItemDto(
         code: CodeType = CodeType("TEST123", true),
         priceTrend: PriceTrendType = PriceTrendType("+5%", true)
