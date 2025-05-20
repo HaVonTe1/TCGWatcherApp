@@ -46,6 +46,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
+import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.OfferFilters
 import de.dkutzer.tcgwatcher.collectables.search.domain.SortField
 import de.dkutzer.tcgwatcher.collectables.search.domain.SortOrder
@@ -55,8 +57,8 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.SortOrder
 @Composable
 fun FilterDialog(
     initialFilters: OfferFilters,
-    availableCountries: List<String>,
-    availableLanguages: List<String>,
+    availableCountries: Set<LocationModel>,
+    availableLanguages: Set<LanguageModel>,
     onFiltersApplied: (OfferFilters) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -77,13 +79,6 @@ fun FilterDialog(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
-//                // Seller Name Filter
-//                OutlinedTextField(
-//                    value = filters.sellerName,
-//                    onValueChange = { filters = filters.copy(sellerName = it) },
-//                    label = { Text("Seller Name") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
 
                 // Country Filter
                 FilterSection("Countries") {
@@ -97,7 +92,7 @@ fun FilterDialog(
                                     }
                                 )
                             },
-                            label = { Text(country) }
+                            label = { Text(country.code) }
                         )
                     }
                 }
@@ -114,7 +109,7 @@ fun FilterDialog(
                                     }
                                 )
                             },
-                            label = { Text(language) }
+                            label = { Text(language.code) }
                         )
                     }
                 }
