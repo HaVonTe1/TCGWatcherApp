@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
@@ -44,6 +45,9 @@ interface SearchCacheDao {
 
     @Query("UPDATE search SET lastUpdated = :lastUpdated WHERE searchId = :searchId")
     fun updateLastUpdated(searchId: Int, lastUpdated: Long)
+
+    @Update
+    fun updateSearch(search: SearchEntity)
 
     @Delete
     fun removeSearch(search: SearchEntity)
