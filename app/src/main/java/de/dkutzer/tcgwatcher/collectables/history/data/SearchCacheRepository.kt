@@ -126,7 +126,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     }
 
     override suspend fun findItemsByLink(link: String): List<ProductItemEntity> {
-        return searchCacheDao.findItemsByLink(link)
+        return searchCacheDao.findItemsByLink(link)i
     }
 
     override suspend fun updateItemByLink(
