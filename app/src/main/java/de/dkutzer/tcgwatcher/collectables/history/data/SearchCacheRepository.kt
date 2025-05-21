@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.history.data
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsAndSelloffersEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
@@ -32,38 +33,77 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
 
     /*
-    TODO: currently every search is persited with NEW ProductItemEntities.
+    TODO: currently every search is persisted with NEW ProductItemEntities.
             Even  the SingleItem Search and the Refreshing of a single item
-            leads to a new search entitie and even worst a new set of ProductItemEntities.
-            This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
-            It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
+            leads to a new search entity and even worst a new set of ProductItemEntities.
+            This should be optimized. Currently the association between Search and ProductItemEntities is 1:N.
+            It should be N:M so every ProductItemEntity has one or more SearchIds and is only persisted once.
     */
-    override suspend fun persistsSearchWithItems(results: SearchAndProductsEntity, language: String): SearchAndProductsEntity {
+    override suspend fun persistsSearchWithItems(searchWithProducts: SearchAndProductsEntity, language: String): SearchAndProductsEntity {
 
-        var searchId = searchCacheDao.getSearchIdBySearchTerm(results.search.searchTerm)
-        val lastUpdated = Instant.now().epochSecond
-        if(searchId!=null) {
+        val currentEpochTime = Instant.now().epochSecond
 
-            searchCacheDao.updateLastUpdated(searchId, lastUpdated)
+        var searchIdBySearchTerm =
+            searchCacheDao.getSearchIdBySearchTerm(searchWithProducts.search.searchTerm)
+        val searchEntity = SearchEntity(
+            searchId = searchIdBySearchTerm ?: 0,
+            searchTerm = searchWithProducts.search.searchTerm,
+            lastUpdated = currentEpochTime,
+            size = searchWithProducts.products.size,
+            language = language,
+            history = searchWithProducts.search.history
+        )
 
-        } else
-        {
-            val persistedSearchId = searchCacheDao.persistSearch(results.search)
-            results.products.forEach { it.searchId = persistedSearchId.toInt() }
-
-            searchCacheDao.persistItems(results.products)
-            searchId = persistedSearchId.toInt()
+        if (searchIdBySearchTerm != null) {
+            searchCacheDao.updateSearch(searchEntity)
+        } else {
+            searchIdBySearchTerm = searchCacheDao.persistSearch(searchWithProducts.search).toInt()
         }
+
+        searchWithProducts.products.forEach { it.searchId = searchIdBySearchTerm }
+
+        searchCacheDao.persistItems(searchWithProducts.products)
         return SearchAndProductsEntity(
-            SearchEntity(
-                searchId =  searchId,
-                searchTerm = results.search.searchTerm,
-                lastUpdated = lastUpdated,
-                size = results.products.size,
-                language = language,
-                history = results.search.history),
-            results.products)
+            search = searchEntity,
+            products = searchWithProducts.products)
     }
+
+    override suspend fun persistSearchWithProductAndSellOffers(
+        searchWithProducts: SearchAndProductsAndSelloffersEntity,
+        language: String
+    ): SearchAndProductsAndSelloffersEntity {
+        val currentEpochTime = Instant.now().epochSecond
+
+        var searchIdBySearchTerm =
+            searchCacheDao.getSearchIdBySearchTerm(searchWithProducts.search.searchTerm)
+        val searchEntity = SearchEntity(
+            searchId = searchIdBySearchTerm ?: 0,
+            searchTerm = searchWithProducts.search.searchTerm,
+            lastUpdated = currentEpochTime,
+            size = searchWithProducts.products.size,
+            language = language,
+            history = searchWithProducts.search.history
+        )
+
+        if (searchIdBySearchTerm != null) {
+            searchCacheDao.updateSearch(searchEntity)
+        } else {
+            searchIdBySearchTerm = searchCacheDao.persistSearch(searchWithProducts.search).toInt()
+        }
+
+        val list = searchWithProducts.products.map { it.productItemEntity }.onEach {
+            it.searchId = searchIdBySearchTerm
+        }.toList()
+
+
+        searchCacheDao.persistItems(list)
+        return SearchAndProductsEntity(
+            search = searchEntity,
+            products = searchWithProducts.products)
+    }
+
+
+
 
     override suspend fun persistSearchItems(results: List<ProductItemEntity>) {
         searchCacheDao.persistItems(results)
