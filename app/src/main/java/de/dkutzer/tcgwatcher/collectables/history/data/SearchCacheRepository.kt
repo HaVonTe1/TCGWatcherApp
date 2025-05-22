@@ -111,14 +111,16 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             history = searchWithProducts.search.history
         )
 
-        searchWithProducts.products.forEach { product ->
+        val updatedProducts = searchWithProducts.products.map { product ->
             product.productItemEntity.searchId = searchId
             val productId = searchCacheDao.persistItem(product.productItemEntity)
+            val updatedProductItemEntity = product.productItemEntity.copy(id = productId.toInt())
             product.offers.forEach { it.productId = productId.toInt() }
             searchCacheDao.persistSellOffers(product.offers)
-        }
+            Product(updatedProductItemEntity, product.offers)
+        }.toList()
 
-        return SearchAndProductsAndSelloffersEntity(searchEntity, searchWithProducts.products)
+        return SearchAndProductsAndSelloffersEntity(searchEntity, updatedProducts)
     }
 
 
