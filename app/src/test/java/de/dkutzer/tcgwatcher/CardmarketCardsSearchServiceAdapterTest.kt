@@ -85,7 +85,7 @@ class CardmarketCardsSearchServiceAdapterTest {
 
         val searchAndProductsEntity = SearchAndProductsEntity(
             search = SearchEntity(
-                searchId = 1,
+                id = 1,
                 searchTerm = "Ramalama",
                 size = 1,
                 history = true,

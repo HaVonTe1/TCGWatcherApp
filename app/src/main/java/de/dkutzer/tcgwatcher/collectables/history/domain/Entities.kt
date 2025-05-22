@@ -12,7 +12,7 @@ import java.time.Instant
 @Entity(tableName = "search")
 data class SearchEntity(
     @PrimaryKey(autoGenerate = true)
-    val searchId: Int = 0,
+    val id: Int = 0,
     @ColumnInfo(index = true)
     val searchTerm: String,
     val size: Int,
@@ -27,8 +27,7 @@ data class ProductItemEntity(
     val id: Int = 0,
     @ColumnInfo(index = true)
     var searchId: Int,
-    @ColumnInfo(index = true)
-    var productId: Int,
+
     val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
     val language: String = "en",
     val genre: String = "",
@@ -67,17 +66,11 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-/*
-TODO: currently every search is persisted with NEW ProductItemEntities.
-        Even  the SingleItem Search and the Refreshing of a single item
-        leads to a new search entitie and even worst a new set of ProductItemEntities.
-        This should be optimized. Currently the Assocciation between Search and ProductItemEntities is 1:N.
-        It should be N:M so every ProductItemEntity has one or more SearchIds and is only persited once.
-*/
+
 data class SearchAndProductsEntity(
     @Embedded val search: SearchEntity,
     @Relation(
-        parentColumn = "searchId",
+        parentColumn = "id",
         entityColumn = "searchId"
     )
     val products: List<ProductItemEntity>
@@ -92,17 +85,22 @@ data class SearchAndProductsEntity(
 data class SearchAndProductsAndSelloffersEntity(
     @Embedded val search: SearchEntity,
     @Relation(
-        parentColumn = "searchId",
+        parentColumn = "id",
         entityColumn = "searchId"
     )
     val products: List<Product>
 
-)
+){
+    fun isOlderThan(seconds: Long): Boolean {
+
+        return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+    }
+}
 
 data class Product(
     @Embedded val productItemEntity: ProductItemEntity,
     @Relation(
-        parentColumn = "productId",
+        parentColumn = "id",
         entityColumn = "productId"
     )
     val offers: List<SellOfferEntity>

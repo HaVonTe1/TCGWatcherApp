@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.history.domain
 interface SearchCacheRepository {
 
     suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchAndProductsEntity?
+    suspend fun findSearchWithItemsAndSellOffersByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchAndProductsAndSelloffersEntity?
     suspend fun persistsSearchWithItems(searchWithProducts: SearchAndProductsEntity, language: String): SearchAndProductsEntity
     suspend fun persistSearchWithProductAndSellOffers(searchWithProducts: SearchAndProductsAndSelloffersEntity, language: String) : SearchAndProductsAndSelloffersEntity
 

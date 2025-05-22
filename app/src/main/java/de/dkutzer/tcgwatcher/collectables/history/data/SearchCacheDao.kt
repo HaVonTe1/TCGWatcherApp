@@ -17,7 +17,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 interface SearchCacheDao {
 
 
-    @Query("SELECT searchId FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
+    @Query("SELECT id FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
     fun getSearchIdBySearchTerm(searchTerm: String) : Int?
 
     @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
@@ -26,7 +26,7 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
     fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductItemEntity>
 
-    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.searchId = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
+    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
@@ -34,6 +34,10 @@ interface SearchCacheDao {
 
     @Upsert
     fun persistItems(results: List<ProductItemEntity>): List<Long>
+
+    @Upsert
+    fun persistItem(item: ProductItemEntity): Long
+
     @Upsert
     fun persistSellOffers(offers: List<SellOfferEntity>): List<Long>
 
@@ -43,7 +47,7 @@ interface SearchCacheDao {
     @Upsert
     fun persistSearch( search: SearchEntity) : Long
 
-    @Query("UPDATE search SET lastUpdated = :lastUpdated WHERE searchId = :searchId")
+    @Query("UPDATE search SET lastUpdated = :lastUpdated WHERE id = :searchId")
     fun updateLastUpdated(searchId: Int, lastUpdated: Long)
 
     @Update
