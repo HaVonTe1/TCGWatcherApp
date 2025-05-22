@@ -50,7 +50,7 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         setLink = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
-        productId = productId,
+        id = productId,
         lastUpdated = Instant.now().epochSecond
     )
 }
@@ -75,6 +75,27 @@ fun ProductItemEntity.toProductModel() : ProductModel {
     )
 }
 
+fun Product.toProductModel() : ProductModel {
+    return ProductModel(
+
+        id = URI(productItemEntity.cmLink).path.split("/").last(),
+        name = NameModel(productItemEntity.displayName, productItemEntity.language, productItemEntity.orgName),
+        code = productItemEntity.code,
+        type = fromString<TypeEnum>(productItemEntity.type) ,
+        genre = fromString<GenreType>(productItemEntity.genre) ,
+        rarity = fromString<RarityType>(productItemEntity.rarity) ,
+        set = SetModel(link = productItemEntity.setLink, name = productItemEntity.setName),
+
+        detailsUrl = productItemEntity.cmLink,
+        imageUrl = productItemEntity.imgLink,
+        price = productItemEntity.price,
+        priceTrend = productItemEntity.priceTrend,
+        sellOffers = offers.map { it.toSellOfferModel(productItemEntity.language) },
+        timestamp = productItemEntity.lastUpdated
+    )
+
+}
+
 fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductItemEntity {
     return ProductItemEntity(
         displayName = this.name.value,
@@ -91,7 +112,7 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         lastUpdated = this.timestamp,
         setName = this.set.name,
         setLink = this.set.link,
-        productId = productId,
+        id = productId,
         searchId = searchId)
 }
 
@@ -112,6 +133,18 @@ fun SellOfferModel.toSellOfferEntity(productId: Int): SellOfferEntity {
         amount = this.amount,
         price = this.price,
         special = this.special.cmCode
+    )
+}
+
+fun SellOfferEntity.toSellOfferModel(language: String): SellOfferModel {
+    return SellOfferModel(
+        sellerName = this.sellerName,
+        sellerLocation = LocationModel.fromSellerLocation(this.sellerLocation, language),
+        productLanguage = LanguageModel.fromProductLanguage(this.productLanguage, language),
+        special = fromString<SpecialType>(this.special),
+        condition = fromString<ConditionType>(this.condition),
+        amount = this.amount,
+        price = this.price
     )
 }
 

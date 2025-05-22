@@ -36,7 +36,7 @@ class CardmarketCardsSearchServiceAdapter(
 
         val searchWithItemsEntity = if(useCache) {
             logger.debug { "Adapter: Looking in the Cache for: ${product.detailsUrl}" }
-            val cachedSearch = cache.findSearchWithItemsByQuery(product.detailsUrl)
+            val cachedSearch = cache.findSearchWithItemsAndSellOffersByQuery(product.detailsUrl)
             logger.debug { "Adapter: Found: $cachedSearch" }
 
             if (cachedSearch == null || cachedSearch.isOlderThan(threeDaysSeconds)) {
@@ -76,7 +76,7 @@ class CardmarketCardsSearchServiceAdapter(
             ),
             products = listOf(productWithDetails.toProductWithSellofferEntity())
         ).also {
-            cache.persistsSearchWithItems(it, language)
+            cache.persistSearchWithProductAndSellOffers(it, language)
         }
     }
 
