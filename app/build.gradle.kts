@@ -146,6 +146,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.robolectrics)
 
     testRuntimeOnly(libs.junit.vintage.engine)
     androidTestImplementation(libs.androidx.junit)
