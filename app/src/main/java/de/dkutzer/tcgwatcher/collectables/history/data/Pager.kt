@@ -8,6 +8,7 @@ import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
+import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -36,6 +37,7 @@ abstract class PokemonPager {
             quicksearchItem: ProductModel? = null,
             pokemonDatabase: SearchCacheDatabase,
             pokemonApi: BaseCardmarketApiClient,
+            config: BaseConfig
         ): Pager<Int, ProductItemEntity> {
 
             logger.debug { "create Searching Pager" }
@@ -44,6 +46,7 @@ abstract class PokemonPager {
                 return Pager(
                     config = PagingConfig(pageSize = 5),
                     remoteMediator = SearchRemoteMediator(
+                        config = config,
                         searchTerm = searchTerm,
                         refreshModel = refreshModel,
                         quicksearchItem = quicksearchItem,
