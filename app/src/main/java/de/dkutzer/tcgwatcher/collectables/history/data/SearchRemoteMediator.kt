@@ -12,6 +12,7 @@ import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServi
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
+import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -19,6 +20,7 @@ private val logger = KotlinLogging.logger {}
 
 @OptIn(ExperimentalPagingApi::class)
 class SearchRemoteMediator (
+    private val config: BaseConfig,
     private val searchTerm: String,
     private val refreshModel: RefreshWrapper,
     private val quicksearchItem: ProductModel? = null,
@@ -38,6 +40,7 @@ class SearchRemoteMediator (
         logger.debug { "Mediator searchTerm: $searchTerm" }
         logger.debug { "Mediator refreshItem: $refreshModel" }
         logger.debug { "Mediator quicksearchItem: $quicksearchItem" }
+        logger.debug { "Mediator config: $config"}
 
         logger.debug { "Mediator load: $loadType" }
         logger.debug { "Mediator state: $state" }
@@ -62,12 +65,12 @@ class SearchRemoteMediator (
         // cached room stuff
 
         val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-            adapter.getSingleItemByItem(refreshModel.item!!)
+            adapter.getSingleItemByItem(refreshModel.item!!, language =  config.lang.displayName)
         } else if (quicksearchItem != null) {
-            adapter.getSingleItemByItem(quicksearchItem, useCache = true)
+            adapter.getSingleItemByItem(quicksearchItem, useCache = true, language =  config.lang.displayName)
         }
         else {
-            adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
+            adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }
         // MAKE API CALL

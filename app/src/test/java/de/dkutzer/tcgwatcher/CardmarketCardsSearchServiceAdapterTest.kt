@@ -2,9 +2,9 @@ package de.dkutzer.tcgwatcher
 
 import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
@@ -65,6 +65,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         priceTrend = "sfds",
         setName = "sdfsdf",
         setLink = "sdfsdf",
+        language = "de",
         lastUpdated = OffsetDateTime.now().toEpochSecond()
     )
 
@@ -104,7 +105,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         val repositoryAdapter =
             CardmarketCardsSearchServiceAdapter(apiClientMock, cacheRepoMock)
 
-        val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5)
+        val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5, language = "en")
 
         Assert.assertEquals(1, searchResults.items.size)
 

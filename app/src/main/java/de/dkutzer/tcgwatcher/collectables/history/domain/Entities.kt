@@ -29,7 +29,7 @@ data class ProductItemEntity(
     var searchId: Int,
 
     val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
-    val language: String = "en",
+    val language: String,
     val genre: String = "",
     val type: String = "",
     val rarity: String = "",
