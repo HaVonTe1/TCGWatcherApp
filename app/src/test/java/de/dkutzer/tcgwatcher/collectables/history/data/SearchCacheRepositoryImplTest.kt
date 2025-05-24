@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.history.data
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import androidx.paging.PagingSource
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -263,6 +264,55 @@ class SearchCacheRepositoryImplTest {
         assertEquals(10, updatedEntity.size)
     }
 
+    @Test
+    fun testFindProductsWithSellOffers() = runBlocking {
+        val searchTerm = "OffersTest"
+        val products = (1..20).map {
+            val productItemEntity = createSampleProductItemEntity(code = "PGD-$it")
+            Product(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
+        }
+        val persistSearchWithProductAndSellOffers =
+            repository.persistSearchWithProductAndSellOffers(
+                SearchAndProductsAndSelloffersEntity(
+                    SearchEntity(
+                        searchTerm = searchTerm,
+                        size = 20,
+                        language = "en",
+                        lastUpdated = System.currentTimeMillis(),
+                        history = true
+                    ),
+                    products
+                ),
+                "en"
+            )
+        val pagingSource = dao.findItemsWithSellOffersByQuery(searchTerm)
+        // Load the paging data
+        val loadParams = PagingSource.LoadParams<Int>.Refresh(
+            key = 0,
+            loadSize = 10,
+            placeholdersEnabled = false
+        )
+        val loadResult = pagingSource.load(loadParams)
+
+        // Verify the results
+        assertTrue(loadResult is PagingSource.LoadResult.Page)
+        val page = loadResult as PagingSource.LoadResult.Page<Int, Product>
+
+        assertEquals(10, page.data.size)
+        val product = page.data[0]
+
+        // Verify product item
+        val productItemEntity = persistSearchWithProductAndSellOffers.products[0].productItemEntity
+        val productId = productItemEntity.id
+        assertEquals(productId, product.productItemEntity.id)
+        assertEquals(productItemEntity.displayName, product.productItemEntity.displayName)
+
+        // Verify offers
+        assertEquals(2, product.offers.size)
+        assertEquals("sdfsdfsdf", product.offers[0].sellerName)
+        assertEquals("10.99", product.offers[0].price)
+    }
+
     private fun createSampleProductItemEntity(code : String = "DRG-1"): ProductItemEntity =
         ProductItemEntity(
             searchId = 0, code = code,
@@ -282,7 +332,7 @@ class SearchCacheRepositoryImplTest {
             lastUpdated = 2111111111111111111
         )
 
-    private fun createSampleSellOfferEntity(price : String = "10.99"): SellOfferEntity = SellOfferEntity(
+    private fun createSampleSellOfferEntity(price : String = "10.99", productId : Int = 0): SellOfferEntity = SellOfferEntity(
         id = 0,
         productId = 0,
         sellerName = "sdfsdfsdf",

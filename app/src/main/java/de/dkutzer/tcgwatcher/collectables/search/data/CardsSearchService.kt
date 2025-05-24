@@ -53,8 +53,6 @@ class CardmarketCardsSearchServiceAdapter(
         val productModel = searchWithItemsEntity.products.first().toProductModel()
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
-        //make sure the refreshed data is mirrored to all search items with this link
-        //TODO: another nested table which stores the items and the searchitems_table just references to it
         cache.updateItemByLink(product.detailsUrl, productModel.toProductItemEntity())
 
         logger.debug { "Adapter: Returning cached results: $result" }
