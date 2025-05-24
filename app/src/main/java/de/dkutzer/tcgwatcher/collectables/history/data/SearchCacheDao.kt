@@ -6,8 +6,10 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import de.dkutzer.tcgwatcher.collectables.history.domain.Product
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
@@ -28,6 +30,12 @@ interface SearchCacheDao {
 
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
+
+    @Transaction
+    @Query("""
+    SELECT * FROM search_result_item
+    WHERE searchId IN (SELECT id FROM search WHERE searchTerm = :searchTerm)""")
+    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, Product>
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>

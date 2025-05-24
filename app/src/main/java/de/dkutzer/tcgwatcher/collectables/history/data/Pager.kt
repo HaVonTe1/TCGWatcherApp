@@ -24,6 +24,9 @@ private val logger = KotlinLogging.logger {}
  * types of data retrieval, such as searching by a term, refreshing a specific item,
  * or performing a quick search.
  */
+
+//TODO: try to refactor this from ProductItemEntity to Product
+//If state == RefreshState.REFRESH_ITEM: lazy-load the selloffers
 abstract class PokemonPager {
     //Highlander Pattern
     companion object {
