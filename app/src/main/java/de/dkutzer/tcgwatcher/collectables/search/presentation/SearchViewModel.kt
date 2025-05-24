@@ -60,7 +60,7 @@ class SearchViewModel(
             engine = Engines.KTOR
         )
     )
-    private val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
+    val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
 
     private val _showHistoryContent = MutableStateFlow(false)
     val showHistoryContent = _showHistoryContent.asStateFlow()
@@ -96,7 +96,8 @@ class SearchViewModel(
                     latestRefreshItem,
                     quicksearchItem,
                     searchCacheDatabase,
-                    productApiClient
+                    productApiClient,
+                    config
                 )
             val pokemonRepositoryImpl = CardmarketPokemonRepositoryAdapter(pokemonPager)
             logger.debug { "getPokemonList now" }
@@ -235,6 +236,7 @@ class SearchViewModel(
     fun onSearchSubmit(searchString: String) {
         logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
         _quicksearchItem.value = null
+        _refreshItem.value = RefreshWrapper(item = null, query = searchString, state = RefreshState.IDLE)
 
         if (searchString.isEmpty()) {
             logger.debug { "Empty search" }

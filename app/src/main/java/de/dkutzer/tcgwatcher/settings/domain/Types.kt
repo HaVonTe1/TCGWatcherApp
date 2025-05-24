@@ -1,7 +1,7 @@
 package de.dkutzer.tcgwatcher.settings.domain
 
-enum class Languages {
-    DE, EN;
+enum class Languages(val displayName: String) {
+    DE("de"), EN("en");
 }
 
 

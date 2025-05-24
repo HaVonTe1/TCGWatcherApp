@@ -38,6 +38,7 @@ import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.search.domain.HistorySearchItem
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.QuickSearchItem
+import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.StateFlow
 
@@ -51,6 +52,8 @@ fun SearchView(
     historyList: StateFlow<List<HistorySearchItem>>,
     quickSearchList: StateFlow<List<QuickSearchItem>>,
     isSearching: StateFlow<Boolean>,
+    settings: StateFlow<SettingsModel>,
+
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onActiveChanged: (String, Boolean) -> Unit,
@@ -63,6 +66,7 @@ fun SearchView(
 
     val historyListState = historyList.collectAsState()
     val quickSearchListState = quickSearchList.collectAsState()
+    val settings = settings.collectAsState()
 
     var query by remember { mutableStateOf("") }
     val active by isSearching.collectAsState(initial = false)
@@ -145,7 +149,7 @@ fun SearchView(
                     onQuickSearchItemClicked = {
                         logger.debug { "SearchBar:content:quicksearchItemClick: $it" }
                         query = it.displayName
-                        onQuicksearchItemClick(it.toProductModel())
+                        onQuicksearchItemClick(it.toProductModel(settings.value.language.name.lowercase()))
                     }
                 )
             }

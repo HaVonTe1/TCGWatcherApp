@@ -14,8 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -24,8 +22,6 @@ import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import java.time.Instant
 
 
 @Composable
@@ -81,27 +77,7 @@ fun ProductListViewItemView(
     }
 }
 
-@PreviewLightDark()
-@PreviewScreenSizes
-@Composable
-fun ItemOfInterestCardPreview() {
-    TCGWatcherTheme {
-        val sampleProduct = ProductModel(
-            "test",
-            "Blitza",
-            "blitza-1234",
-            "Jolteon",
-            "https://havonte.ddns.net/core/img/logo/logo.svg",
-            "https://havonte.ddns.net/core/img/logo/logo.svg",
-            "12.34",
-            "56.78",
-            Instant.now().epochSecond,)
-        ProductListViewItemView(productModel = sampleProduct,
-            showLastUpdated = true,
-            iconRowContent = {}
-        )
-    }
-}
+
 
 @Composable
 fun ProductDetailsTable(
@@ -111,7 +87,7 @@ fun ProductDetailsTable(
 
     Column(modifier = modifier.padding(1.dp))
     {
-        Text(text = productModel.localName, style = MaterialTheme.typography.headlineLarge)
+        Text(text = productModel.name.value, style = MaterialTheme.typography.headlineLarge)
         if(productModel.code.isNotBlank()) {
             Text(text = " (${productModel.code})", style = MaterialTheme.typography.bodySmall)
         }

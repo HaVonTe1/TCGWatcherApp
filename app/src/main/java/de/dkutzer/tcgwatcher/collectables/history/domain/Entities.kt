@@ -7,16 +7,16 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.time.Instant
 
-class Entities {
-}
+
 
 @Entity(tableName = "search")
 data class SearchEntity(
     @PrimaryKey(autoGenerate = true)
-    val searchId: Int = 0,
+    val id: Int = 0,
     @ColumnInfo(index = true)
     val searchTerm: String,
     val size: Int,
+    val language: String,
     val lastUpdated: Long,
     val history: Boolean
 )
@@ -27,19 +27,38 @@ data class ProductItemEntity(
     val id: Int = 0,
     @ColumnInfo(index = true)
     var searchId: Int,
-    val displayName: String,
+
+    val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
+    val language: String,
+    val genre: String = "",
+    val type: String = "",
+    val rarity: String = "",
     val code: String,
     val orgName: String,
     val cmLink: String,
     val imgLink: String,
     val price: String,
     val priceTrend: String,
+    val setName: String, //TODO: normalize the setName into seperate Entity to make is multilangual
+    val setLink: String,
     val lastUpdated: Long
-) {
-    fun isOlderThan(seconds: Long): Boolean {
-        return Instant.ofEpochSecond(this.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
-    }
-}
+)
+
+@Entity(tableName = "product_offer")
+data class SellOfferEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(index = true)
+    var productId: Int,
+
+    val sellerName: String,
+    val sellerLocation: String,
+    val productLanguage: String,
+    val condition: String,
+    val amount: Int,
+    val price: String,
+    val special: String,
+)
 
 @Entity("remote_key")
 data class RemoteKeyEntity(
@@ -47,13 +66,14 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-data class SearchWithItemsEntity(
+
+data class SearchAndProductsEntity(
     @Embedded val search: SearchEntity,
     @Relation(
-        parentColumn = "searchId",
+        parentColumn = "id",
         entityColumn = "searchId"
     )
-    val results: List<ProductItemEntity>
+    val products: List<ProductItemEntity>
 
 ) {
     fun isOlderThan(seconds: Long): Boolean {
@@ -61,3 +81,29 @@ data class SearchWithItemsEntity(
         return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
     }
 }
+
+data class SearchAndProductsAndSelloffersEntity(
+    @Embedded val search: SearchEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "searchId"
+    )
+    val products: List<Product>
+
+){
+    fun isOlderThan(seconds: Long): Boolean {
+
+        return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+    }
+}
+
+data class Product(
+    @Embedded val productItemEntity: ProductItemEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "productId"
+    )
+    val offers: List<SellOfferEntity>
+)
+
+

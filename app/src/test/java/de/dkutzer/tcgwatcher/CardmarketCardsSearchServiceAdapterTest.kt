@@ -2,12 +2,13 @@ package de.dkutzer.tcgwatcher
 
 import android.net.Uri
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithItemsEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
-import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
+import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -41,15 +42,15 @@ class CardmarketCardsSearchServiceAdapterTest {
 
 
 
-    private fun createResultItemDto() = SearchResultItemDto(
-        displayName = "Vincent Le",
+    private fun createResultItemDto() = CardmarketProductGallaryItemDto(
+        name = NameDto("xx","de","yy"),
         code = "TST 1",
-        orgName = "Miranda Pitts",
+        genre = "xx",
+        type = "xx",
         cmLink = "https://www.cardmarket.com/de/Pokemon/jhghj/fames",
         imgLink = "instructior",
         price = "hac",
-        priceTrend = "dfsgdff"
-
+        priceTrend = "dfsgdff",
     )
 
     private fun createSearchResultItemEntity() = ProductItemEntity(
@@ -62,6 +63,9 @@ class CardmarketCardsSearchServiceAdapterTest {
         imgLink = "molestiae",
         price = "dictum",
         priceTrend = "sfds",
+        setName = "sdfsdf",
+        setLink = "sdfsdf",
+        language = "de",
         lastUpdated = OffsetDateTime.now().toEpochSecond()
     )
 
@@ -80,27 +84,28 @@ class CardmarketCardsSearchServiceAdapterTest {
         )
 
 
-        val searchWithItemsEntity = SearchWithItemsEntity(
+        val searchAndProductsEntity = SearchAndProductsEntity(
             search = SearchEntity(
-                searchId = 1,
+                id = 1,
                 searchTerm = "Ramalama",
                 size = 1,
                 history = true,
+                language = "en",
                 lastUpdated = OffsetDateTime.now().toEpochSecond()
-            ), results = listOf(createSearchResultItemEntity())
+            ), products = listOf(createSearchResultItemEntity())
         )
-        coEvery { cacheRepoMock.persistsSearchWithItems(any()) }.returns( searchWithItemsEntity)
+        coEvery { cacheRepoMock.persistsSearchWithItems(any(), any()) }.returns( searchAndProductsEntity)
 
         coEvery { cacheRepoMock.findSearchWithItemsByQuery(eq("Ramalama"), 1) }.returns(
             null
         ).andThen(
-            searchWithItemsEntity
+            searchAndProductsEntity
         )
 
         val repositoryAdapter =
             CardmarketCardsSearchServiceAdapter(apiClientMock, cacheRepoMock)
 
-        val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5)
+        val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5, language = "en")
 
         Assert.assertEquals(1, searchResults.items.size)
 
