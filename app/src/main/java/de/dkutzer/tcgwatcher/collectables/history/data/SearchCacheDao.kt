@@ -28,13 +28,12 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
     fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductItemEntity>
 
+    @Transaction
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
 
     @Transaction
-    @Query("""
-    SELECT * FROM search_result_item
-    WHERE searchId IN (SELECT id FROM search WHERE searchTerm = :searchTerm)""")
+    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, Product>
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")

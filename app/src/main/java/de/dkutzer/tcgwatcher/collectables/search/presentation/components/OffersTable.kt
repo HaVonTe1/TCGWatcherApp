@@ -1,14 +1,11 @@
 package de.dkutzer.tcgwatcher.collectables.search.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,30 +26,44 @@ import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
 
 @Composable
 fun OffersTable(offers: List<SellOfferModel>) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Table Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TableHeaderCell("Seller", 2f)
-            TableHeaderCell("Location", 1f)
-            TableHeaderCell("Language", 1f)
-            TableHeaderCell("Condition", 1.5f)
-            TableHeaderCell("Price", 1f)
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+//    Column(modifier = Modifier.fillMaxWidth()) {
+//        // Table Header
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .background(MaterialTheme.colorScheme.primaryContainer)
+//                .padding(4.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            TableHeaderCell("Seller", 2f)
+//            TableHeaderCell("Location", 1f)
+//            TableHeaderCell("Language", 1f)
+//            TableHeaderCell("Condition", 1.5f)
+//            TableHeaderCell("Price", 1f)
+//        }
+//
+//        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
         // Offers List
-        LazyColumn {
-            items(offers) { offer ->
-                OfferRow(offer = offer)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            }
+//        LazyColumn(
+//            modifier = Modifier
+//            .fillMaxWidth()
+//            .heightIn(max = 400.dp) // Add max height constraint
+//        ) {
+//            items(offers) { offer ->
+//                OfferRow(offer = offer)
+//                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+//            }
+//        }
+//    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+//            .verticalScroll(rememberScrollState())
+    ) {
+        offers.forEach { offer ->
+            OfferRow(offer = offer)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         }
     }
 }
@@ -78,7 +89,7 @@ private fun OfferRow(offer: SellOfferModel) {
         TableCell(text = offer.condition.cmCode, weight = 1.5f)
 
         // Price
-        TableCell(text = "$${"%.2f".format(offer.price)}", weight = 1f)
+        TableCell(text = offer.price, weight = 1f)
     }
 }
 
@@ -136,7 +147,7 @@ fun OffersTablePreview() {
         val sampleOffers = listOf(
             SellOfferModel(
                 sellerName = "Card Kingdom",
-                sellerLocation = LocationModel("Germany", "de"),
+                sellerLocation = LocationModel("Deutschland", "de"),
                 productLanguage = LanguageModel("de", "Deutsch"),
                 condition = ConditionType.MINT,
                 amount = 1,
