@@ -47,10 +47,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -60,8 +63,20 @@ import de.dkutzer.tcgwatcher.collectables.search.data.REFERER
 import de.dkutzer.tcgwatcher.collectables.search.data.USER_AGENT
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
+import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
+import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
+import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.OfferFilters
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
+import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
+import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
+import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import kotlinx.coroutines.flow.flowOf
 import kotlin.math.roundToInt
 
 private enum class Anchors { Left, Center, Right }
@@ -254,13 +269,14 @@ fun ProductDetailsView(
             Column(
                 modifier = Modifier
                     .padding(1.dp)
-                    .fillMaxSize(),
+                    .fillMaxWidth(),
             ) {
 
                 Row(
                     modifier = Modifier
                         .padding(4.dp)
-                        .fillMaxSize(),
+                        .fillMaxWidth()
+                        .weight(1f),
                     horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
                 ) {
                     Text(
@@ -306,16 +322,66 @@ fun ProductDetailsView(
                     }
                 }
 
-                //add selling table
-                if(productModel.sellOffers.isNotEmpty())
-                {
-                    OffersTable(productModel.sellOffers)
-                }
+
+            }
+            //add selling table
+            if(productModel.sellOffers.isNotEmpty())
+            {
+                OffersTable(productModel.sellOffers)
             }
             //TODO: add a row for inventory management
         }
     }
 
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProductDetailsViewPreview() {
+    val previewProducts = listOf(
+        ProductModel(
+            id = "prev2",
+            name = NameModel("Preview Product 1", languageCode = "de", "dfdsf"),
+            code = "PRV002",
+            price = "29.99",
+            imageUrl = "http://example.com/image2.png",
+            detailsUrl = "http://example.com/details2",
+            sellOffers = listOf(SellOfferModel(
+                sellerName = "sdf",
+                sellerLocation = LocationModel(country = "df", code = "de"),
+                productLanguage = LanguageModel(code = "de", displayName = "df"),
+                special = SpecialType.REVERSED,
+                condition = ConditionType.NEAR_MINT,
+                amount = 11,
+                price = "123"
+            )),
+            type = TypeEnum.CARD,
+            genre = GenreType.POKEMON,
+            rarity = RarityType.COMMON,
+            set = SetModel(link = "df", name = "dfsdf"),
+            priceTrend = "34",
+            timestamp = System.currentTimeMillis()
+        )
+    )
+
+    val lazyPagingItems: LazyPagingItems<ProductModel> =
+        flowOf(PagingData.from(previewProducts)).collectAsLazyPagingItems()
+
+    TCGWatcherTheme {
+        if (lazyPagingItems.itemCount > 0) { // Ensure items are available
+            ProductDetailsView(
+                products = lazyPagingItems,
+                index = 0, // Use a valid index like 0
+                modifier = Modifier,
+                refreshProductDetails = { /* No-op for preview */ },
+                onImageClick = { /* No-op for preview */ },
+                onBackClick = { /* No-op for preview */ },
+                onIndexChange = { /* No-op for preview */ }
+            )
+        } else {
+            Text("Loading preview data...") // Or some placeholder
+        }
+    }
 }
 
 

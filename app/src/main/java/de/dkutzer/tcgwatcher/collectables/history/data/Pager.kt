@@ -3,7 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.history.data
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.Product
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
@@ -24,14 +24,11 @@ private val logger = KotlinLogging.logger {}
  * types of data retrieval, such as searching by a term, refreshing a specific item,
  * or performing a quick search.
  */
-
-//TODO: try to refactor this from ProductItemEntity to Product
-//If state == RefreshState.REFRESH_ITEM: lazy-load the selloffers
 abstract class PokemonPager {
     //Highlander Pattern
     companion object {
         @Volatile
-        private var Instance: Pager<Int, ProductItemEntity>? = null
+        private var Instance: Pager<Int, Product>? = null
 
         @OptIn(ExperimentalPagingApi::class)
         fun providePokemonPager(
@@ -41,7 +38,7 @@ abstract class PokemonPager {
             pokemonDatabase: SearchCacheDatabase,
             pokemonApi: BaseCardmarketApiClient,
             config: BaseConfig
-        ): Pager<Int, ProductItemEntity> {
+        ): Pager<Int, Product> {
 
             logger.debug { "create Searching Pager" }
             return Instance ?: synchronized(this) {
@@ -60,15 +57,15 @@ abstract class PokemonPager {
                         logger.debug { "refreshItem: [$refreshModel] searchTerm: [$searchTerm]" }
                         if(refreshModel.state == RefreshState.REFRESH_ITEM) {
                             logger.debug { "calling refresh item as paging source: $refreshModel" }
-                            pokemonDatabase.searchCacheDao.findItemsByQuery(refreshModel.item!!.detailsUrl)
+                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.item!!.detailsUrl)
                         }
                         else if(quicksearchItem != null) {
                             logger.debug { "calling quicksearch  as paging source: $quicksearchItem" }
-                            pokemonDatabase.searchCacheDao.findItemsByQuery(quicksearchItem.detailsUrl)
+                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(quicksearchItem.detailsUrl)
                         }
                         else {
                             logger.debug { "calling search term as paging source: $searchTerm" }
-                            pokemonDatabase.searchCacheDao.findItemsByQuery(searchTerm)
+                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(searchTerm)
                         }
                     },
                 )
