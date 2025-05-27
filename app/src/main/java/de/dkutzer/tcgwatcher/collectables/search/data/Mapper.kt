@@ -105,7 +105,7 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         type = this.type.cmCode,
         rarity = this.rarity.cmCode,
         imgLink = this.imageUrl,
-        orgName = this.name.i18n,
+        orgName = this.name.i18n, //FixMe
         price = this.price,
         cmLink = this.detailsUrl,
         priceTrend = this.priceTrend,
@@ -139,8 +139,8 @@ fun SellOfferModel.toSellOfferEntity(productId: Int): SellOfferEntity {
 fun SellOfferEntity.toSellOfferModel(language: String): SellOfferModel {
     return SellOfferModel(
         sellerName = this.sellerName,
-        sellerLocation = LocationModel.fromSellerLocation(this.sellerLocation, language),
-        productLanguage = LanguageModel.fromProductLanguage(this.productLanguage, language),
+        sellerLocation = LocationModel.fromCode(this.sellerLocation, language),
+        productLanguage = LanguageModel.fromCode(this.productLanguage, language),
         special = fromString<SpecialType>(this.special),
         condition = fromString<ConditionType>(this.condition),
         amount = this.amount,

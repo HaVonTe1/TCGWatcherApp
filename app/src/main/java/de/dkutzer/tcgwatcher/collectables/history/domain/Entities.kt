@@ -8,7 +8,6 @@ import androidx.room.Relation
 import java.time.Instant
 
 
-
 @Entity(tableName = "search")
 data class SearchEntity(
     @PrimaryKey(autoGenerate = true)
@@ -105,5 +104,4 @@ data class Product(
     )
     val offers: List<SellOfferEntity>
 )
-
 

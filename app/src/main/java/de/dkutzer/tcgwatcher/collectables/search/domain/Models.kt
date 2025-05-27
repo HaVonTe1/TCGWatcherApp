@@ -1,7 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
 import android.os.Parcelable
-import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
@@ -102,6 +101,28 @@ data class LocationModel(
                 LocationModel(country = "unknown", code = "")
             }
         }
+
+        fun fromCode(code: String, language: String): LocationModel {
+            val targetDisplayLocale = when (language.lowercase()) {
+                "de" -> Locale.GERMAN
+                "en" -> Locale.ENGLISH
+                else -> null // Handle unsupported languages
+            }
+            if (targetDisplayLocale == null) {
+                logger.debug{"Warning: Unsupported language '$language'"}
+                return LocationModel(country = "unknown", code = "")
+            }
+            val foundLocale = AVAILABLE_LOCALES.firstOrNull { it.country.lowercase() == code.lowercase() }
+            return if (foundLocale != null) {
+                LocationModel(
+                    country = foundLocale.getDisplayCountry(targetDisplayLocale), // Use the determined display locale
+                    code = foundLocale.country.lowercase()
+                )
+                } else {
+                logger.debug { "Warning: Could not find locale for country '$code' in language '${targetDisplayLocale.language}'" }
+                LocationModel(country = "unknown", code = "")
+            }
+        }
     }
 }
 
@@ -138,6 +159,23 @@ data class LanguageModel(
                     displayName = it.getDisplayLanguage(targetSearchLocale)
                 )
             } ?: LanguageModel(code = "", displayName = "")
+        }
+
+        fun fromCode(code: String, language: String): LanguageModel {
+            val targetSearchLocale = when (language.lowercase()) {
+                "de" -> Locale.GERMAN
+                "en" -> Locale.ENGLISH
+                else -> return LanguageModel(code = "", displayName = "")
+            }
+            val foundLocale = AVAILABLE_LOCALES.firstOrNull { it.language.lowercase() == code.lowercase() }
+
+            return foundLocale?.let {
+                LanguageModel(
+                    code = it.language,
+                    displayName = it.getDisplayLanguage(targetSearchLocale)
+                )
+
+                } ?: LanguageModel(code = "", displayName = "")
         }
     }
 }
@@ -248,7 +286,7 @@ data class RefreshWrapper(
 )
 
 enum class RefreshState {
-    REFRESH_ITEM, REFRESH_SEARCH, ERROR, IDLE
+    REFRESH_ITEM, REFRESH_SEARCH,REFRESH_ITEM_FROM_CACHE, ERROR, IDLE
 }
 
 

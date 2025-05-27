@@ -2,7 +2,7 @@ package de.dkutzer.tcgwatcher.collectables.search.domain
 
 interface CardsSearchService {
 
-    suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean = false, language: String) : SearchResultsPage
+    suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean, useTtl: Boolean,loadDetails: Boolean, language: String) : SearchResultsPage
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5, language: String) : SearchResultsPage
 
