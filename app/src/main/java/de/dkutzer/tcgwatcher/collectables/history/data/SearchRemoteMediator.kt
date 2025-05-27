@@ -65,14 +65,38 @@ class SearchRemoteMediator (
         // cached room stuff
 
         val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-            adapter.getSingleItemByItem(refreshModel.item!!, language =  config.lang.displayName)
-        } else if (quicksearchItem != null) {
-            adapter.getSingleItemByItem(quicksearchItem, useCache = true, language =  config.lang.displayName)
+            var searchResultsPage = adapter.getSingleItemByItem(
+                refreshModel.item!!,
+                useCache = false,
+                useTtl = true,
+                loadDetails = true,
+                language = config.lang.displayName
+            )
+//            if(refreshModel.query.isNotEmpty()) {
+//                searchResultsPage =  adapter.searchByOffset(refreshModel.query, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
+//            }
+            searchResultsPage
+
+        } else if (refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
+            var searchResultsPage =  adapter.getSingleItemByItem(
+                refreshModel.item!!,
+                useCache = true,
+                useTtl = false,
+                loadDetails = false,
+                language =  config.lang.displayName)
+//            if(refreshModel.query.isNotEmpty()) {
+//                searchResultsPage =  adapter.searchByOffset(refreshModel.query, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
+//            }
+            searchResultsPage
+        }
+        else if (quicksearchItem != null) {
+            adapter.getSingleItemByItem(quicksearchItem, useCache = true, useTtl = false, loadDetails = false, language =  config.lang.displayName)
         }
         else {
             adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }
+        logger.info {"SearchResult size: ${searchResultsPage.items.size}"}
         // MAKE API CALL
 
         val nextOffset = offset + state.config.pageSize

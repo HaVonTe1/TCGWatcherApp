@@ -61,7 +61,7 @@ fun SearchView(
     onRefreshSearch: () -> Unit,
     onRefreshSingleItem: (item: ProductModel) -> Unit,
     onQuicksearchItemClick: (item: ProductModel) -> Unit,
-    modifier: Modifier = Modifier
+    onRefreshSingleItemFromCache: (item: ProductModel) -> Unit
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -183,6 +183,9 @@ fun SearchView(
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
                             onRefreshDetails = { item -> onRefreshSingleItem(item) },
+                            onReloadProductFromCache = { productModel ->
+                                onRefreshSingleItemFromCache(productModel)
+                            }
                         )
                     }
                 }

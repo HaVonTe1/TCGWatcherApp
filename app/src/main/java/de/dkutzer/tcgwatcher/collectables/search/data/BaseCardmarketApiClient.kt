@@ -95,7 +95,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         val displayName = h1Tag?.ownText() ?: ""
 
         val matchResult = nameAndCodePattern.find(displayName)
-        val name = matchResult?.groupValues?.getOrNull(1)
+        val name = displayName
         val code = matchResult?.groupValues?.getOrNull(2)
         val orgName = link.split("/").last()
         val typePath =
@@ -171,7 +171,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         }
 
         val cardmarketProductDetailsDto = CardmarketProductDetailsDto(
-            name = NameDto(name ?: displayName, triple.first ?: "", orgName),
+            name = NameDto(value =  name ?: displayName, languageCode = triple.first ?: "", i18n =  orgName),
             code = CodeType(code ?: "", code != null),
             type = triple.third ?: "",
             genre = triple.second ?: "",
@@ -192,9 +192,12 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 private val languageAndGenreAndTypePattern = "^\\s*/?([^/]+)/([^/]+)/[^/]+/([^/]+)".toRegex()
 
 fun parseLink(typePath: String?): Triple<String?, String?, String?> {
+    logger.debug { "Parsing Link: $typePath" }
     val matchResult = languageAndGenreAndTypePattern.find(typePath ?: "")
     val language = matchResult?.groupValues?.getOrNull(1)
     val genre = matchResult?.groupValues?.getOrNull(2)
     val type = matchResult?.groupValues?.getOrNull(3)
-    return Triple(language, genre, type)
+    val triple = Triple(language, genre, type)
+    logger.debug { "Parsed Link: $triple" }
+    return triple
 }

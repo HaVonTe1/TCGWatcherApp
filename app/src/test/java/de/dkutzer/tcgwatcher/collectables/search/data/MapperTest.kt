@@ -330,6 +330,37 @@ class MapperTest {
     }
 
     @Test
+    fun `test LocationModel fromCode`() {
+
+        val locationModel = LocationModel.fromCode("de", "de")
+        assertEquals("Deutschland", locationModel.country)
+        assertEquals("de", locationModel.code)
+
+        val locationModel2 = LocationModel.fromCode("it", "en")
+        assertEquals("Italy", locationModel2.country)
+        assertEquals("it", locationModel2.code)
+
+        val locationModel3 = LocationModel.fromCode("fr", "en")
+        assertEquals("France", locationModel3.country)
+        assertEquals("fr", locationModel3.code)
+
+    }
+
+    @Test
+    fun `test LanguageModel fromCode`() {
+        val languageModel = LanguageModel.fromCode("de", "de")
+        assertEquals("de", languageModel.code)
+        assertEquals("Deutsch", languageModel.displayName)
+        val languageModel2 = LanguageModel.fromCode("it", "en")
+        assertEquals("it", languageModel2.code)
+        assertEquals("Italian", languageModel2.displayName)
+
+        val languageModel3 = LanguageModel.fromCode("fr", "en")
+        assertEquals("fr", languageModel3.code)
+        assertEquals("French", languageModel3.displayName)
+    }
+
+    @Test
     fun `test ProductDetailsDto ToProductModel de`() {
 
         val productDetailsDto = createSampleProductDetailsDto("de")

@@ -97,7 +97,8 @@ fun ProductDetailsView(
     refreshProductDetails: (product: ProductModel) -> Unit,
     onImageClick: (index: Int) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onIndexChange: (Int) -> Unit = {}
+    onIndexChange: (Int) -> Unit = {},
+    onReloadProductFromCache: (ProductModel) -> Unit = {}
 ) {
 
     val productModel = products[index]
@@ -113,6 +114,11 @@ fun ProductDetailsView(
     val intent =
         remember { Intent(Intent.ACTION_VIEW, (referrer + productModel.detailsUrl).toUri()) }
 
+
+    LaunchedEffect(currentIndex) {
+        currentProductModel = products[currentIndex]!!
+        onReloadProductFromCache(currentProductModel)
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -275,8 +281,7 @@ fun ProductDetailsView(
                 Row(
                     modifier = Modifier
                         .padding(4.dp)
-                        .fillMaxWidth()
-                        .weight(1f),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
                 ) {
                     Text(
@@ -347,6 +352,14 @@ fun ProductDetailsViewPreview() {
             imageUrl = "http://example.com/image2.png",
             detailsUrl = "http://example.com/details2",
             sellOffers = listOf(SellOfferModel(
+                sellerName = "sdf",
+                sellerLocation = LocationModel(country = "df", code = "de"),
+                productLanguage = LanguageModel(code = "de", displayName = "df"),
+                special = SpecialType.REVERSED,
+                condition = ConditionType.NEAR_MINT,
+                amount = 11,
+                price = "123"
+            ), SellOfferModel(
                 sellerName = "sdf",
                 sellerLocation = LocationModel(country = "df", code = "de"),
                 productLanguage = LanguageModel(code = "de", displayName = "df"),

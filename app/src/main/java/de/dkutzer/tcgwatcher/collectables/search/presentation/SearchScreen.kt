@@ -3,8 +3,6 @@ package de.dkutzer.tcgwatcher.collectables.search.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.SnackbarHostState
@@ -20,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
@@ -28,6 +25,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchDatabase
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.presentation.components.SearchView
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
@@ -112,7 +110,6 @@ fun SearchScreen(
 
 
     SearchView(
-        modifier = Modifier.fillMaxSize().padding(0.dp),
         searchResultPagingItems = searchResultPagingItems,
         historyList = searchViewModel.historyList,
         quickSearchList = searchViewModel.quickSearchList,
@@ -123,9 +120,11 @@ fun SearchScreen(
         onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },
         onRefreshSearch = { searchViewModel.onRefreshSearch() },
         onRefreshSingleItem = { searchViewModel.onRefreshSingleItem(it) },
-        onQuicksearchItemClick = { searchViewModel.onQuickSearch(it) }
+        onQuicksearchItemClick = { searchViewModel.onQuickSearch(it) },
+        onRefreshSingleItemFromCache = { searchViewModel.onRefreshSingleItemFromCache(it) }
     )
 }
+
 
 
 @PreviewLightDark

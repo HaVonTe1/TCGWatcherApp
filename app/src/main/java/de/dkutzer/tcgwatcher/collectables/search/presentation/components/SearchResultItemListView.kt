@@ -28,7 +28,8 @@ fun SearchResultItemListView(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
     onRefreshList: () -> Unit,
-    onRefreshDetails: (ProductModel) -> Unit
+    onRefreshDetails: (ProductModel) -> Unit,
+    onReloadProductFromCache: (ProductModel) -> Unit
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
@@ -79,18 +80,24 @@ fun SearchResultItemListView(
         detailPane = {
             navigator.currentDestination?.contentKey?.let {
                 logger.debug { "DetailPane: $it" }
+
                 AnimatedPane {
-                    val index = it as Int;
+                    val index = it as Int
                     ProductDetailsView(
                         products = productPagingItems,
                         index = index,
-                        refreshProductDetails = { onRefreshDetails(it) },
-                        onImageClick = {
-                            logger.debug { "DetailPane:onImageClick: $it" }
+                        onReloadProductFromCache = { productModel ->
+                            onReloadProductFromCache(
+                                productModel
+                            )
+                        },
+                        refreshProductDetails = { productModel -> onRefreshDetails(productModel) },
+                        onImageClick = { clickedIndex ->
+                            logger.debug { "DetailPane:onImageClick: $clickedIndex" }
                             coroutineScope.launch {
                                 navigator.navigateTo(
                                     ListDetailPaneScaffoldRole.Extra,
-                                    it
+                                    clickedIndex
                                 )
                             }
                         },
@@ -115,11 +122,11 @@ fun SearchResultItemListView(
             }
         },
         extraPane = {
-           navigator.currentDestination?.contentKey?.let {
-               logger.debug { "ExtraPane: $it" }
+            navigator.currentDestination?.contentKey?.let {
+                logger.debug { "ExtraPane: $it" }
                 AnimatedPane {
                     val index = it as Int;
-                    ZoomableCardImage (
+                    ZoomableCardImage(
                         productModel = productPagingItems[index]!!
                     )
                 }

@@ -55,9 +55,12 @@ abstract class PokemonPager {
                     ),
                     pagingSourceFactory = {
                         logger.debug { "refreshItem: [$refreshModel] searchTerm: [$searchTerm]" }
-                        if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-                            logger.debug { "calling refresh item as paging source: $refreshModel" }
-                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.item!!.detailsUrl)
+                        if (refreshModel.state == RefreshState.REFRESH_ITEM || refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
+                            logger.debug { "calling refresh item as paging source (state: ${refreshModel.state}): $refreshModel" }
+
+                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.query)
+                            //FixMe: instead of searching for the detailsUrl - do a refresh of the item
+                            //pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.item!!.detailsUrl)
                         }
                         else if(quicksearchItem != null) {
                             logger.debug { "calling quicksearch  as paging source: $quicksearchItem" }

@@ -230,7 +230,13 @@ class SearchViewModel(
     fun onRefreshSingleItem(item: ProductModel) {
         logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
         _quicksearchItem.value = null
-        _refreshItem.value = RefreshWrapper(item, query = "", state = RefreshState.REFRESH_ITEM)
+        _refreshItem.value = RefreshWrapper(item, query = query.value, state = RefreshState.REFRESH_ITEM)
+    }
+
+    fun onRefreshSingleItemFromCache(item: ProductModel) {
+        logger.debug { "SearchViewModel::onRefreshSingleItemFromCache: $item" }
+        _quicksearchItem.value = null
+        _refreshItem.value = RefreshWrapper(item, query = query.value, state = RefreshState.REFRESH_ITEM_FROM_CACHE)
     }
 
     fun onSearchSubmit(searchString: String) {
