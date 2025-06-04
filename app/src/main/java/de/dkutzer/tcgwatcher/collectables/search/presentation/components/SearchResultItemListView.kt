@@ -28,12 +28,12 @@ fun SearchResultItemListView(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
     onRefreshList: () -> Unit,
-    onRefreshDetails: (ProductModel) -> Unit,
-    onReloadProductFromCache: (ProductModel) -> Unit
+    onReloadProduct: (productId: String, cacheOnly: Boolean) -> ProductModel
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
     val coroutineScope = rememberCoroutineScope()
+
 
     NavigableListDetailPaneScaffold(
         modifier = modifier,
@@ -54,6 +54,7 @@ fun SearchResultItemListView(
                             key = productPagingItems.itemKey { it.id }
                         )
                         { index ->
+
                             logger.debug { "ProductListViewItemView: $index" }
                             val productModel = productPagingItems[index]
                             ProductListViewItemView(
@@ -78,20 +79,15 @@ fun SearchResultItemListView(
 
         },
         detailPane = {
-            navigator.currentDestination?.contentKey?.let {
-                logger.debug { "DetailPane: $it" }
+            navigator.currentDestination?.contentKey?.let { index ->
+                logger.debug { "DetailPane: $index" }
 
                 AnimatedPane {
-                    val index = it as Int
                     ProductDetailsView(
-                        products = productPagingItems,
-                        index = index,
-                        onReloadProductFromCache = { productModel ->
-                            onReloadProductFromCache(
-                                productModel
-                            )
-                        },
-                        refreshProductDetails = { productModel -> onRefreshDetails(productModel) },
+                        initialProduct = productPagingItems[index as Int]!!,
+                        currentIndex = index,
+                        nextIndex = if ((index + 1) < productPagingItems.itemCount) index + 1 else null,
+                        previousIndex = if ((index - 1) >= 0) index - 1 else null,
                         onImageClick = { clickedIndex ->
                             logger.debug { "DetailPane:onImageClick: $clickedIndex" }
                             coroutineScope.launch {
@@ -102,21 +98,23 @@ fun SearchResultItemListView(
                             }
                         },
                         onBackClick = {
-                            logger.debug { "DetailPane:onBackClick: $it" }
+                            logger.debug { "DetailPane:onBackClick:" }
                             coroutineScope.launch {
                                 navigator.navigateBack()
                             }
                         },
-                        onIndexChange = { newIndex ->
+                        onChangedIndex = { clickedIndex ->
+                            logger.debug { "DetailPane:onPreviousClick: $clickedIndex" }
                             coroutineScope.launch {
-                                // Navigate to the new index within the detail pane
                                 navigator.navigateTo(
                                     ListDetailPaneScaffoldRole.Detail,
-                                    newIndex
+                                    clickedIndex
                                 )
                             }
+                        },
+                        onLoadProduct = { id, cache ->
+                            onReloadProduct(id, cache)
                         }
-
                     )
                 }
             }

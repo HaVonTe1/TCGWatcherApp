@@ -1,12 +1,14 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
+import de.dkutzer.tcgwatcher.settings.domain.CardmarketConfig
 import de.dkutzer.tcgwatcher.settings.domain.Engines
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-class CardmarketApiClientFactory(val config: BaseConfig) {
+class CardmarketApiClientFactory(val config: CardmarketConfig) {
 
     fun create(): BaseCardmarketApiClient {
         logger.debug { "Creating new client with : ${config.engine}" }
@@ -17,5 +19,19 @@ class CardmarketApiClientFactory(val config: BaseConfig) {
             Engines.TESTING -> TestingApiClientImpl()
 
         }
+    }
+}
+
+class ApiClientFactory(val config: BaseConfig) {
+    fun create(): CardsApiClient {
+        logger.debug { "Creating new client with : ${config.engine}" }
+
+        if(config is CardmarketConfig) {
+            return CardmarketApiClientFactory(config).create()
+
+
+        }
+        throw IllegalArgumentException("Unknown Config: $config")
+
     }
 }

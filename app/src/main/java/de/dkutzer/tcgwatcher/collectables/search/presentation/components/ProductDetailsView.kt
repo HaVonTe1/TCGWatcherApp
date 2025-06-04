@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,9 +50,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.paging.PagingData
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -76,49 +72,36 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
-import kotlinx.coroutines.flow.flowOf
 import kotlin.math.roundToInt
 
 private enum class Anchors { Left, Center, Right }
 
-/**
- * Composable function that displays the detailed information of a product item in a card layout.
- *
- * @param product The [ProductModel] object containing the details of the product to be displayed.
- * @param modifier Optional [Modifier] for customizing the layout.
- * @param refreshProductDetails Callback function to refresh the product details.  It takes the current [ProductModel] as a parameter.
- */
+
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductDetailsView(
-    products: LazyPagingItems<ProductModel>,
-    index: Int,
     modifier: Modifier = Modifier,
-    refreshProductDetails: (product: ProductModel) -> Unit,
-    onImageClick: (index: Int) -> Unit = {},
+
+    initialProduct: ProductModel,
+    currentIndex: Int = 0,
+    nextIndex: Int? = null,
+    previousIndex: Int? = null,
+    onImageClick: (id: Int) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onIndexChange: (Int) -> Unit = {},
-    onReloadProductFromCache: (ProductModel) -> Unit = {}
+    onChangedIndex: (id: Int) -> Unit = {},
+    onLoadProduct: (productId: String, cacheOnly: Boolean) -> ProductModel = { _, _ -> initialProduct },
 ) {
 
-    val productModel = products[index]
+    var currentProductModel by remember { mutableStateOf<ProductModel>(initialProduct) }
 
-    var currentProductModel by remember(productModel!!) { mutableStateOf(productModel) }
-    var currentIndex by remember(index) { mutableIntStateOf(index) }
-    // Function to handle index changes
-    fun updateIndex(newIndex: Int) {
-        currentIndex = newIndex
-        onIndexChange(newIndex) // Notify parent of index change
+    // Load data (runs once when composable enters composition)
+    LaunchedEffect(key1 = initialProduct) {
+        currentProductModel = onLoadProduct(initialProduct.id, true)
     }
     val context = LocalContext.current
     val intent =
-        remember { Intent(Intent.ACTION_VIEW, (referrer + productModel.detailsUrl).toUri()) }
-
-
-    LaunchedEffect(currentIndex) {
-        currentProductModel = products[currentIndex]!!
-        onReloadProductFromCache(currentProductModel)
-    }
+        remember { Intent(Intent.ACTION_VIEW, (referrer + currentProductModel.detailsUrl).toUri()) }
 
     LazyColumn(
         modifier = Modifier
@@ -163,7 +146,7 @@ fun ProductDetailsView(
                 )
                 Icon(
                     modifier = Modifier
-                        .clickable { refreshProductDetails(currentProductModel) }
+                        .clickable { onLoadProduct(currentProductModel.id, false) }
                         .align(Alignment.CenterVertically)
                         .padding(4.dp)
                         .size(24.dp),
@@ -172,11 +155,11 @@ fun ProductDetailsView(
                 )
             }
             Row {
-                if (currentIndex - 1 >= 0) {
+                if (previousIndex!=null) {
                     Icon(
                         modifier = Modifier
                             .clickable {
-                                updateIndex(currentIndex - 1)
+                                onChangedIndex(previousIndex)
                             }
                             .align(Alignment.CenterVertically)
                             .padding(4.dp)
@@ -210,15 +193,15 @@ fun ProductDetailsView(
                 LaunchedEffect(dragState.currentValue) {
                     when (dragState.currentValue) {
                         Anchors.Right -> {
-                            if (currentIndex - 1 >= 0) {
-                                updateIndex(currentIndex - 1)
+                            if (previousIndex!=null) {
+                                onChangedIndex(previousIndex)
                             }
                             dragState.snapTo(Anchors.Center)
                         }
 
                         Anchors.Left -> {
-                            if (currentIndex + 1 < products.itemCount) {
-                                updateIndex(currentIndex + 1)
+                            if (nextIndex!=null) {
+                                onChangedIndex(nextIndex)
                             }
                             dragState.snapTo(Anchors.Center)
                         }
@@ -257,11 +240,11 @@ fun ProductDetailsView(
                         .build()
                 )
 
-                if (currentIndex + 1 < products.itemCount) {
+                if (nextIndex!=null) {
                     Icon(
                         modifier = Modifier
                             .clickable {
-                                updateIndex(currentIndex + 1)
+                                onChangedIndex(nextIndex)
                             }
                             .align(Alignment.CenterVertically)
                             .padding(4.dp)
@@ -316,8 +299,8 @@ fun ProductDetailsView(
                     if (showFilterDialog) {
                         FilterDialog(
                             initialFilters = currentFilters,
-                            availableCountries = productModel.getAvailableCountries(),
-                            availableLanguages = productModel.getAvailableLanguages(),
+                            availableCountries = currentProductModel.getAvailableCountries(),
+                            availableLanguages = currentProductModel.getAvailableLanguages(),
                             onFiltersApplied = { newFilters ->
                                 currentFilters = newFilters
                                 // Trigger your filtering/sorting here
@@ -330,9 +313,9 @@ fun ProductDetailsView(
 
             }
             //add selling table
-            if(productModel.sellOffers.isNotEmpty())
+            if(currentProductModel.sellOffers.isNotEmpty())
             {
-                OffersTable(productModel.sellOffers)
+                OffersTable(currentProductModel.sellOffers)
             }
             //TODO: add a row for inventory management
         }
@@ -377,23 +360,21 @@ fun ProductDetailsViewPreview() {
         )
     )
 
-    val lazyPagingItems: LazyPagingItems<ProductModel> =
-        flowOf(PagingData.from(previewProducts)).collectAsLazyPagingItems()
 
     TCGWatcherTheme {
-        if (lazyPagingItems.itemCount > 0) { // Ensure items are available
             ProductDetailsView(
-                products = lazyPagingItems,
-                index = 0, // Use a valid index like 0
+
                 modifier = Modifier,
-                refreshProductDetails = { /* No-op for preview */ },
+                initialProduct = previewProducts[0],
+                currentIndex = 0,
+                nextIndex = null,
+                previousIndex = null,
+                onLoadProduct = { _, _ -> previewProducts[0] },
+                onChangedIndex = { /* No-op for preview */ },
                 onImageClick = { /* No-op for preview */ },
                 onBackClick = { /* No-op for preview */ },
-                onIndexChange = { /* No-op for preview */ }
             )
-        } else {
-            Text("Loading preview data...") // Or some placeholder
-        }
+
     }
 }
 
