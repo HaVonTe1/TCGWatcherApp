@@ -25,7 +25,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import de.dkutzer.tcgwatcher.R
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchDatabase
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.presentation.components.SearchView
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
@@ -119,9 +118,8 @@ fun SearchScreen(
         onSearchSubmit = { searchViewModel.onSearchSubmit(it) },
         onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },
         onRefreshSearch = { searchViewModel.onRefreshSearch() },
-        onRefreshSingleItem = { searchViewModel.onRefreshSingleItem(it) },
         onQuicksearchItemClick = { searchViewModel.onQuickSearch(it) },
-        onRefreshSingleItemFromCache = { searchViewModel.onRefreshSingleItemFromCache(it) }
+        onReloadProduct = {id, cache ->  searchViewModel.onLoadSingleItem(id, cache) }
     )
 }
 

@@ -59,9 +59,9 @@ fun SearchView(
     onActiveChanged: (String, Boolean) -> Unit,
 
     onRefreshSearch: () -> Unit,
-    onRefreshSingleItem: (item: ProductModel) -> Unit,
     onQuicksearchItemClick: (item: ProductModel) -> Unit,
-    onRefreshSingleItemFromCache: (item: ProductModel) -> Unit
+
+    onReloadProduct: (id: String, cacheOnly: Boolean) -> ProductModel,
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -171,10 +171,9 @@ fun SearchView(
                 when (itemCount) {
                     0 -> NoSearchResults()
                     1 -> ProductDetailsView(
-                        products = searchResultPagingItems,
-                        index = 0,
-                        refreshProductDetails = { onRefreshSingleItem(searchResultPagingItems[0]!!) },
                         modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
+                        initialProduct = searchResultPagingItems[0]!!,
+                        onLoadProduct = {id, cache -> onReloadProduct(id, cache) }
                     )
 
                     else -> {
@@ -182,10 +181,7 @@ fun SearchView(
                             modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
-                            onRefreshDetails = { item -> onRefreshSingleItem(item) },
-                            onReloadProductFromCache = { productModel ->
-                                onRefreshSingleItemFromCache(productModel)
-                            }
+                            onReloadProduct = {id, cache -> onReloadProduct(id, cache) }
                         )
                     }
                 }

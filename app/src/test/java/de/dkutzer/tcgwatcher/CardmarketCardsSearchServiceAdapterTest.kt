@@ -6,7 +6,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
+import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
@@ -103,7 +103,7 @@ class CardmarketCardsSearchServiceAdapterTest {
         )
 
         val repositoryAdapter =
-            CardmarketCardsSearchServiceAdapter(apiClientMock, cacheRepoMock)
+            CardmarketCardsSearchService(apiClientMock, cacheRepoMock)
 
         val searchResults = repositoryAdapter.searchByOffset("Ramalama", offset = 0, limit = 5, language = "en")
 

@@ -27,7 +27,7 @@ data class ProductItemEntity(
     @ColumnInfo(index = true)
     var searchId: Int,
 
-    val displayName: String, //TODO: normalize the displayName into seperate Entity to make is multilangual
+    val displayName: String,
     val language: String,
     val genre: String = "",
     val type: String = "",
@@ -38,7 +38,7 @@ data class ProductItemEntity(
     val imgLink: String,
     val price: String,
     val priceTrend: String,
-    val setName: String, //TODO: normalize the setName into seperate Entity to make is multilangual
+    val setName: String,
     val setLink: String,
     val lastUpdated: Long
 )

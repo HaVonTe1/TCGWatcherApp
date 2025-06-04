@@ -7,12 +7,10 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.collectables.history.domain.Product
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
-import de.dkutzer.tcgwatcher.collectables.search.data.BaseCardmarketApiClient
-import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketCardsSearchServiceAdapter
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
-import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -20,17 +18,14 @@ private val logger = KotlinLogging.logger {}
 
 @OptIn(ExperimentalPagingApi::class)
 class SearchRemoteMediator (
-    private val config: BaseConfig,
     private val searchTerm: String,
     private val refreshModel: RefreshWrapper,
     private val quicksearchItem: ProductModel? = null,
     private val pokemonDatabase: SearchCacheDatabase,
-    pokemonApi: BaseCardmarketApiClient,
+    private val cardSearchService: CardsSearchService
 ) : RemoteMediator<Int, Product>() {
 
     private val REMOTE_KEY_ID = "cm"
-    private val searchCacheRepository = SearchCacheRepositoryImpl(pokemonDatabase.searchCacheDao)
-    private val adapter = CardmarketCardsSearchServiceAdapter(pokemonApi, searchCacheRepository)
 
     override suspend fun load(
         loadType: LoadType,
@@ -40,7 +35,6 @@ class SearchRemoteMediator (
         logger.debug { "Mediator searchTerm: $searchTerm" }
         logger.debug { "Mediator refreshItem: $refreshModel" }
         logger.debug { "Mediator quicksearchItem: $quicksearchItem" }
-        logger.debug { "Mediator config: $config"}
 
         logger.debug { "Mediator load: $loadType" }
         logger.debug { "Mediator state: $state" }
@@ -65,35 +59,31 @@ class SearchRemoteMediator (
         // cached room stuff
 
         val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-            var searchResultsPage = adapter.getSingleItemByItem(
+            var searchResultsPage = cardSearchService.getSingleItemByItem(
                 refreshModel.item!!,
                 useCache = false,
                 useTtl = true,
                 loadDetails = true,
-                language = config.lang.displayName
+
             )
-//            if(refreshModel.query.isNotEmpty()) {
-//                searchResultsPage =  adapter.searchByOffset(refreshModel.query, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
-//            }
+
             searchResultsPage
 
         } else if (refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
-            var searchResultsPage =  adapter.getSingleItemByItem(
+            var searchResultsPage =  cardSearchService.getSingleItemByItem(
                 refreshModel.item!!,
                 useCache = true,
                 useTtl = false,
                 loadDetails = false,
-                language =  config.lang.displayName)
-//            if(refreshModel.query.isNotEmpty()) {
-//                searchResultsPage =  adapter.searchByOffset(refreshModel.query, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
-//            }
+                )
+
             searchResultsPage
         }
         else if (quicksearchItem != null) {
-            adapter.getSingleItemByItem(quicksearchItem, useCache = true, useTtl = false, loadDetails = false, language =  config.lang.displayName)
+            cardSearchService.getSingleItemByItem(quicksearchItem, useCache = true, useTtl = false, loadDetails = false)
         }
         else {
-            adapter.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset, language =  config.lang.displayName)
+            cardSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }
         logger.info {"SearchResult size: ${searchResultsPage.items.size}"}

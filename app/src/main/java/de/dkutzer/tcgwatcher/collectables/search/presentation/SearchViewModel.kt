@@ -11,9 +11,12 @@ import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchRepositoryImpl
-import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketApiClientFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
 import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketPokemonRepositoryAdapter
+import de.dkutzer.tcgwatcher.collectables.search.data.CardsSearchServiceFactory
 import de.dkutzer.tcgwatcher.collectables.search.data.GetPokemonList
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
+import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.HistorySearchItem
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.QuickSearchItem
@@ -22,9 +25,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.data.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.settings.data.toModel
-import de.dkutzer.tcgwatcher.settings.domain.CardmarketConfig
-import de.dkutzer.tcgwatcher.settings.domain.Engines
-import de.dkutzer.tcgwatcher.settings.domain.Languages
+import de.dkutzer.tcgwatcher.settings.domain.ConfigFactory
 import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -53,13 +54,9 @@ class SearchViewModel(
 
     private val quicksearchRepository =
         QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
+    private val searchCacheRepository = SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao)
 
-    private val _settings: MutableStateFlow<SettingsModel> = MutableStateFlow(
-        SettingsModel(
-            language = Languages.EN,
-            engine = Engines.KTOR
-        )
-    )
+    private val _settings: MutableStateFlow<SettingsModel> = MutableStateFlow(SettingsModel())
     val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
 
     private val _showHistoryContent = MutableStateFlow(false)
@@ -79,6 +76,10 @@ class SearchViewModel(
     private val quicksearchItem: StateFlow<ProductModel?> = _quicksearchItem.asStateFlow()
 
 
+    private val apiConfig = ConfigFactory(settingsModel = settings.value).create()
+    private val cardsApiClient: CardsApiClient = ApiClientFactory(apiConfig).create()
+    private val cardsSearchService: CardsSearchService = CardsSearchServiceFactory(cardsApiClient, searchCacheRepository, apiConfig).create()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
         combine(
@@ -88,16 +89,13 @@ class SearchViewModel(
         ) { latestSearchQuery, latestRefreshItem, quicksearchItem ->
             logger.debug { "SearchViewModel:: Flow of query or refreshItem or quicksearchItme changed: $latestSearchQuery, $latestRefreshItem $quicksearchItem" }
 
-            val config = CardmarketConfig(settings.value)
-            val productApiClient = CardmarketApiClientFactory(config).create()
             val pokemonPager =
                 PokemonPager.providePokemonPager(
                     latestSearchQuery,
                     latestRefreshItem,
                     quicksearchItem,
                     searchCacheDatabase,
-                    productApiClient,
-                    config
+                    cardsSearchService
                 )
             val pokemonRepositoryImpl = CardmarketPokemonRepositoryAdapter(pokemonPager)
             logger.debug { "getPokemonList now" }
@@ -227,17 +225,18 @@ class SearchViewModel(
             RefreshWrapper(item = null, query = _query.value, state = RefreshState.REFRESH_SEARCH)
     }
 
-    fun onRefreshSingleItem(item: ProductModel) {
-        logger.debug { "SearchViewModel::onRefreshSingleItem: $item" }
-        _quicksearchItem.value = null
-        _refreshItem.value = RefreshWrapper(item, query = query.value, state = RefreshState.REFRESH_ITEM)
+    fun onLoadSingleItem(id: String, cacheOnly: Boolean) : ProductModel {
+
+        viewModelScope.launch(Dispatchers.IO) {
+
+                val productModel = cardsSearchService.getProductWithDetails(id, cacheOnly)
+                logger.debug { "SearchViewModel::onLoadSingleItem: $productModel" }
+                productModel
+
+        }
     }
 
-    fun onRefreshSingleItemFromCache(item: ProductModel) {
-        logger.debug { "SearchViewModel::onRefreshSingleItemFromCache: $item" }
-        _quicksearchItem.value = null
-        _refreshItem.value = RefreshWrapper(item, query = query.value, state = RefreshState.REFRESH_ITEM_FROM_CACHE)
-    }
+
 
     fun onSearchSubmit(searchString: String) {
         logger.debug { "SearchViewModel::onSearchSubmit: $searchString" }
