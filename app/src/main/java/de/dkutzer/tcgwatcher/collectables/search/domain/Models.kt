@@ -36,6 +36,8 @@ data class ProductModel(
     fun getAvailableCountries(): Set<LocationModel> {
         return this.sellOffers.map(SellOfferModel::sellerLocation).toSet()
     }
+
+    companion object
 }
 
 @Parcelize

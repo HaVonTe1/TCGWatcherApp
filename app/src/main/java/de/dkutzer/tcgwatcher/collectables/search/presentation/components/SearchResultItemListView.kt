@@ -28,7 +28,6 @@ fun SearchResultItemListView(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
     onRefreshList: () -> Unit,
-    onReloadProduct: (productId: String, cacheOnly: Boolean) -> ProductModel
 ) {
 
     val navigator = rememberListDetailPaneScaffoldNavigator<Any>()
@@ -111,9 +110,6 @@ fun SearchResultItemListView(
                                     clickedIndex
                                 )
                             }
-                        },
-                        onLoadProduct = { id, cache ->
-                            onReloadProduct(id, cache)
                         }
                     )
                 }
