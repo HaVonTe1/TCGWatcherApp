@@ -119,7 +119,6 @@ fun SearchScreen(
         onActiveChanged = { query, active -> searchViewModel.onActiveChanged(query, active) },
         onRefreshSearch = { searchViewModel.onRefreshSearch() },
         onQuicksearchItemClick = { searchViewModel.onQuickSearch(it) },
-        onReloadProduct = {id, cache ->  searchViewModel.onLoadSingleItem(id, cache) }
     )
 }
 

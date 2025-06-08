@@ -225,17 +225,6 @@ class SearchViewModel(
             RefreshWrapper(item = null, query = _query.value, state = RefreshState.REFRESH_SEARCH)
     }
 
-    fun onLoadSingleItem(id: String, cacheOnly: Boolean) : ProductModel {
-
-        viewModelScope.launch(Dispatchers.IO) {
-
-                val productModel = cardsSearchService.getProductWithDetails(id, cacheOnly)
-                logger.debug { "SearchViewModel::onLoadSingleItem: $productModel" }
-                productModel
-
-        }
-    }
-
 
 
     fun onSearchSubmit(searchString: String) {
@@ -303,3 +292,5 @@ class SearchViewModel(
 
 
 }
+
+data class SingleItemReloadState(val state: RefreshState, val item: ProductModel)

@@ -61,7 +61,6 @@ fun SearchView(
     onRefreshSearch: () -> Unit,
     onQuicksearchItemClick: (item: ProductModel) -> Unit,
 
-    onReloadProduct: (id: String, cacheOnly: Boolean) -> ProductModel,
 ) {
 
     val historyListState = historyList.collectAsState()
@@ -172,8 +171,7 @@ fun SearchView(
                     0 -> NoSearchResults()
                     1 -> ProductDetailsView(
                         modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
-                        initialProduct = searchResultPagingItems[0]!!,
-                        onLoadProduct = {id, cache -> onReloadProduct(id, cache) }
+                        initialProduct = searchResultPagingItems[0]!!
                     )
 
                     else -> {
@@ -181,7 +179,6 @@ fun SearchView(
                             modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
-                            onReloadProduct = {id, cache -> onReloadProduct(id, cache) }
                         )
                     }
                 }
