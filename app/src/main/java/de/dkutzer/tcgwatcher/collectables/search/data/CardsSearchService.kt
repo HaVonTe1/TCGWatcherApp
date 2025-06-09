@@ -37,43 +37,38 @@ class CardmarketCardsSearchService
 
     override suspend fun getSingleItemByItem(product: ProductModel, useCache: Boolean, useTtl:Boolean, loadDetails: Boolean): SearchResultsPage {
 
-        /*
-        This use case is different from the search by query.
-        We might dont have a "searchEntity" here. Because we came here via a refresh from a singleItemView.
-        Only in the case, that we already refreshed this item, where is a "SearchEntity".
-        In every case the SearchEntity with the cmLink as Id needs to pe upserted.
-         */
-        logger.debug { "Adapter: getSingleItemByLink: $product" }
-        logger.debug { "Adapter: useCache $useCache useTtl $useTtl"}
-
-        val searchWithItemsEntity = if(useCache) {
-            logger.debug { "Adapter: Looking in the Cache for: ${product.detailsUrl}" }
-            val cachedSearch = cache.findSearchWithItemsAndSellOffersByQuery(product.detailsUrl)
-            logger.debug { "Adapter: Found: $cachedSearch" }
-
-            if (cachedSearch == null || (useTtl && cachedSearch.isOlderThan(threeDaysSeconds))) {
-                logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(cachedSearch?.search?.lastUpdated!!)}" }
-                createAndPersistSearchEntity(product,loadDetails)
-            } else {
-                logger.debug { "Adapter: Returning cached results: $cachedSearch" }
-                cachedSearch
-            }
-        } else {
-            logger.debug { "Adapter: no cache - Start a new Search: ${product.detailsUrl}" }
-            createAndPersistSearchEntity(product, loadDetails)
-        }
-        val productModel = searchWithItemsEntity.products.first().toProductModel()
+        val productModel = getProductWithDetails(product, useCache, useTtl, loadDetails)
         val result = SearchResultsPage(listOf(productModel), 1, 1)
-
-        //TODO: remove this when every product is unique and the relation between 'search'  and 'product' is n:m
-        cache.updateItemByLink(product.detailsUrl, productModel.toProductItemEntity())
 
         logger.debug { "Adapter: Finally returning results: $result" }
         return result
     }
 
-    override suspend fun getProductWithDetails(productId: String, useCache: Boolean): ProductModel {
-        TODO("Not yet implemented")
+    override suspend fun getProductWithDetails(product: ProductModel, useCache: Boolean, useTtl : Boolean, loadDetails: Boolean): ProductModel {
+        logger.debug { "CardmarketCardsSearchService: getProductWithDetails: $product" }
+        logger.debug { "CardmarketCardsSearchService: useCache $useCache"}
+
+        val product = if(useCache) {
+            logger.debug { "CardmarketCardsSearchService: Looking in the Cache for: ${product.detailsUrl}" }
+            val cachedSearch = cache.findSearchWithItemsAndSellOffersByCmId(product.cmId)
+            logger.debug { "CardmarketCardsSearchService: Found: $cachedSearch" }
+
+            if (cachedSearch == null || (useTtl && cachedSearch.isOlderThan(threeDaysSeconds))) {
+                logger.debug { "CardmarketCardsSearchService: Cache is older than 3 days: ${Instant.ofEpochMilli(cachedSearch?.search?.lastUpdated!!)}" }
+                createAndPersistSearchEntity(product,loadDetails)
+            } else {
+                logger.debug { "CardmarketCardsSearchService: Returning cached results: $cachedSearch" }
+                cachedSearch
+            }
+        } else {
+            logger.debug { "CardmarketCardsSearchService: no cache - Start a new Search: ${product.detailsUrl}" }
+            createAndPersistSearchEntity(product, loadDetails)
+        }
+        val productModel = product.toProductModel()
+        cache.updateItemByLink(product.detailsUrl, productModel.toProductItemEntity())
+
+        return productModel
+
     }
 
 

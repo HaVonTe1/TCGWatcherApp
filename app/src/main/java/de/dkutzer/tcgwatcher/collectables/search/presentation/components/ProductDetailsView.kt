@@ -82,10 +82,12 @@ import de.dkutzer.tcgwatcher.collectables.search.presentation.SingleItemReloadSt
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.roundToInt
 
 private enum class Anchors { Left, Center, Right }
 
+private val logger = KotlinLogging.logger {}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -101,6 +103,7 @@ fun ProductDetailsView(
     onChangedIndex: (id: Int) -> Unit = {},
 ) {
 
+    logger.debug { "ProductDetailsView" }
     val context = LocalContext.current
 
     val settingsDatabase: SettingsDatabase by lazy {
@@ -124,10 +127,12 @@ fun ProductDetailsView(
             SingleItemReloadState(state = RefreshState.IDLE, item = initialProduct)
         )
     }
+    logger.debug { "ProductDetailsView::currentProductModelState: $currentProductModelState" }
 
     // Load data (runs once when composable enters composition)
     LaunchedEffect(key1 = initialProduct) {
-        detailsViewModel.onLoadSingleItem(initialProduct.id, true)
+        logger.debug { "ProductDetailsView::LaunchedEffect" }
+        detailsViewModel.onLoadSingleItem(initialProduct, true)
         currentProductModelState = detailsViewModel.reloadedSingleItem
     }
     val intent =
@@ -190,7 +195,8 @@ fun ProductDetailsView(
                     Icon(
                         modifier = Modifier
                             .clickable {
-                                detailsViewModel.onLoadSingleItem(currentProductModelState.item.id, false)
+                                logger.debug { "ProductDetailsView::Refresh" }
+                                detailsViewModel.onLoadSingleItem(currentProductModelState.item, false)
                             }
                             .align(Alignment.CenterVertically)
                             .padding(4.dp)
@@ -204,6 +210,7 @@ fun ProductDetailsView(
                         Icon(
                             modifier = Modifier
                                 .clickable {
+                                    logger.debug { "ProductDetailsView::Previous" }
                                     onChangedIndex(previousIndex)
                                 }
                                 .align(Alignment.CenterVertically)
@@ -280,7 +287,10 @@ fun ProductDetailsView(
                                 state = dragState,
                                 orientation = Orientation.Horizontal
                             )
-                            .clickable { onImageClick(currentIndex) },
+                            .clickable {
+                                logger.debug { "ProductDetailsView::ImageClick" }
+                                onImageClick(currentIndex)
+                            },
 
                         contentScale = ContentScale.FillWidth,
                         imageLoader = LocalContext.current.imageLoader.newBuilder()
@@ -292,6 +302,7 @@ fun ProductDetailsView(
                         Icon(
                             modifier = Modifier
                                 .clickable {
+                                    logger.debug { "ProductDetailsView::Next" }
                                     onChangedIndex(nextIndex)
                                 }
                                 .align(Alignment.CenterVertically)
