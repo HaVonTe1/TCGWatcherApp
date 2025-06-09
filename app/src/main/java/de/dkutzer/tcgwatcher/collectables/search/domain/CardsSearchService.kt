@@ -10,7 +10,7 @@ interface CardsSearchService {
 
     suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean, useTtl: Boolean,loadDetails: Boolean) : SearchResultsPage
 
-    suspend fun getProductWithDetails(productId: String, useCache: Boolean) : ProductModel
+    suspend fun getProductWithDetails(productModel: ProductModel, useCache: Boolean,useTtl: Boolean = false,loadDetails: Boolean=true) : ProductModel
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 

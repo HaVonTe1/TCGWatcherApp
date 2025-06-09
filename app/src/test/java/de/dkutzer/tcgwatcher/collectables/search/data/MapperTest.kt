@@ -145,6 +145,8 @@ class MapperTest {
             "Theme-Decks" to TypeEnum.THEME_DECK,
             "Trainer-Kits" to TypeEnum.TRAINER_KIT,
             "Tins" to TypeEnum.TIN,
+            "Coins" to TypeEnum.COIN,
+            "Lots" to TypeEnum.LOT,
             "Box-Sets" to TypeEnum.BOX_SET,
             "Elite-Trainer-Boxes" to TypeEnum.ELITE_TRAINER_BOX,
             "Blisters" to TypeEnum.BLISTER

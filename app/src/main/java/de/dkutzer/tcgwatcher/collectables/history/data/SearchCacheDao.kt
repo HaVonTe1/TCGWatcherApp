@@ -36,7 +36,7 @@ interface SearchCacheDao {
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, Product>
 
-    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.orgName = :productId") //TODO: test
+    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.cmId = :productId") //TODO: test
     fun findItemWithSellOffersByProductId(productId: String) : Product?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")

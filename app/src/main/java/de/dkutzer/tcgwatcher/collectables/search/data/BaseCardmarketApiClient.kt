@@ -35,7 +35,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
 
         tiles.forEach {
             val cmLink = it.attr("href")
-            val triple = parseLink(cmLink)
+            val parsedLink = parseLink(cmLink)
             val imgTag = it.getElementsByTag("img")
             val imageLink = imgTag.attr("data-echo")
             val titleTag = it.getElementsByTag("h2")
@@ -46,10 +46,11 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             val intPriceTag = it.getElementsByTag("b")
             val intPrice = intPriceTag.text()
             val itemDto = CardmarketProductGallaryItemDto(
-                name = NameDto(name ?: localName, triple.first?:"", localName),
+                name = NameDto(name ?: localName, parsedLink.language?:"", localName),
                 code = CodeType(code ?: "", code != null),
-                genre = triple.second?:"",
-                type = triple.third?:"",
+                genre = parsedLink.genre?:"",
+                type = parsedLink.type?:"",
+                cmId = parsedLink.id?:"",
                 cmLink = cmLink,
                 imgLink = imageLink,
                 price = intPrice,
@@ -101,7 +102,7 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         val typePath =
             document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
 
-        val triple = parseLink(typePath)
+        val parsedLink = parseLink(typePath)
 
         val infoDivs = document.getElementsByClass("info-list-container")
         val infoDiv = infoDivs.first()
@@ -171,10 +172,11 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         }
 
         val cardmarketProductDetailsDto = CardmarketProductDetailsDto(
-            name = NameDto(value =  name ?: displayName, languageCode = triple.first ?: "", i18n =  orgName),
+            name = NameDto(value = name, languageCode = parsedLink.language ?: "", i18n =  orgName),
             code = CodeType(code ?: "", code != null),
-            type = triple.third ?: "",
-            genre = triple.second ?: "",
+            type = parsedLink.type?: "",
+            genre = parsedLink.genre ?: "",
+            cmId = parsedLink.id ?: "",
             rarity = rarityText ?: "",
             set = SetDto(setName ?: "", setLink ?: ""),
             detailsUrl = link,
@@ -188,16 +190,28 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
     }
 }
 
-//  /de/pokemon /en/magic etc
+// Data class to hold all four components (language, genre, type, id)
+private data class ParsedLink(
+    val language: String?,
+    val genre: String?,
+    val type: String?,
+    val id: String?
+)
+
 private val languageAndGenreAndTypePattern = "^\\s*/?([^/]+)/([^/]+)/[^/]+/([^/]+)".toRegex()
 
-fun parseLink(typePath: String?): Triple<String?, String?, String?> {
+private fun parseLink(typePath: String?): ParsedLink {
     logger.debug { "Parsing Link: $typePath" }
-    val matchResult = languageAndGenreAndTypePattern.find(typePath ?: "")
+    val matchResult = typePath?.let { languageAndGenreAndTypePattern.find(it) }
     val language = matchResult?.groupValues?.getOrNull(1)
     val genre = matchResult?.groupValues?.getOrNull(2)
     val type = matchResult?.groupValues?.getOrNull(3)
-    val triple = Triple(language, genre, type)
-    logger.debug { "Parsed Link: $triple" }
-    return triple
+
+    // Extract ID: Last segment of the path (after trimming any slashes)
+    val cleanPath = typePath?.trim()?.trim('/')
+    val id = cleanPath?.substringAfterLast('/')
+
+    val parsedLink = ParsedLink(language, genre, type, id)
+    logger.debug { "Parsed Link: $parsedLink" }
+    return parsedLink
 }

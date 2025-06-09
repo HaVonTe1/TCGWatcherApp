@@ -86,13 +86,13 @@ class ProductDetailsViewModel(
         ProductModel.empty()))
         private set
 
-    fun onLoadSingleItem(id: String, cacheOnly: Boolean)  {
-        logger.debug { "SearchViewModel::onLoadSingleItem: $id" }
+    fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
+        logger.debug { "SearchViewModel::onLoadSingleItem for $productModel" }
         reloadedSingleItem = SingleItemReloadState(RefreshState.REFRESH_ITEM, ProductModel.empty())
 
         viewModelScope.launch(Dispatchers.IO) {
 
-            val productModel = cardsSearchService.getProductWithDetails(id, cacheOnly)
+            val productModel = cardsSearchService.getProductWithDetails(productModel, cacheOnly)
             logger.debug { "SearchViewModel::onLoadSingleItem: $productModel" }
 
 

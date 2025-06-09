@@ -4,6 +4,7 @@ interface SearchCacheRepository {
 
     suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchAndProductsEntity?
     suspend fun findSearchWithItemsAndSellOffersByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchAndProductsAndSelloffersEntity?
+    suspend fun findSearchWithItemsAndSellOffersByCmId(cmId: String) : Product?
     suspend fun persistsSearchWithItems(searchWithProducts: SearchAndProductsEntity, language: String): SearchAndProductsEntity
     suspend fun persistSearchWithProductAndSellOffers(searchWithProducts: SearchAndProductsAndSelloffersEntity, language: String) : SearchAndProductsAndSelloffersEntity
 

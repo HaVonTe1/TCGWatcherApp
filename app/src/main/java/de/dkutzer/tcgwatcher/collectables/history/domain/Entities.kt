@@ -33,6 +33,7 @@ data class ProductItemEntity(
     val type: String = "",
     val rarity: String = "",
     val code: String,
+    val cmId: String,
     val orgName: String,
     val cmLink: String,
     val imgLink: String,

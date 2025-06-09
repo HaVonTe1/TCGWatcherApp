@@ -52,6 +52,13 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
+    override suspend fun findSearchWithItemsAndSellOffersByCmId(cmId: String): Product? {
+        logger.debug { "SearchCacheRepositoryImpl::findSearchWithItemsAndSellOffersByCmId" }
+        val product = searchCacheDao.findItemWithSellOffersByProductId(cmId)
+
+        return product
+    }
+
     fun processSearch(
         searchTerm: String,
         productsSize: Int,

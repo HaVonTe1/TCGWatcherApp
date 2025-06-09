@@ -17,6 +17,7 @@ data class ProductModel(
     val type: TypeEnum = TypeEnum.CARD,
     val genre: GenreType,
     val code: String,
+    val cmId: String,
     val imageUrl: String,
     val detailsUrl: String,
     val rarity: RarityType,
@@ -35,6 +36,14 @@ data class ProductModel(
 
     fun getAvailableCountries(): Set<LocationModel> {
         return this.sellOffers.map(SellOfferModel::sellerLocation).toSet()
+    }
+
+    fun cmLink(): String {
+        val base ="${this.name.languageCode}/${this.genre.cmCode}/Products/${this.type.cmCode}/"
+        if(this.type == TypeEnum.CARD)
+            return base + "${this.set.link}/${this.cmId}"
+        return base + this.cmId
+
     }
 
     companion object
@@ -223,6 +232,8 @@ enum class TypeEnum(override val cmCode: String, val displayName: String) : Keye
     TRAINER_KIT("Trainer-Kits","Trainer Kit"),
     TIN("Tins","Tin"),
     BOX_SET("Box-Sets","Box Set"),
+    COIN("Coins","Coin"),
+    LOT("Lots","Lot"),
     ELITE_TRAINER_BOX("Elite-Trainer-Boxes","Elite Trainer Box"),
     BLISTER("Blisters","Blister"),
     OTHER("","Other");
@@ -259,6 +270,7 @@ data class QuickSearchItem(
             id = id,
             name = NameModel(displayName, currentLanguageCode, this.nameEn),
             code = code,
+            cmId = cmCardId,
             type = TypeEnum.CARD,
             rarity = RarityType.OTHER,
             set = SetModel(cmSetId, ""),
