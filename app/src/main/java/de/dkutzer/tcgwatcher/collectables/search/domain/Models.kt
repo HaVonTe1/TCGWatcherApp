@@ -17,7 +17,7 @@ data class ProductModel(
     val type: TypeEnum = TypeEnum.CARD,
     val genre: GenreType,
     val code: String,
-    val cmId: String,
+    val externalId: String,
     val imageUrl: String,
     val detailsUrl: String,
     val rarity: RarityType,
@@ -41,8 +41,8 @@ data class ProductModel(
     fun cmLink(): String {
         val base ="${this.name.languageCode}/${this.genre.cmCode}/Products/${this.type.cmCode}/"
         if(this.type == TypeEnum.CARD)
-            return base + "${this.set.link}/${this.cmId}"
-        return base + this.cmId
+            return base + "${this.set.link}/${this.externalId}"
+        return base + this.externalId
 
     }
 
@@ -270,7 +270,7 @@ data class QuickSearchItem(
             id = id,
             name = NameModel(displayName, currentLanguageCode, this.nameEn),
             code = code,
-            cmId = cmCardId,
+            externalId = cmCardId,
             type = TypeEnum.CARD,
             rarity = RarityType.OTHER,
             set = SetModel(cmSetId, ""),

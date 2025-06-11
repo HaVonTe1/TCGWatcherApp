@@ -1,6 +1,8 @@
-package de.dkutzer.tcgwatcher.collectables.search.data
+package de.dkutzer.tcgwatcher.collectables.search.data.cardmarket
 
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.CardmarketKtorApiClientImpl
+import de.dkutzer.tcgwatcher.collectables.search.data.TestingApiClientImpl
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductsApiClient
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import de.dkutzer.tcgwatcher.settings.domain.CardmarketConfig
 import de.dkutzer.tcgwatcher.settings.domain.Engines
@@ -23,7 +25,7 @@ class CardmarketApiClientFactory(val config: CardmarketConfig) {
 }
 
 class ApiClientFactory(val config: BaseConfig) {
-    fun create(): CardsApiClient {
+    fun create(): ProductsApiClient {
         logger.debug { "Creating new client with : ${config.engine}" }
 
         if(config is CardmarketConfig) {

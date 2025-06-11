@@ -3,14 +3,14 @@ package de.dkutzer.tcgwatcher.collectables.search.domain
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 
-interface CardsSearchService {
-    val client: CardsApiClient
+interface ProductSearchService {
+    val client: ProductsApiClient
     val cache: SearchCacheRepository
     val config: BaseConfig
 
-    suspend fun getSingleItemByItem(searchItem: ProductModel, useCache: Boolean, useTtl: Boolean,loadDetails: Boolean) : SearchResultsPage
+    suspend fun loadQuicksearchProductIntoResultPage(quickSearchProduct: ProductModel) : SearchResultsPage
 
-    suspend fun getProductWithDetails(productModel: ProductModel, useCache: Boolean,useTtl: Boolean = false,loadDetails: Boolean=true) : ProductModel
+    suspend fun refreshProduct(productModel: ProductModel, cacheOnly: Boolean) : ProductModel
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 

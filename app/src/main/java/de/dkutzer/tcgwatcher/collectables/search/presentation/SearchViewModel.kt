@@ -11,14 +11,13 @@ import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchDatabase
 import de.dkutzer.tcgwatcher.collectables.quicksearch.data.QuickSearchRepositoryImpl
-import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
-import de.dkutzer.tcgwatcher.collectables.search.data.CardmarketPokemonRepositoryAdapter
-import de.dkutzer.tcgwatcher.collectables.search.data.CardsSearchServiceFactory
-import de.dkutzer.tcgwatcher.collectables.search.data.GetPokemonList
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.ApiClientFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.CardmarketPokemonRepositoryAdapter
+import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.GetPokemonList
 import de.dkutzer.tcgwatcher.collectables.search.domain.HistorySearchItem
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.QuickSearchItem
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
@@ -77,8 +76,8 @@ class SearchViewModel(
 
 
     private val apiConfig = ConfigFactory(settingsModel = settings.value).create()
-    private val cardsApiClient: CardsApiClient = ApiClientFactory(apiConfig).create()
-    private val cardsSearchService: CardsSearchService = CardsSearchServiceFactory(cardsApiClient, searchCacheRepository, apiConfig).create()
+    private val productsApiClient: ProductsApiClient = ApiClientFactory(apiConfig).create()
+    private val productSearchService: ProductSearchService = ProductsSearchServiceFactory(productsApiClient, searchCacheRepository, apiConfig).create()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val pokemonPagingDataFlow: Flow<PagingData<ProductModel>> =
@@ -95,7 +94,7 @@ class SearchViewModel(
                     latestRefreshItem,
                     quicksearchItem,
                     searchCacheDatabase,
-                    cardsSearchService
+                    productSearchService
                 )
             val pokemonRepositoryImpl = CardmarketPokemonRepositoryAdapter(pokemonPager)
             logger.debug { "getPokemonList now" }

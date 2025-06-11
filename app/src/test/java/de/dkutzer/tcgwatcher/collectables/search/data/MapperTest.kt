@@ -252,7 +252,7 @@ class MapperTest {
         assertEquals(model.price, result.price)
         assertEquals(model.priceTrend, result.priceTrend)
         assertEquals(model.set.name, result.setName)
-        assertEquals(model.set.link, result.setLink)
+        assertEquals(model.set.link, result.setId)
     }
 
     @Test
@@ -366,7 +366,7 @@ class MapperTest {
     fun `test ProductDetailsDto ToProductModel de`() {
 
         val productDetailsDto = createSampleProductDetailsDto("de")
-        val productModel = productDetailsDto.toProductModel("de")
+        val productModel = productDetailsDto.toProductModel()
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("de", productModel.name.languageCode)
         assertEquals("Test Product", productModel.name.i18n)
@@ -399,7 +399,7 @@ class MapperTest {
     fun `test ProductDetailsDto ToProductModel en`() {
 
         val productDetailsDto = createSampleProductDetailsDto("en")
-        val productModel = productDetailsDto.toProductModel("en")
+        val productModel = productDetailsDto.toProductModel()
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("en", productModel.name.languageCode)
         assertEquals("Test Product", productModel.name.i18n)
@@ -511,7 +511,7 @@ class MapperTest {
             price = "100.00",
             priceTrend = "+5%",
             setName = "Test Set",
-            setLink = "http://example.com/set",
+            setId = "http://example.com/set",
             lastUpdated = Instant.now().epochSecond
         )
     }
@@ -560,7 +560,7 @@ class MapperTest {
         assertEquals(entity.price, model.price)
         assertEquals(entity.priceTrend, model.priceTrend)
         assertEquals(entity.setName, model.set.name)
-        assertEquals(entity.setLink, model.set.link)
+        assertEquals(entity.setId, model.set.link)
     }
 
     // Additional helper assertions for timestamps

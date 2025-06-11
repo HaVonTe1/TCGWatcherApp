@@ -45,10 +45,10 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         type = this.type,
         rarity = RarityType.OTHER.name,
         price = this.price,
-        cmId = this.cmId,
+        externalId = this.cmId,
         cmLink = this.cmLink,
         setName = "",
-        setLink = "",
+        setId = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
         id = productId,
@@ -65,9 +65,9 @@ fun ProductItemEntity.toProductModel() : ProductModel {
         type = fromString<TypeEnum>(this.type) ,
         genre = fromString<GenreType>(this.genre) ,
         rarity = fromString<RarityType>(this.rarity) ,
-        set = SetModel(link = this.setLink, name = this.setName),
+        set = SetModel(link = this.setId, name = this.setName),
         detailsUrl = this.cmLink,
-        cmId = this.cmId,
+        externalId = this.externalId,
         imageUrl = this.imgLink,
         price = this.price,
         priceTrend = this.priceTrend,
@@ -86,8 +86,8 @@ fun Product.toProductModel() : ProductModel {
         type = fromString<TypeEnum>(productItemEntity.type) ,
         genre = fromString<GenreType>(productItemEntity.genre) ,
         rarity = fromString<RarityType>(productItemEntity.rarity) ,
-        set = SetModel(link = productItemEntity.setLink, name = productItemEntity.setName),
-        cmId = productItemEntity.cmId,
+        set = SetModel(link = productItemEntity.setId, name = productItemEntity.setName),
+        externalId = productItemEntity.externalId,
         detailsUrl = productItemEntity.cmLink,
         imageUrl = productItemEntity.imgLink,
         price = productItemEntity.price,
@@ -110,11 +110,11 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         orgName = this.name.i18n, //FixMe
         price = this.price,
         cmLink = this.detailsUrl,
-        cmId = this.cmId,
+        externalId = this.externalId,
         priceTrend = this.priceTrend,
         lastUpdated = this.timestamp,
         setName = this.set.name,
-        setLink = this.set.link,
+        setId = this.set.link,
         id = productId,
         searchId = searchId)
 }
@@ -167,7 +167,7 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
         priceTrend = this.priceTrend)
 }
 
-fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
+fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
     return ProductModel(
         name = this.name.toModel(),
         type = fromString<TypeEnum>(this.type) ,
@@ -175,14 +175,56 @@ fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
         set = SetModel(name = this.set.name,link = this.set.link),
         rarity = fromString<RarityType>(this.rarity) ,
         code = if (this.code.valid) this.code.value else "",
-        cmId = this.cmId,
+        externalId = this.cmId,
         detailsUrl = this.detailsUrl,
         imageUrl = this.imageUrl,
         price = this.price,
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         id = URI(this.detailsUrl).path.split("/").last(),
-        sellOffers = this.sellOffers.map { it.toSellOfferModel(language) },
+        sellOffers = this.sellOffers.map { it.toSellOfferModel(this.name.languageCode) },
         timestamp = Instant.now().epochSecond
+    )
+}
+
+fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductItemEntity {
+    return ProductItemEntity(
+        displayName = this.name.value,
+        imgLink = this.imageUrl,
+        orgName = this.name.i18n, //??
+        language = this.name.languageCode,
+        genre = this.genre,
+        type = this.type,
+        rarity = this.rarity,
+        price = this.price,
+        externalId = this.cmId,
+        cmLink = this.detailsUrl,
+        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
+        searchId = searchId.toInt(),
+        id = productId,
+        lastUpdated = Instant.now().epochSecond,
+        setName = this.set.name,
+        setId = this.set.link,
+        code = if (this.code.valid) this.code.value else "",
+    )
+}
+
+fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int): SellOfferEntity {
+    return SellOfferEntity(
+        productId = productId,
+        sellerName = this.sellerName,
+        sellerLocation = this.sellerLocation,
+        productLanguage = this.productLanguage,
+        condition = this.condition,
+        amount = this.amount.toInt(),
+        price = this.price,
+        special = this.special
+    )
+}
+
+fun CardmarketProductDetailsDto.toProduct(searchId: Long = 0, productId: Int = 0) : Product {
+    return Product(
+        productItemEntity = this.toProductItemEntity(searchId, productId),
+        offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
     )
 }
 

@@ -21,7 +21,8 @@ open class BaseConfig(
     open val lang: Languages,
     open val engine: Engines,
     open val searchUrl: String,
-    open val limit: Int
+    open val limit: Int,
+    val ttlInSeconds: Long = (3 * 24 * 60 * 60L)
 )
 
 

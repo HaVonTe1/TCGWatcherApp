@@ -1,12 +1,12 @@
-package de.dkutzer.tcgwatcher.collectables.search.data
+package de.dkutzer.tcgwatcher.collectables.search.data.cardmarket
 
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductsApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetDto
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -14,8 +14,7 @@ import org.jsoup.nodes.Document
 
 private val logger = KotlinLogging.logger {}
 
-
-abstract class BaseCardmarketApiClient : CardsApiClient {
+abstract class BaseCardmarketApiClient : ProductsApiClient {
 
     private val paginationRegex = "\\b(?:von|of|de) (\\d+)\\b".toRegex()
 
@@ -46,11 +45,11 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
             val intPriceTag = it.getElementsByTag("b")
             val intPrice = intPriceTag.text()
             val itemDto = CardmarketProductGallaryItemDto(
-                name = NameDto(name ?: localName, parsedLink.language?:"", localName),
+                name = NameDto(name ?: localName, parsedLink.language ?: "", localName),
                 code = CodeType(code ?: "", code != null),
-                genre = parsedLink.genre?:"",
-                type = parsedLink.type?:"",
-                cmId = parsedLink.id?:"",
+                genre = parsedLink.genre ?: "",
+                type = parsedLink.type ?: "",
+                cmId = parsedLink.id ?: "",
                 cmLink = cmLink,
                 imgLink = imageLink,
                 price = intPrice,
@@ -172,9 +171,9 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         }
 
         val cardmarketProductDetailsDto = CardmarketProductDetailsDto(
-            name = NameDto(value = name, languageCode = parsedLink.language ?: "", i18n =  orgName),
+            name = NameDto(value = name, languageCode = parsedLink.language ?: "", i18n = orgName),
             code = CodeType(code ?: "", code != null),
-            type = parsedLink.type?: "",
+            type = parsedLink.type ?: "",
             genre = parsedLink.genre ?: "",
             cmId = parsedLink.id ?: "",
             rarity = rarityText ?: "",
@@ -188,30 +187,31 @@ abstract class BaseCardmarketApiClient : CardsApiClient {
         logger.debug { "Product Details: $cardmarketProductDetailsDto" }
         return cardmarketProductDetailsDto
     }
-}
 
-// Data class to hold all four components (language, genre, type, id)
-private data class ParsedLink(
-    val language: String?,
-    val genre: String?,
-    val type: String?,
-    val id: String?
-)
+    // Data class to hold all four components (language, genre, type, id)
+    private data class ParsedLink(
+        val language: String?,
+        val genre: String?,
+        val type: String?,
+        val id: String?
+    )
 
-private val languageAndGenreAndTypePattern = "^\\s*/?([^/]+)/([^/]+)/[^/]+/([^/]+)".toRegex()
+    private val languageAndGenreAndTypePattern = "^\\s*/?([^/]+)/([^/]+)/[^/]+/([^/]+)".toRegex()
 
-private fun parseLink(typePath: String?): ParsedLink {
-    logger.debug { "Parsing Link: $typePath" }
-    val matchResult = typePath?.let { languageAndGenreAndTypePattern.find(it) }
-    val language = matchResult?.groupValues?.getOrNull(1)
-    val genre = matchResult?.groupValues?.getOrNull(2)
-    val type = matchResult?.groupValues?.getOrNull(3)
+    private fun parseLink(typePath: String?): ParsedLink {
+        logger.debug { "Parsing Link: $typePath" }
+        val matchResult = typePath?.let { languageAndGenreAndTypePattern.find(it) }
+        val language = matchResult?.groupValues?.getOrNull(1)
+        val genre = matchResult?.groupValues?.getOrNull(2)
+        val type = matchResult?.groupValues?.getOrNull(3)
 
-    // Extract ID: Last segment of the path (after trimming any slashes)
-    val cleanPath = typePath?.trim()?.trim('/')
-    val id = cleanPath?.substringAfterLast('/')
+        // Extract ID: Last segment of the path (after trimming any slashes)
+        val cleanPath = typePath?.trim()?.trim('/')
+        val id = cleanPath?.substringAfterLast('/')
 
-    val parsedLink = ParsedLink(language, genre, type, id)
-    logger.debug { "Parsed Link: $parsedLink" }
-    return parsedLink
+        val parsedLink = ParsedLink(language, genre, type, id)
+        logger.debug { "Parsed Link: $parsedLink" }
+        return parsedLink
+    }
+
 }

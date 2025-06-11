@@ -4,9 +4,10 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsAndSel
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductsApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPage
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
@@ -16,58 +17,84 @@ import kotlin.system.measureTimeMillis
 
 private val logger = KotlinLogging.logger {}
 
-class CardsSearchServiceFactory(private val client: CardsApiClient, private val cache: SearchCacheRepository, private val config: BaseConfig) {
-    fun create(): CardsSearchService {
+class ProductsSearchServiceFactory(private val client: ProductsApiClient, private val cache: SearchCacheRepository, private val config: BaseConfig) {
+    fun create(): ProductSearchService {
         if(client is BaseCardmarketApiClient)
-            return CardmarketCardsSearchService.createInstance(client, cache, config)
+            return CardmarketProductSearchService.createInstance(client, cache, config)
         throw  UnsupportedOperationException("Client type not supported")
     }
 }
 
 
-class CardmarketCardsSearchService
-    private constructor(override val client: CardsApiClient, override val cache: SearchCacheRepository, override val config: BaseConfig) : CardsSearchService {
+class CardmarketProductSearchService
+    private constructor(override val client: ProductsApiClient, override val cache: SearchCacheRepository, override val config: BaseConfig) : ProductSearchService {
     companion object {
-        fun createInstance(client: CardsApiClient, cache: SearchCacheRepository, config: BaseConfig): CardsSearchService {
-            return CardmarketCardsSearchService(client, cache, config)
+        fun createInstance(client: ProductsApiClient, cache: SearchCacheRepository, config: BaseConfig): ProductSearchService {
+            return CardmarketProductSearchService(client, cache, config)
         }
     }
 
-    private val threeDaysSeconds = 3 * 24 * 60 * 60L //TODO: make it configurable
+    /*
+    product is a quicksearchitem - so a previously saved search might exists
+     */
+    override suspend fun loadQuicksearchProductIntoResultPage(product: ProductModel): SearchResultsPage {
 
-    override suspend fun getSingleItemByItem(product: ProductModel, useCache: Boolean, useTtl:Boolean, loadDetails: Boolean): SearchResultsPage {
+        logger.debug { "CardmarketProductSearchService: loadQuicksearchProductIntoResultPage: $product" }
 
-        val productModel = getProductWithDetails(product, useCache, useTtl, loadDetails)
+        val searchAndProductsAndSelloffersEntity =
+            cache.findSearchWithItemsAndSellOffersByQuery(product.detailsUrl)
+        if (searchAndProductsAndSelloffersEntity != null) {
+            logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
+            return SearchResultsPage(
+                searchAndProductsAndSelloffersEntity.products.map { it.toProductModel() },
+                1,
+                1)
+        }
+        val searchEntity = createAndPersistSearchEntity(product, true)
+        val productModel = searchEntity.products.first().toProductModel()
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         logger.debug { "Adapter: Finally returning results: $result" }
         return result
     }
 
-    override suspend fun getProductWithDetails(product: ProductModel, useCache: Boolean, useTtl : Boolean, loadDetails: Boolean): ProductModel {
-        logger.debug { "CardmarketCardsSearchService: getProductWithDetails: $product" }
-        logger.debug { "CardmarketCardsSearchService: useCache $useCache"}
+    /*
+    UseCases:
+    'product' is an item of a previous search so no need to create a new search entity.
+    - a search by query was performed and an item is shown in the details view
+        --> the item loaded only minimal data but now all details are needed BUT it should be fast so: cacheOnly = true
+    - an item is shown in the details view and no details have been available so far but we want to load all details now: cacheOnly = false
+     */
+    override suspend fun refreshProduct(product: ProductModel, cacheOnly: Boolean): ProductModel {
+        logger.debug { "CardmarketProductSearchService: getProductWithDetails: $product" }
+        logger.debug { "CardmarketProductSearchService: useCache $cacheOnly"}
 
-        val product = if(useCache) {
-            logger.debug { "CardmarketCardsSearchService: Looking in the Cache for: ${product.detailsUrl}" }
-            val cachedSearch = cache.findSearchWithItemsAndSellOffersByCmId(product.cmId)
-            logger.debug { "CardmarketCardsSearchService: Found: $cachedSearch" }
+        val refreshedProduct: ProductModel?  = if (cacheOnly) {
+            val product =
+                cache.findProductWithSellOffersByExternalId(product.externalId)
+            product?.toProductModel()
 
-            if (cachedSearch == null || (useTtl && cachedSearch.isOlderThan(threeDaysSeconds))) {
-                logger.debug { "CardmarketCardsSearchService: Cache is older than 3 days: ${Instant.ofEpochMilli(cachedSearch?.search?.lastUpdated!!)}" }
-                createAndPersistSearchEntity(product,loadDetails)
-            } else {
-                logger.debug { "CardmarketCardsSearchService: Returning cached results: $cachedSearch" }
-                cachedSearch
-            }
         } else {
-            logger.debug { "CardmarketCardsSearchService: no cache - Start a new Search: ${product.detailsUrl}" }
-            createAndPersistSearchEntity(product, loadDetails)
-        }
-        val productModel = product.toProductModel()
-        cache.updateItemByLink(product.detailsUrl, productModel.toProductItemEntity())
+            val productDetailsDto = client.getProductDetails(product.detailsUrl)
 
-        return productModel
+            //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
+            val cachedProducts = cache.getProductsByExternalId(product.externalId)
+            cachedProducts.forEach { product ->
+                logger.debug { "CardmarketProductSearchService: updating product: $product" }
+                val updatedProduct = productDetailsDto.toProduct(
+                    product.productItemEntity.searchId.toLong(),
+                    product.productItemEntity.id
+                )
+                cache.updateProduct(updatedProduct)
+            }
+
+            productDetailsDto.toProductModel()
+        }
+
+        if(refreshedProduct==null){
+            logger.warn { "CardmarketProductSearchService: error while refeshing product: $product" }
+        }
+        return refreshedProduct ?: product
 
     }
 
@@ -94,9 +121,9 @@ class CardmarketCardsSearchService
         }
     }
 
-    private suspend fun enrichProductWithDetails(searchItem: ProductModel) : ProductModel {
-        val productDetails = client.getProductDetails(searchItem.detailsUrl)
-        val productModel = productDetails.toProductModel(config.lang.name)
+    private suspend fun enrichProductWithDetails(productModel: ProductModel) : ProductModel {
+        val productDetails = client.getProductDetails(productModel.detailsUrl)
+        val productModel = productDetails.toProductModel()
         return productModel
     }
 
@@ -113,14 +140,14 @@ class CardmarketCardsSearchService
         if(lastUpdated!=null)
             logger.debug { "TTL: ${Instant.ofEpochSecond(lastUpdated)}" }
 
-        if(searchWithResults!=null && searchWithResults.isOlderThan(threeDaysSeconds)) {
+        if(searchWithResults!=null && searchWithResults.isOlderThan(config.ttlInSeconds)) {
             logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(lastUpdated!!)}" }
 
             cache.deleteSearchItems(searchWithResults.products)
             cache.deleteSearch(searchWithResults.search)
             searchWithResults = null
         }
-        if(searchWithResults!=null && !searchWithResults.isOlderThan(threeDaysSeconds)) {
+        if(searchWithResults!=null && !searchWithResults.isOlderThan(config.ttlInSeconds)) {
             val searchItems = searchWithResults.products.map { it.toProductModel() }
             result = SearchResultsPage(
                 searchItems,

@@ -7,9 +7,8 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import de.dkutzer.tcgwatcher.collectables.history.domain.Product
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
-import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -22,7 +21,7 @@ class SearchRemoteMediator (
     private val refreshModel: RefreshWrapper,
     private val quicksearchItem: ProductModel? = null,
     private val pokemonDatabase: SearchCacheDatabase,
-    private val cardSearchService: CardsSearchService
+    private val cardSearchService: ProductSearchService
 ) : RemoteMediator<Int, Product>() {
 
     private val REMOTE_KEY_ID = "cm"
@@ -58,29 +57,8 @@ class SearchRemoteMediator (
         // so we make a call to fetch ALL data from the api and return the
         // cached room stuff
 
-        val searchResultsPage = if(refreshModel.state == RefreshState.REFRESH_ITEM) {
-            var searchResultsPage = cardSearchService.getSingleItemByItem(
-                refreshModel.item!!,
-                useCache = false,
-                useTtl = true,
-                loadDetails = true,
-
-            )
-
-            searchResultsPage
-
-        } else if (refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
-            var searchResultsPage =  cardSearchService.getSingleItemByItem(
-                refreshModel.item!!,
-                useCache = true,
-                useTtl = false,
-                loadDetails = false,
-                )
-
-            searchResultsPage
-        }
-        else if (quicksearchItem != null) {
-            cardSearchService.getSingleItemByItem(quicksearchItem, useCache = true, useTtl = false, loadDetails = false)
+        val searchResultsPage =  if (quicksearchItem != null) {
+            cardSearchService.loadQuicksearchProductIntoResultPage(quicksearchItem)
         }
         else {
             cardSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
