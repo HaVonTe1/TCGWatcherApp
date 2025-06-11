@@ -33,14 +33,14 @@ data class ProductItemEntity(
     val type: String = "",
     val rarity: String = "",
     val code: String,
-    val cmId: String,
+    val externalId: String,
     val orgName: String,
     val cmLink: String,
     val imgLink: String,
     val price: String,
     val priceTrend: String,
     val setName: String,
-    val setLink: String,
+    val setId: String,
     val lastUpdated: Long
 )
 
@@ -90,12 +90,7 @@ data class SearchAndProductsAndSelloffersEntity(
     )
     val products: List<Product>
 
-){
-    fun isOlderThan(seconds: Long): Boolean {
-
-        return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
-    }
-}
+)
 
 data class Product(
     @Embedded val productItemEntity: ProductItemEntity,
@@ -104,5 +99,10 @@ data class Product(
         entityColumn = "productId"
     )
     val offers: List<SellOfferEntity>
-)
+) {
+    fun isOlderThan(seconds: Long): Boolean {
+
+        return Instant.ofEpochSecond(this.productItemEntity.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
+    }
+}
 

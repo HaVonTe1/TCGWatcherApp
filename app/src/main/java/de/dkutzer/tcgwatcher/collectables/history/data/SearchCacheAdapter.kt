@@ -32,6 +32,17 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
+    //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
+    override suspend fun getProductsByExternalId(externalId: String): List<Product> {
+
+       return  searchCacheDao.findProductsByExternalId(externalId)
+
+    }
+
+    override suspend fun updateProduct(product: Product) {
+        searchCacheDao.updateProduct(product)
+    }
+
     override suspend fun findSearchWithItemsAndSellOffersByQuery(searchTerm: String, page: Int, limit: Int ): SearchAndProductsAndSelloffersEntity?  {
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
         val search = searchCacheDao.findSearch(searchTerm)
@@ -52,9 +63,9 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
-    override suspend fun findSearchWithItemsAndSellOffersByCmId(cmId: String): Product? {
+    override suspend fun findProductWithSellOffersByExternalId(externalId: String): Product? {
         logger.debug { "SearchCacheRepositoryImpl::findSearchWithItemsAndSellOffersByCmId" }
-        val product = searchCacheDao.findItemWithSellOffersByProductId(cmId)
+        val product = searchCacheDao.findItemWithSellOffersByProductId(externalId)
 
         return product
     }
@@ -168,7 +179,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             priceTrend = itemEntity.priceTrend,
             orgName = itemEntity.orgName,
             setName = itemEntity.setName,
-            setLink = itemEntity.setLink,
+            setLink = itemEntity.setId,
             rarity = itemEntity.rarity,
             type = itemEntity.type,
             lastUpdated = itemEntity.lastUpdated)

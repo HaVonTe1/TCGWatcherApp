@@ -1,9 +1,10 @@
-package de.dkutzer.tcgwatcher.collectables.search.data
+package de.dkutzer.tcgwatcher.collectables.search.data.cardmarket
 
 import androidx.paging.Pager
 import androidx.paging.PagingData
 import androidx.paging.map
 import de.dkutzer.tcgwatcher.collectables.history.domain.Product
+import de.dkutzer.tcgwatcher.collectables.search.data.toProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketPokemonRepository
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import io.github.oshai.kotlinlogging.KotlinLogging

@@ -32,11 +32,15 @@ interface SearchCacheDao {
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductItemEntity>
 
+    //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
+    @Query("SELECT * FROM search_result_item WHERE externalId = :externalId")
+    fun findProductsByExternalId(externalId: String): List<Product>
+
     @Transaction
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
     fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, Product>
 
-    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.cmId = :productId") //TODO: test
+    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId") //TODO: test
     fun findItemWithSellOffersByProductId(productId: String) : Product?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
@@ -63,6 +67,9 @@ interface SearchCacheDao {
     @Update
     fun updateSearch(search: SearchEntity)
 
+    @Update
+    fun updateProduct(product: Product)
+
     @Delete
     fun removeSearch(search: SearchEntity)
 
@@ -77,7 +84,7 @@ interface SearchCacheDao {
             "priceTrend = :priceTrend, " +
             "orgName = :orgName, " +
             "setName = :setName, " +
-            "setLink = :setLink, " +
+            "setId = :setLink, " +
             "rarity = :rarity, " +
             "type = :type, " +
             "lastUpdated = :lastUpdated WHERE " +

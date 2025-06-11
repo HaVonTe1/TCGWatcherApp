@@ -1,6 +1,7 @@
-package de.dkutzer.tcgwatcher.collectables.search.data
+package de.dkutzer.tcgwatcher.collectables.search.data.cardmarket
 
 import de.dkutzer.tcgwatcher.EventBus
+import de.dkutzer.tcgwatcher.collectables.search.data.toProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
@@ -20,8 +21,8 @@ import org.htmlunit.util.NameValuePair
 import org.jsoup.Jsoup
 import java.net.URL
 import kotlin.system.measureTimeMillis
-
 private val logger = KotlinLogging.logger {}
+
 
 
 class CardmarketHtmlUnitApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() {

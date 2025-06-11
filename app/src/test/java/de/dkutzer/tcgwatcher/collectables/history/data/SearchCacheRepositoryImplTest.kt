@@ -178,7 +178,7 @@ class SearchCacheRepositoryImplTest {
             imgLink = "sdf",
             priceTrend = "sdfg",
             setName = "sdfgdg",
-            setLink = "sdg"
+            setId = "sdg"
         )
 
         repository.persistSearchItems(listOf(initialItem))
@@ -328,7 +328,7 @@ class SearchCacheRepositoryImplTest {
             price = "10.00",
             priceTrend = "11.00",
             setName = "bla",
-            setLink = "/de/Pokemon/Products/bla",
+            setId = "/de/Pokemon/Products/bla",
             lastUpdated = 2111111111111111111
         )
 

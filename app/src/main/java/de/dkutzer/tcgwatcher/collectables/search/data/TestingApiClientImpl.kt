@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType

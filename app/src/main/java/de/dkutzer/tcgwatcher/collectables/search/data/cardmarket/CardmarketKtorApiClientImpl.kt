@@ -1,13 +1,15 @@
-package de.dkutzer.tcgwatcher.collectables.search.data
+package de.dkutzer.tcgwatcher.collectables.search.data.cardmarket
 
-import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
+import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.BrowserUserAgent
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.LoggingConfig
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
@@ -22,9 +24,9 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
 
         HttpClient(OkHttp) {
             followRedirects = true
-            install(Logging)
+            HttpClientConfig.install(Logging)
             {
-                level = LogLevel.HEADERS
+                LoggingConfig.level = LogLevel.HEADERS
             }
             BrowserUserAgent()
 
@@ -59,9 +61,9 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
         HttpClient(OkHttp) {
             followRedirects = true
 
-            install(Logging)
+            HttpClientConfig.install(Logging)
             {
-                level = LogLevel.ALL
+                LoggingConfig.level = LogLevel.ALL
             }
             BrowserUserAgent() //ihnalt egal, dard nur nich leer sein
 

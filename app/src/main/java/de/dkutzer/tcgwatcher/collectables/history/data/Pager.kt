@@ -4,7 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import de.dkutzer.tcgwatcher.collectables.history.domain.Product
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
@@ -35,7 +35,7 @@ abstract class PokemonPager {
             refreshModel: RefreshWrapper,
             quicksearchItem: ProductModel? = null,
             pokemonDatabase: SearchCacheDatabase,
-            cardSearchService: CardsSearchService
+            cardSearchService: ProductSearchService
         ): Pager<Int, Product> {
 
             logger.debug { "create Searching Pager" }

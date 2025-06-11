@@ -9,16 +9,17 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
-import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
-import de.dkutzer.tcgwatcher.collectables.search.data.CardsSearchServiceFactory
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.CardsSearchService
+import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.ApiClientFactory
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductsApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchModelCreationKeys
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SingleItemReloadState
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
@@ -76,10 +77,10 @@ class ProductDetailsViewModel(
     }
 
     private val apiConfig = ConfigFactory(settingsModel = settings).create()
-    private val cardsApiClient: CardsApiClient = ApiClientFactory(apiConfig).create()
+    private val productsApiClient: ProductsApiClient = ApiClientFactory(apiConfig).create()
     private val searchCacheRepository = SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao)
 
-    private val cardsSearchService: CardsSearchService = CardsSearchServiceFactory(cardsApiClient, searchCacheRepository, apiConfig).create()
+    private val productSearchService: ProductSearchService = ProductsSearchServiceFactory(productsApiClient, searchCacheRepository, apiConfig).create()
 
 
     var reloadedSingleItem by     mutableStateOf(SingleItemReloadState(RefreshState.IDLE,
@@ -92,7 +93,7 @@ class ProductDetailsViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
 
-            val productModel = cardsSearchService.getProductWithDetails(productModel, cacheOnly)
+            val productModel = productSearchService.refreshProduct(productModel, cacheOnly)
             logger.debug { "SearchViewModel::onLoadSingleItem: $productModel" }
 
 
@@ -113,5 +114,7 @@ fun ProductModel.Companion.empty(): ProductModel = ProductModel(
     price = "",
     priceTrend = "",
     sellOffers = emptyList(),
-    timestamp = System.currentTimeMillis()
+    timestamp = System.currentTimeMillis(),
+    type = TypeEnum.CARD,
+    externalId = "bla_blub"
 )
