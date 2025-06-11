@@ -29,7 +29,7 @@ class BaseCardmarketApiClientTest {
                 genre = "xxx",
                 type = "xxx",
                 rarity = "xxx",
-
+                cmId = "sdfsfd",
                 code = CodeType("xxx", false),
             )
         }

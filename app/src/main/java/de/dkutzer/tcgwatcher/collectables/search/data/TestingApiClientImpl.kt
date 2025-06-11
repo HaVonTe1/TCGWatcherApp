@@ -19,6 +19,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 type = "Card",
                 code = CodeType("TST 1", true),
                 cmLink = "https://localhost:8080/test/bluepoke",
+                cmId = "bluepoke",
                 imgLink = "https://havonte.ddns.net/test/card_blue.png",
                 price = "1.00 €",
                 priceTrend = PriceTrendType("2.00 €", true)
@@ -29,6 +30,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 genre = "Pokemon",
                 type = "Card",
                 cmLink = "https://localhost:8080/test/brownpoke",
+                cmId = "brownpoke",
                 imgLink = "https://havonte.ddns.net/test/card_braun.png",
                 price = "2.00 €",
                 priceTrend =  PriceTrendType("1.00 €",true)
@@ -39,6 +41,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 genre = "Pokemon",
                 type = "Card",
                 cmLink = "https://localhost:8080/test/greenpoke",
+                cmId = "greenpoke",
                 imgLink = "https://havonte.ddns.net/test/card_green.png",
                 price = "3.00 €",
                 priceTrend = PriceTrendType("1.00 €",true)
@@ -49,6 +52,7 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
                 type = "Card",
                 code = "TST 4",
                 cmLink = "https://localhost:8080/test/redpoke",
+                cmId = "redpoke",
                 imgLink = "https://havonte.ddns.net/test/card_red.png",
                 price = "4.00 €",
                 priceTrend = "1.00 €"

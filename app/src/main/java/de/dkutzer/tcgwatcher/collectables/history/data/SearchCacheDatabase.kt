@@ -4,13 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 
 @Database(
-    entities = [SearchEntity::class, ProductItemEntity::class, SellOfferEntity::class, RemoteKeyEntity::class],
+    entities = [SearchEntity::class, ProductEntity::class, SellOfferEntity::class, RemoteKeyEntity::class],
     version = 1,
     exportSchema = false
 )

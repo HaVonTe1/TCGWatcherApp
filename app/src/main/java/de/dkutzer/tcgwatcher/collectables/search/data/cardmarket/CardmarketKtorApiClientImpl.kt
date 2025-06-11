@@ -4,17 +4,14 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetails
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.BrowserUserAgent
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.logging.LoggingConfig
 import io.ktor.client.request.get
+import io.ktor.client.request.headers
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
-import io.ktor.http.headers
 import org.jsoup.Jsoup
+
 
 class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiClient() {
 
@@ -22,12 +19,10 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
 
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
 
-        HttpClient(OkHttp) {
+        HttpClient {
             followRedirects = true
-            HttpClientConfig.install(Logging)
-            {
-                LoggingConfig.level = LogLevel.HEADERS
-            }
+
+
             BrowserUserAgent()
 
         }.use { client ->
@@ -61,10 +56,7 @@ class CardmarketKtorApiClientImpl(val config: BaseConfig) : BaseCardmarketApiCli
         HttpClient(OkHttp) {
             followRedirects = true
 
-            HttpClientConfig.install(Logging)
-            {
-                LoggingConfig.level = LogLevel.ALL
-            }
+
             BrowserUserAgent() //ihnalt egal, dard nur nich leer sein
 
         }.use { client ->

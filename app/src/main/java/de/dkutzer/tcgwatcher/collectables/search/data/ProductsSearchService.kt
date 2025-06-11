@@ -1,9 +1,9 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsAndSelloffersEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
 import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
@@ -46,12 +46,12 @@ class CardmarketProductSearchService
         if (searchAndProductsAndSelloffersEntity != null) {
             logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
             return SearchResultsPage(
-                searchAndProductsAndSelloffersEntity.products.map { it.toProductModel() },
+                searchAndProductsAndSelloffersEntity.productWithSellOffers.map { it.toProductModel() },
                 1,
                 1)
         }
         val searchEntity = createAndPersistSearchEntity(product, true)
-        val productModel = searchEntity.products.first().toProductModel()
+        val productModel = searchEntity.productWithSellOffers.first().toProductModel()
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         logger.debug { "Adapter: Finally returning results: $result" }
@@ -82,8 +82,8 @@ class CardmarketProductSearchService
             cachedProducts.forEach { product ->
                 logger.debug { "CardmarketProductSearchService: updating product: $product" }
                 val updatedProduct = productDetailsDto.toProduct(
-                    product.productItemEntity.searchId.toLong(),
-                    product.productItemEntity.id
+                    product.productEntity.searchId.toLong(),
+                    product.productEntity.id
                 )
                 cache.updateProduct(updatedProduct)
             }
@@ -99,7 +99,7 @@ class CardmarketProductSearchService
     }
 
 
-    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean): SearchAndProductsAndSelloffersEntity {
+    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean): SearchWithProductsAndSellOffers {
         val productWithDetails = if(loadDetails) {
             enrichProductWithDetails(product)
         } else {
@@ -107,7 +107,7 @@ class CardmarketProductSearchService
         }
         logger.debug { "Adapter: Persisting enriched product in the cache: $productWithDetails" }
 
-        return SearchAndProductsAndSelloffersEntity(
+        return SearchWithProductsAndSellOffers(
             search = SearchEntity(
                 searchTerm = productWithDetails.detailsUrl,
                 size = 1,
@@ -115,7 +115,7 @@ class CardmarketProductSearchService
                 language = config.lang.name,
                 history = false
             ),
-            products = listOf(productWithDetails.toProductWithSellofferEntity())
+            productWithSellOffers = listOf(productWithDetails.toProductWithSellofferEntity())
         ).also {
             cache.persistSearchWithProductAndSellOffers(it, config.lang.name)
         }
@@ -183,7 +183,7 @@ class CardmarketProductSearchService
                     logger.trace { "Adapter: Results so far: $mergedResults" }
                 }
 
-                val searchAndProductsEntity = SearchAndProductsEntity(
+                val searchWithProducts = SearchWithProducts(
                     search = SearchEntity(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
@@ -193,8 +193,8 @@ class CardmarketProductSearchService
                     ),
                     products = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
-                logger.debug { "Persisting cache: $searchAndProductsEntity" }
-                cache.persistsSearchWithItems(searchAndProductsEntity, config.lang.name)
+                logger.debug { "Persisting cache: $searchWithProducts" }
+                cache.persistsSearchWithItems(searchWithProducts, config.lang.name)
 
                 logger.debug { "Now fetching paged results from newly cache" }
                 val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)

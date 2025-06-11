@@ -5,7 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import de.dkutzer.tcgwatcher.collectables.history.domain.Product
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
@@ -20,15 +20,15 @@ class SearchRemoteMediator (
     private val searchTerm: String,
     private val refreshModel: RefreshWrapper,
     private val quicksearchItem: ProductModel? = null,
-    private val pokemonDatabase: SearchCacheDatabase,
-    private val cardSearchService: ProductSearchService
-) : RemoteMediator<Int, Product>() {
+    private val searchCacheDatabase: SearchCacheDatabase,
+    private val productSearchService: ProductSearchService
+) : RemoteMediator<Int, ProductWithSellOffers>() {
 
     private val REMOTE_KEY_ID = "cm"
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Product>,
+        state: PagingState<Int, ProductWithSellOffers>,
     ): MediatorResult {
 
         logger.debug { "Mediator searchTerm: $searchTerm" }
@@ -44,7 +44,7 @@ class SearchRemoteMediator (
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.APPEND -> {
                 // RETRIEVE NEXT OFFSET FROM DATABASE
-                val remoteKey = pokemonDatabase.remoteKeyDao.getById(REMOTE_KEY_ID)
+                val remoteKey = searchCacheDatabase.remoteKeyDao.getById(REMOTE_KEY_ID)
                 if (remoteKey == null || remoteKey.nextOffset == 0) // END OF PAGINATION REACHED
                     return MediatorResult.Success(endOfPaginationReached = true)
                 remoteKey.nextOffset
@@ -58,10 +58,10 @@ class SearchRemoteMediator (
         // cached room stuff
 
         val searchResultsPage =  if (quicksearchItem != null) {
-            cardSearchService.loadQuicksearchProductIntoResultPage(quicksearchItem)
+            productSearchService.loadQuicksearchProductIntoResultPage(quicksearchItem)
         }
         else {
-            cardSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
+            productSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }
         logger.info {"SearchResult size: ${searchResultsPage.items.size}"}
@@ -70,11 +70,11 @@ class SearchRemoteMediator (
         val nextOffset = offset + state.config.pageSize
         logger.debug { "Next Offset: $nextOffset" }
         // SAVE RESULTS AND NEXT OFFSET TO DATABASE
-        pokemonDatabase.withTransaction {
+        searchCacheDatabase.withTransaction {
 
             logger.debug { "Upsert remotekey" }
 
-            pokemonDatabase.remoteKeyDao.insert(
+            searchCacheDatabase.remoteKeyDao.insert(
                 RemoteKeyEntity(
                     id = REMOTE_KEY_ID,
                     nextOffset = nextOffset,

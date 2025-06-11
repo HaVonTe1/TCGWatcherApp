@@ -21,7 +21,7 @@ data class SearchEntity(
 )
 
 @Entity(tableName = "search_result_item")
-data class ProductItemEntity(
+data class ProductEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     @ColumnInfo(index = true)
@@ -35,7 +35,7 @@ data class ProductItemEntity(
     val code: String,
     val externalId: String,
     val orgName: String,
-    val cmLink: String,
+    val externalLink: String,
     val imgLink: String,
     val price: String,
     val priceTrend: String,
@@ -67,13 +67,13 @@ data class RemoteKeyEntity(
 )
 
 
-data class SearchAndProductsEntity(
+data class SearchWithProducts(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "searchId"
     )
-    val products: List<ProductItemEntity>
+    val products: List<ProductEntity>
 
 ) {
     fun isOlderThan(seconds: Long): Boolean {
@@ -82,27 +82,22 @@ data class SearchAndProductsEntity(
     }
 }
 
-data class SearchAndProductsAndSelloffersEntity(
+data class SearchWithProductsAndSellOffers(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "searchId"
     )
-    val products: List<Product>
+    val productWithSellOffers: List<ProductWithSellOffers>
 
 )
 
-data class Product(
-    @Embedded val productItemEntity: ProductItemEntity,
+data class ProductWithSellOffers(
+    @Embedded val productEntity: ProductEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "productId"
     )
     val offers: List<SellOfferEntity>
-) {
-    fun isOlderThan(seconds: Long): Boolean {
-
-        return Instant.ofEpochSecond(this.productItemEntity.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
-    }
-}
+)
 

@@ -7,11 +7,11 @@ import androidx.paging.PagingSource
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import de.dkutzer.tcgwatcher.collectables.history.domain.Product
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsAndSelloffersEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
@@ -95,7 +95,7 @@ class SearchCacheRepositoryImplTest {
             createSampleProductItemEntity(),
         )
 
-        val searchWithProducts = SearchAndProductsEntity(search, products)
+        val searchWithProducts = SearchWithProducts(search, products)
 
         // Persist
         val persisted = repository.persistsSearchWithItems(searchWithProducts, "en")
@@ -118,7 +118,7 @@ class SearchCacheRepositoryImplTest {
         }
 
         repository.persistsSearchWithItems(
-            SearchAndProductsEntity(
+            SearchWithProducts(
                 SearchEntity(searchTerm = searchTerm, size = 20, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
                 products
             ),
@@ -138,7 +138,7 @@ class SearchCacheRepositoryImplTest {
 
     @Test
     fun testProductWithOffers() = runBlocking {
-        val product = Product(
+        val productWithSellOffers = ProductWithSellOffers(
             createSampleProductItemEntity(code = "OFR-1"),
             listOf(
                 createSampleSellOfferEntity(price = "10.99"),
@@ -146,24 +146,24 @@ class SearchCacheRepositoryImplTest {
             )
         )
 
-        val searchWithOffers = SearchAndProductsAndSelloffersEntity(
+        val searchWithOffers = SearchWithProductsAndSellOffers(
             SearchEntity(searchTerm = "OffersTest", size =  1, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
-            listOf(product)
+            listOf(productWithSellOffers)
         )
 
         val persisted = repository.persistSearchWithProductAndSellOffers(searchWithOffers, "en")
 
         // Verify offers were persisted
-        val offers = dao.findSellOfferByProductId(persisted.products[0].productItemEntity.id)
+        val offers = dao.findSellOfferByProductId(persisted.productWithSellOffers[0].productEntity.id)
         assertEquals(2, offers.size)
-        assertTrue(offers.all { it.productId == persisted.products[0].productItemEntity.id })
+        assertTrue(offers.all { it.productId == persisted.productWithSellOffers[0].productEntity.id })
     }
 
     @Test
     fun testUpdateByLink() = runBlocking {
         val link = "special-card-link"
-        val initialItem = ProductItemEntity(
-            cmLink = link,
+        val initialItem = ProductEntity(
+            externalLink = link,
             price = "10.00",
             lastUpdated = 0,
             id = 0,
@@ -178,6 +178,7 @@ class SearchCacheRepositoryImplTest {
             imgLink = "sdf",
             priceTrend = "sdfg",
             setName = "sdfgdg",
+            externalId = "sdf",
             setId = "sdg"
         )
 
@@ -229,7 +230,7 @@ class SearchCacheRepositoryImplTest {
         val product = createSampleProductItemEntity( code = "ORPH-1").apply { searchId = 1 }
 
 
-        dao.persistSearch(search)
+        dao.saveSearch(search)
         repository.persistSearchItems(listOf(product))
 
         repository.deleteSearch(search)
@@ -267,13 +268,13 @@ class SearchCacheRepositoryImplTest {
     @Test
     fun testFindProductsWithSellOffers() = runBlocking {
         val searchTerm = "OffersTest"
-        val products = (1..20).map {
+        val productWithSellOffers = (1..20).map {
             val productItemEntity = createSampleProductItemEntity(code = "PGD-$it")
-            Product(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
+            ProductWithSellOffers(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
         }
         val persistSearchWithProductAndSellOffers =
             repository.persistSearchWithProductAndSellOffers(
-                SearchAndProductsAndSelloffersEntity(
+                SearchWithProductsAndSellOffers(
                     SearchEntity(
                         searchTerm = searchTerm,
                         size = 20,
@@ -281,7 +282,7 @@ class SearchCacheRepositoryImplTest {
                         lastUpdated = System.currentTimeMillis(),
                         history = true
                     ),
-                    products
+                    productWithSellOffers
                 ),
                 "en"
             )
@@ -296,16 +297,16 @@ class SearchCacheRepositoryImplTest {
 
         // Verify the results
         assertTrue(loadResult is PagingSource.LoadResult.Page)
-        val page = loadResult as PagingSource.LoadResult.Page<Int, Product>
+        val page = loadResult as PagingSource.LoadResult.Page<Int, ProductWithSellOffers>
 
         assertEquals(10, page.data.size)
         val product = page.data[0]
 
         // Verify product item
-        val productItemEntity = persistSearchWithProductAndSellOffers.products[0].productItemEntity
+        val productItemEntity = persistSearchWithProductAndSellOffers.productWithSellOffers[0].productEntity
         val productId = productItemEntity.id
-        assertEquals(productId, product.productItemEntity.id)
-        assertEquals(productItemEntity.displayName, product.productItemEntity.displayName)
+        assertEquals(productId, product.productEntity.id)
+        assertEquals(productItemEntity.displayName, product.productEntity.displayName)
 
         // Verify offers
         assertEquals(2, product.offers.size)
@@ -313,8 +314,8 @@ class SearchCacheRepositoryImplTest {
         assertEquals("10.99", product.offers[0].price)
     }
 
-    private fun createSampleProductItemEntity(code : String = "DRG-1"): ProductItemEntity =
-        ProductItemEntity(
+    private fun createSampleProductItemEntity(code : String = "DRG-1"): ProductEntity =
+        ProductEntity(
             searchId = 0, code = code,
             id = 0,
             displayName = "sdfsdf",
@@ -323,12 +324,13 @@ class SearchCacheRepositoryImplTest {
             type = TypeEnum.CARD.cmCode,
             rarity = RarityType.UNCOMMON.cmCode,
             orgName = "sdfsf",
-            cmLink = "/de/pokemon/Products/Singles/bla/blub",
+            externalLink = "/de/pokemon/Products/Singles/bla/blub",
             imgLink = "https://fddgf.dsdfdfg.jpg",
             price = "10.00",
             priceTrend = "11.00",
             setName = "bla",
             setId = "/de/Pokemon/Products/bla",
+            externalId = "blub",
             lastUpdated = 2111111111111111111
         )
 

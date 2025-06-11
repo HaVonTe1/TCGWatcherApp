@@ -418,6 +418,7 @@ fun ProductDetailsViewPreview() {
             rarity = RarityType.COMMON,
             set = SetModel(link = "df", name = "dfsdf"),
             priceTrend = "34",
+            externalId = "details2",
             timestamp = System.currentTimeMillis()
         )
     )

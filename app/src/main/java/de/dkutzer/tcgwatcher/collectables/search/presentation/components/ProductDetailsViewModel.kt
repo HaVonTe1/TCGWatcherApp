@@ -10,7 +10,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
-import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.ApiClientFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
