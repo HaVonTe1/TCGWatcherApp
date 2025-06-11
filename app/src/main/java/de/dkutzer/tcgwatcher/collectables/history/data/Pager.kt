@@ -3,9 +3,9 @@ package de.dkutzer.tcgwatcher.collectables.history.data
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import de.dkutzer.tcgwatcher.collectables.history.domain.Product
-import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshWrapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -27,7 +27,7 @@ abstract class PokemonPager {
     //Highlander Pattern
     companion object {
         @Volatile
-        private var Instance: Pager<Int, Product>? = null
+        private var Instance: Pager<Int, ProductWithSellOffers>? = null
 
         @OptIn(ExperimentalPagingApi::class)
         fun providePokemonPager(
@@ -36,7 +36,7 @@ abstract class PokemonPager {
             quicksearchItem: ProductModel? = null,
             pokemonDatabase: SearchCacheDatabase,
             cardSearchService: ProductSearchService
-        ): Pager<Int, Product> {
+        ): Pager<Int, ProductWithSellOffers> {
 
             logger.debug { "create Searching Pager" }
             return Instance ?: synchronized(this) {
@@ -48,17 +48,16 @@ abstract class PokemonPager {
                         searchTerm = searchTerm,
                         refreshModel = refreshModel,
                         quicksearchItem = quicksearchItem,
-                        pokemonDatabase = pokemonDatabase,
-                        cardSearchService = cardSearchService
+                        searchCacheDatabase = pokemonDatabase,
+                        productSearchService = cardSearchService
                     ),
                     pagingSourceFactory = {
                         logger.debug { "refreshItem: [$refreshModel] searchTerm: [$searchTerm]" }
+                        //TODO: this can be removed??!!!??!?!?
                         if (refreshModel.state == RefreshState.REFRESH_ITEM || refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
                             logger.debug { "calling refresh item as paging source (state: ${refreshModel.state}): $refreshModel" }
 
                             pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.query)
-                            //FixMe: instead of searching for the detailsUrl - do a refresh of the item
-                            //pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.item!!.detailsUrl)
                         }
                         else if(quicksearchItem != null) {
                             logger.debug { "calling quicksearch  as paging source: $quicksearchItem" }

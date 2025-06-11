@@ -22,6 +22,7 @@ class MapperTest {
             genre = "xx",
             type = "xx",
             cmLink = "https://example.com/item1",
+            cmId = "item1",
             imgLink = "https://example.com/item1.jpg",
             price = "$10",
             priceTrend = "sdf"
@@ -33,7 +34,7 @@ class MapperTest {
         // Assert
         assertEquals(dto.name.value, entity.displayName)
         assertEquals(dto.name.i18n, entity.orgName)
-        assertEquals(dto.cmLink, entity.cmLink)
+        assertEquals(dto.cmLink, entity.externalLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
         assertEquals(searchId.toInt(), entity.searchId)
@@ -51,6 +52,7 @@ class MapperTest {
             genre = "xx",
             type = "xx",
             cmLink = "https://example.com/item1",
+            cmId = "item1",
             imgLink = "https://example.com/item1.jpg",
             price = "$10",
             priceTrend = "sdf"
@@ -62,7 +64,7 @@ class MapperTest {
         // Then
         assertEquals(dto.name.value, entity.displayName)
         assertEquals(dto.name.i18n, entity.orgName)
-        assertEquals(dto.cmLink, entity.cmLink)
+        assertEquals(dto.cmLink, entity.externalLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
         assertEquals(searchId.toInt(), entity.searchId)

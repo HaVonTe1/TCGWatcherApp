@@ -1,6 +1,6 @@
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchAndProductsEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
@@ -12,17 +12,17 @@ import java.time.Instant
 class SearchWithItemsEntityTest {
 
     private lateinit var searchEntity: SearchEntity
-    private lateinit var productItemEntities: List<ProductItemEntity>
-    private lateinit var searchAndProductsEntity: SearchAndProductsEntity
+    private lateinit var productItemEntities: List<ProductEntity>
+    private lateinit var searchWithProducts: SearchWithProducts
 
     @Before
     fun setUp() {
         // Mock the SearchEntity and ProductItemEntity
         searchEntity = mockk<SearchEntity>()
-        productItemEntities = listOf(mockk<ProductItemEntity>())
+        productItemEntities = listOf(mockk<ProductEntity>())
 
         // Create an instance of SearchWithItemsEntity
-        searchAndProductsEntity = SearchAndProductsEntity(searchEntity, productItemEntities)
+        searchWithProducts = SearchWithProducts(searchEntity, productItemEntities)
     }
 
     @Test
@@ -31,7 +31,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().epochSecond
 
         // Test with a small number of seconds (e.g., 1 second)
-        assertFalse(searchAndProductsEntity.isOlderThan(1))
+        assertFalse(searchWithProducts.isOlderThan(1))
     }
 
     @Test
@@ -40,7 +40,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(10).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchAndProductsEntity.isOlderThan(5))
+        assertTrue(searchWithProducts.isOlderThan(5))
     }
 
     @Test
@@ -49,6 +49,6 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(5).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchAndProductsEntity.isOlderThan(5))
+        assertTrue(searchWithProducts.isOlderThan(5))
     }
 }

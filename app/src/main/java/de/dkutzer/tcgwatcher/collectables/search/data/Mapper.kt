@@ -1,8 +1,8 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 
-import de.dkutzer.tcgwatcher.collectables.history.domain.Product
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
@@ -34,8 +34,8 @@ inline fun <reified T> fromString(value: String): T
 }
 
 
-fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductItemEntity {
-    return ProductItemEntity(
+fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+    return ProductEntity(
         displayName = this.name.value,
         code = if (this.code.valid) this.code.value else "",
         imgLink = this.imgLink,
@@ -46,7 +46,7 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         rarity = RarityType.OTHER.name,
         price = this.price,
         externalId = this.cmId,
-        cmLink = this.cmLink,
+        externalLink = this.cmLink,
         setName = "",
         setId = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
@@ -57,16 +57,16 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
 }
 
 
-fun ProductItemEntity.toProductModel() : ProductModel {
+fun ProductEntity.toProductModel() : ProductModel {
     return ProductModel(
-        id = URI(cmLink).path.split("/").last(),
+        id = URI(externalLink).path.split("/").last(),
         name = NameModel(this.displayName, this.language, this.orgName),
         code = this.code,
         type = fromString<TypeEnum>(this.type) ,
         genre = fromString<GenreType>(this.genre) ,
         rarity = fromString<RarityType>(this.rarity) ,
         set = SetModel(link = this.setId, name = this.setName),
-        detailsUrl = this.cmLink,
+        detailsUrl = this.externalLink,
         externalId = this.externalId,
         imageUrl = this.imgLink,
         price = this.price,
@@ -77,29 +77,29 @@ fun ProductItemEntity.toProductModel() : ProductModel {
     )
 }
 
-fun Product.toProductModel() : ProductModel {
+fun ProductWithSellOffers.toProductModel() : ProductModel {
     return ProductModel(
 
-        id = URI(productItemEntity.cmLink).path.split("/").last(),
-        name = NameModel(productItemEntity.displayName, productItemEntity.language, productItemEntity.orgName),
-        code = productItemEntity.code,
-        type = fromString<TypeEnum>(productItemEntity.type) ,
-        genre = fromString<GenreType>(productItemEntity.genre) ,
-        rarity = fromString<RarityType>(productItemEntity.rarity) ,
-        set = SetModel(link = productItemEntity.setId, name = productItemEntity.setName),
-        externalId = productItemEntity.externalId,
-        detailsUrl = productItemEntity.cmLink,
-        imageUrl = productItemEntity.imgLink,
-        price = productItemEntity.price,
-        priceTrend = productItemEntity.priceTrend,
-        sellOffers = offers.map { it.toSellOfferModel(productItemEntity.language) },
-        timestamp = productItemEntity.lastUpdated
+        id = URI(productEntity.externalLink).path.split("/").last(),
+        name = NameModel(productEntity.displayName, productEntity.language, productEntity.orgName),
+        code = productEntity.code,
+        type = fromString<TypeEnum>(productEntity.type) ,
+        genre = fromString<GenreType>(productEntity.genre) ,
+        rarity = fromString<RarityType>(productEntity.rarity) ,
+        set = SetModel(link = productEntity.setId, name = productEntity.setName),
+        externalId = productEntity.externalId,
+        detailsUrl = productEntity.externalLink,
+        imageUrl = productEntity.imgLink,
+        price = productEntity.price,
+        priceTrend = productEntity.priceTrend,
+        sellOffers = offers.map { it.toSellOfferModel(productEntity.language) },
+        timestamp = productEntity.lastUpdated
     )
 
 }
 
-fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductItemEntity {
-    return ProductItemEntity(
+fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductEntity {
+    return ProductEntity(
         displayName = this.name.value,
         code = this.code,
         language = this.name.languageCode,
@@ -109,7 +109,7 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         imgLink = this.imageUrl,
         orgName = this.name.i18n, //FixMe
         price = this.price,
-        cmLink = this.detailsUrl,
+        externalLink = this.detailsUrl,
         externalId = this.externalId,
         priceTrend = this.priceTrend,
         lastUpdated = this.timestamp,
@@ -119,9 +119,9 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         searchId = searchId)
 }
 
-fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : Product {
-    return Product(
-        productItemEntity = this.toProductItemEntity(searchId, productId),
+fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductWithSellOffers {
+    return ProductWithSellOffers(
+        productEntity = this.toProductItemEntity(searchId, productId),
         offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
     )
 }
@@ -186,8 +186,8 @@ fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
     )
 }
 
-fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductItemEntity {
-    return ProductItemEntity(
+fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+    return ProductEntity(
         displayName = this.name.value,
         imgLink = this.imageUrl,
         orgName = this.name.i18n, //??
@@ -197,7 +197,7 @@ fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productI
         rarity = this.rarity,
         price = this.price,
         externalId = this.cmId,
-        cmLink = this.detailsUrl,
+        externalLink = this.detailsUrl,
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         searchId = searchId.toInt(),
         id = productId,
@@ -221,9 +221,9 @@ fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int): SellOfferEntity {
     )
 }
 
-fun CardmarketProductDetailsDto.toProduct(searchId: Long = 0, productId: Int = 0) : Product {
-    return Product(
-        productItemEntity = this.toProductItemEntity(searchId, productId),
+fun CardmarketProductDetailsDto.toProduct(searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
+    return ProductWithSellOffers(
+        productEntity = this.toProductItemEntity(searchId, productId),
         offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
     )
 }

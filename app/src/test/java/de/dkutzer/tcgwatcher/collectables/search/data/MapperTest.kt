@@ -1,6 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductItemEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
@@ -247,7 +247,7 @@ class MapperTest {
         assertEquals(model.genre.cmCode, result.genre)
         assertEquals(model.rarity.cmCode, result.rarity)
         assertEquals(model.code, result.code)
-        assertEquals(model.detailsUrl, result.cmLink)
+        assertEquals(model.detailsUrl, result.externalLink)
         assertEquals(model.imageUrl, result.imgLink)
         assertEquals(model.price, result.price)
         assertEquals(model.priceTrend, result.priceTrend)
@@ -443,6 +443,7 @@ class MapperTest {
             price = "100.00",
             priceTrend = PriceTrendType("+5%", true),
             set = SetDto("Test Set", "/$lang/Pokemon/Products/Singles/Team-Rocket/"),
+            cmId = "Dark-Gloom-TR36",
             sellOffers = listOf(
                 when(lang) {
                     "de" -> createSampleSellOfferDtoDe()
@@ -485,6 +486,7 @@ class MapperTest {
             genre = "Pokemon",
             type = "Singles",
             cmLink = "/de/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36",
+            cmId = "Dark-Gloom-TR36",
             imgLink = "https://product-images.s3.cardmarket.com/51/TR/274089/274089.jpg",
             price = "100.00",
             priceTrend = priceTrend
@@ -496,8 +498,8 @@ class MapperTest {
         type: String = "Singles",
         genre: String = "Pokemon",
         rarity: String = "Rare"
-    ): ProductItemEntity {
-        return ProductItemEntity(
+    ): ProductEntity {
+        return ProductEntity(
             searchId = 0,
             displayName = "Test Product",
             language = "en",
@@ -506,7 +508,8 @@ class MapperTest {
             rarity = rarity,
             code = "TEST123",
             orgName = "Org Name",
-            cmLink = cmLink,
+            externalLink = cmLink,
+            externalId = "External ID",
             imgLink = "http://example.com/image.jpg",
             price = "100.00",
             priceTrend = "+5%",
@@ -530,24 +533,25 @@ class MapperTest {
             price = "100.00",
             priceTrend = "+5%",
             sellOffers = emptyList(),
+            externalId = "card456",
             timestamp = Instant.now().epochSecond
         )
     }
 
     private fun assertCommonGalleryDtoMapping(
         dto: CardmarketProductGallaryItemDto,
-        entity: ProductItemEntity
+        entity: ProductEntity
     ) {
         assertEquals(dto.name.value, entity.displayName)
         assertEquals(dto.genre, entity.genre)
         assertEquals(dto.type, entity.type)
-        assertEquals(dto.cmLink, entity.cmLink)
+        assertEquals(dto.cmLink, entity.externalLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
     }
 
     private fun assertCommonProductModelMapping(
-        entity: ProductItemEntity,
+        entity: ProductEntity,
         model: ProductModel
     ) {
         assertEquals(entity.displayName, model.name.value)
@@ -555,7 +559,7 @@ class MapperTest {
         assertEquals(entity.type, model.type.cmCode)
         assertEquals(entity.rarity, model.rarity.cmCode)
         assertEquals(entity.code, model.code)
-        assertEquals(entity.cmLink, model.detailsUrl)
+        assertEquals(entity.externalLink, model.detailsUrl)
         assertEquals(entity.imgLink, model.imageUrl)
         assertEquals(entity.price, model.price)
         assertEquals(entity.priceTrend, model.priceTrend)
