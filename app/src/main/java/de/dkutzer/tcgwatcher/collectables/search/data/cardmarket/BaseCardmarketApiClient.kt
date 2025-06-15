@@ -205,9 +205,8 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         val genre = matchResult?.groupValues?.getOrNull(2)
         val type = matchResult?.groupValues?.getOrNull(3)
 
-        // Extract ID: Last segment of the path (after trimming any slashes)
         val cleanPath = typePath?.trim()?.trim('/')
-        val id = cleanPath?.substringAfterLast('/')
+        val id = if(language !=null)  cleanPath?.substringAfter(language) else typePath
 
         val parsedLink = ParsedLink(language, genre, type, id)
         logger.debug { "Parsed Link: $parsedLink" }

@@ -59,7 +59,7 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
 
 fun ProductEntity.toProductModel() : ProductModel {
     return ProductModel(
-        id = URI(externalLink).path.split("/").last(),
+        id = this.id.toString(),
         name = NameModel(this.displayName, this.language, this.orgName),
         code = this.code,
         type = fromString<TypeEnum>(this.type) ,
