@@ -78,7 +78,6 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchModelCreationKeys
-import de.dkutzer.tcgwatcher.collectables.search.presentation.SingleItemReloadState
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
@@ -103,12 +102,10 @@ fun ProductDetailsView(
     onChangedIndex: (id: Int) -> Unit = {},
 ) {
 
-    logger.debug { "ProductDetailsView" }
+    logger.debug { "ProductDetailsView::recompose" }
     val context = LocalContext.current
 
-    val settingsDatabase: SettingsDatabase by lazy {
-        SettingsDatabase.getDatabase(context)
-    }
+    val settingsDatabase = remember { SettingsDatabase.getDatabase(context) }
     val searchCacheDatabase: SearchCacheDatabase by lazy {
         SearchCacheDatabase.getDatabase(context)
     }
@@ -121,19 +118,15 @@ fun ProductDetailsView(
         }
     )
 
+    val currentProductModelState = detailsViewModel.reloadedSingleItem
 
-    var currentProductModelState by remember {
-        mutableStateOf<SingleItemReloadState>(
-            SingleItemReloadState(state = RefreshState.IDLE, item = initialProduct)
-        )
-    }
     logger.debug { "ProductDetailsView::currentProductModelState: $currentProductModelState" }
 
     // Load data (runs once when composable enters composition)
     LaunchedEffect(key1 = initialProduct) {
         logger.debug { "ProductDetailsView::LaunchedEffect" }
+        detailsViewModel.resetToProduct(initialProduct)
         detailsViewModel.onLoadSingleItem(initialProduct, true)
-        currentProductModelState = detailsViewModel.reloadedSingleItem
     }
     val intent =
         remember {
@@ -142,244 +135,245 @@ fun ProductDetailsView(
                 (referrer + currentProductModelState.item.detailsUrl).toUri()
             )
         }
+    if (currentProductModelState.state == RefreshState.REFRESH_ITEM) {
+        CircularProgressIndicator(
+            modifier = Modifier.width(128.dp),
 
+            color = MaterialTheme.colorScheme.secondary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+    }
     LazyColumn(
         modifier = Modifier
             .padding(1.dp)
             .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
     ) {
         items(
             count = 1
         ) {
 
-            if (currentProductModelState.state == RefreshState.REFRESH_ITEM) {
-                CircularProgressIndicator(
-                    modifier = Modifier.width(128.dp),
-                    color = MaterialTheme.colorScheme.secondary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(1.dp)
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .clickable { onBackClick() }
+                        .align(Alignment.CenterVertically)
+                        .padding(4.dp)
+                        .size(24.dp),
+                    imageVector = Icons.AutoMirrored.TwoTone.ArrowBack,
+                    contentDescription = "Back"
                 )
-            } else {
+
+                Text(
+                    text = "${currentProductModelState.item.name.value} (${currentProductModelState.item.code})",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.Blue,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .clickable {
+                            context.startActivity(intent)
+                        }
+                        .align(Alignment.CenterVertically)
+                        .weight(1f),  // Takes remaining space
+                    textAlign = TextAlign.Center,  // Centers text within allocated space
+                    maxLines = 1,  // Prevents line breaks
+                    overflow = TextOverflow.Ellipsis  // Adds "..." when text overflows
+                )
+                Icon(
+                    modifier = Modifier
+                        .clickable {
+                            logger.debug { "ProductDetailsView::Refresh" }
+                            detailsViewModel.onLoadSingleItem(currentProductModelState.item, false)
+                        }
+                        .align(Alignment.CenterVertically)
+                        .padding(4.dp)
+                        .size(24.dp),
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh"
+                )
+            }
+            Row {
+                if (previousIndex != null) {
+                    Icon(
+                        modifier = Modifier
+                            .clickable {
+                                logger.debug { "ProductDetailsView::Previous" }
+                                onChangedIndex(previousIndex)
+                            }
+                            .align(Alignment.CenterVertically)
+                            .padding(4.dp)
+                            .size(24.dp),
+                        imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowLeft,
+                        contentDescription = "Previous"
+                    )
+                }
+
+                val screenWidthPx =
+                    with(LocalDensity.current) {
+                        LocalConfiguration.current.screenWidthDp.dp.roundToPx().toFloat()
+                    }
+
+                val dragState: AnchoredDraggableState<Anchors> = remember {
+                    AnchoredDraggableState(
+                        initialValue = Anchors.Center,
+                        anchors = DraggableAnchors {
+                            Anchors.Left at -screenWidthPx * 3 / 4
+                            Anchors.Center at 0f
+                            Anchors.Right at screenWidthPx * 3 / 4
+                        },
+                        positionalThreshold = { _ -> screenWidthPx / 3 },
+                        velocityThreshold = { 100f },
+                        snapAnimationSpec = tween(),
+                        decayAnimationSpec = exponentialDecay()
+                    )
+                }
+
+                // Handle drag state changes
+                LaunchedEffect(dragState.currentValue) {
+                    when (dragState.currentValue) {
+                        Anchors.Right -> {
+                            if (previousIndex != null) {
+                                onChangedIndex(previousIndex)
+                            }
+                            dragState.snapTo(Anchors.Center)
+                        }
+
+                        Anchors.Left -> {
+                            if (nextIndex != null) {
+                                onChangedIndex(nextIndex)
+                            }
+                            dragState.snapTo(Anchors.Center)
+                        }
+
+                        else -> {}
+                    }
+                }
+
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(currentProductModelState.item.imageUrl)
+                        .setHeader(USER_AGENT, userAgent)
+                        .setHeader(
+                            REFERER,
+                            referrer
+                        )
+                        .build(),
+                    contentDescription = currentProductModelState.item.id,
+                    modifier = modifier
+                        .padding(1.dp)
+                        .weight(1f)
+                        .offset {
+                            IntOffset(
+                                x = dragState
+                                    .requireOffset()
+                                    .roundToInt(),
+                                y = 0
+                            )
+                        }
+                        .anchoredDraggable(
+                            state = dragState,
+                            orientation = Orientation.Horizontal
+                        )
+                        .clickable {
+                            logger.debug { "ProductDetailsView::ImageClick" }
+                            onImageClick(currentIndex)
+                        },
+
+                    contentScale = ContentScale.FillWidth,
+                    imageLoader = LocalContext.current.imageLoader.newBuilder()
+                        .logger(DebugLogger())
+                        .build()
+                )
+
+                if (nextIndex != null) {
+                    Icon(
+                        modifier = Modifier
+                            .clickable {
+                                logger.debug { "ProductDetailsView::Next" }
+                                onChangedIndex(nextIndex)
+                            }
+                            .align(Alignment.CenterVertically)
+                            .padding(4.dp)
+                            .size(24.dp),
+                        imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowRight,
+                        contentDescription = "Next"
+                    )
+                }
+
+            }
+            Column(
+                modifier = Modifier
+                    .padding(1.dp)
+                    .fillMaxWidth(),
+            ) {
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(1.dp)
-                ) {
-                    Icon(
-                        modifier = Modifier
-                            .clickable { onBackClick() }
-                            .align(Alignment.CenterVertically)
-                            .padding(4.dp)
-                            .size(24.dp),
-                        imageVector = Icons.AutoMirrored.TwoTone.ArrowBack,
-                        contentDescription = "Back"
-                    )
-
-                    Text(
-                        text = "${currentProductModelState.item.name.value} (${currentProductModelState.item.code})",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = Color.Blue,
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clickable {
-                                context.startActivity(intent)
-                            }
-                            .align(Alignment.CenterVertically)
-                            .weight(1f),  // Takes remaining space
-                        textAlign = TextAlign.Center,  // Centers text within allocated space
-                        maxLines = 1,  // Prevents line breaks
-                        overflow = TextOverflow.Ellipsis  // Adds "..." when text overflows
-                    )
-                    Icon(
-                        modifier = Modifier
-                            .clickable {
-                                logger.debug { "ProductDetailsView::Refresh" }
-                                detailsViewModel.onLoadSingleItem(currentProductModelState.item, false)
-                            }
-                            .align(Alignment.CenterVertically)
-                            .padding(4.dp)
-                            .size(24.dp),
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh"
-                    )
-                }
-                Row {
-                    if (previousIndex != null) {
-                        Icon(
-                            modifier = Modifier
-                                .clickable {
-                                    logger.debug { "ProductDetailsView::Previous" }
-                                    onChangedIndex(previousIndex)
-                                }
-                                .align(Alignment.CenterVertically)
-                                .padding(4.dp)
-                                .size(24.dp),
-                            imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowLeft,
-                            contentDescription = "Previous"
-                        )
-                    }
-
-                    val screenWidthPx =
-                        with(LocalDensity.current) {
-                            LocalConfiguration.current.screenWidthDp.dp.roundToPx().toFloat()
-                        }
-
-                    val dragState: AnchoredDraggableState<Anchors> = remember {
-                        AnchoredDraggableState(
-                            initialValue = Anchors.Center,
-                            anchors = DraggableAnchors {
-                                Anchors.Left at -screenWidthPx * 3 / 4
-                                Anchors.Center at 0f
-                                Anchors.Right at screenWidthPx * 3 / 4
-                            },
-                            positionalThreshold = { _ -> screenWidthPx / 3 },
-                            velocityThreshold = { 100f },
-                            snapAnimationSpec = tween(),
-                            decayAnimationSpec = exponentialDecay()
-                        )
-                    }
-
-                    // Handle drag state changes
-                    LaunchedEffect(dragState.currentValue) {
-                        when (dragState.currentValue) {
-                            Anchors.Right -> {
-                                if (previousIndex != null) {
-                                    onChangedIndex(previousIndex)
-                                }
-                                dragState.snapTo(Anchors.Center)
-                            }
-
-                            Anchors.Left -> {
-                                if (nextIndex != null) {
-                                    onChangedIndex(nextIndex)
-                                }
-                                dragState.snapTo(Anchors.Center)
-                            }
-
-                            else -> {}
-                        }
-                    }
-
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(currentProductModelState.item.imageUrl)
-                            .setHeader(USER_AGENT, userAgent)
-                            .setHeader(
-                                REFERER,
-                                referrer
-                            )
-                            .build(),
-                        contentDescription = currentProductModelState.item.id,
-                        modifier = modifier
-                            .padding(1.dp)
-                            .weight(1f)
-                            .offset {
-                                IntOffset(
-                                    x = dragState
-                                        .requireOffset()
-                                        .roundToInt(),
-                                    y = 0
-                                )
-                            }
-                            .anchoredDraggable(
-                                state = dragState,
-                                orientation = Orientation.Horizontal
-                            )
-                            .clickable {
-                                logger.debug { "ProductDetailsView::ImageClick" }
-                                onImageClick(currentIndex)
-                            },
-
-                        contentScale = ContentScale.FillWidth,
-                        imageLoader = LocalContext.current.imageLoader.newBuilder()
-                            .logger(DebugLogger())
-                            .build()
-                    )
-
-                    if (nextIndex != null) {
-                        Icon(
-                            modifier = Modifier
-                                .clickable {
-                                    logger.debug { "ProductDetailsView::Next" }
-                                    onChangedIndex(nextIndex)
-                                }
-                                .align(Alignment.CenterVertically)
-                                .padding(4.dp)
-                                .size(24.dp),
-                            imageVector = Icons.AutoMirrored.TwoTone.KeyboardArrowRight,
-                            contentDescription = "Next"
-                        )
-                    }
-
-                }
-                Column(
-                    modifier = Modifier
-                        .padding(1.dp)
+                        .padding(4.dp)
                         .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
                 ) {
-
-                    Row(
+                    Text(
+                        text = "€ ${currentProductModelState.item.price}",
+                        style = MaterialTheme.typography.headlineLarge,
                         modifier = Modifier
                             .padding(4.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
-                    ) {
-                        Text(
-                            text = "€ ${currentProductModelState.item.price}",
-                            style = MaterialTheme.typography.headlineLarge,
+                    )
+                    Text(
+                        text = "( ~ ${currentProductModelState.item.priceTrend})",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+                    var showFilterDialog by remember { mutableStateOf(false) }
+                    var currentFilters by remember { mutableStateOf(OfferFilters()) }
+
+                    IconButton(onClick = {
+                        showFilterDialog = true
+                    }) {
+                        Icon(
                             modifier = Modifier
-                                .padding(4.dp)
-                        )
-                        Text(
-                            text = "( ~ ${currentProductModelState.item.priceTrend})",
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier
-                                .padding(4.dp)
                                 .align(Alignment.CenterVertically)
+                                .padding(4.dp)
+                                .size(36.dp),
+                            imageVector = ImageVector.vectorResource(id = R.drawable.filter_solid),
+                            contentDescription = "Filter"
                         )
-                        var showFilterDialog by remember { mutableStateOf(false) }
-                        var currentFilters by remember { mutableStateOf(OfferFilters()) }
-
-                        IconButton(onClick = {
-                            showFilterDialog = true
-                        }) {
-                            Icon(
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .padding(4.dp)
-                                    .size(36.dp),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.filter_solid),
-                                contentDescription = "Filter"
-                            )
-                        }
-
-                        if (showFilterDialog) {
-                            FilterDialog(
-                                initialFilters = currentFilters,
-                                availableCountries = currentProductModelState.item.getAvailableCountries(),
-                                availableLanguages = currentProductModelState.item.getAvailableLanguages(),
-                                onFiltersApplied = { newFilters ->
-                                    currentFilters = newFilters
-                                    // Trigger your filtering/sorting here
-                                },
-                                onDismiss = { showFilterDialog = false }
-                            )
-                        }
                     }
 
+                    if (showFilterDialog) {
+                        FilterDialog(
+                            initialFilters = currentFilters,
+                            availableCountries = currentProductModelState.item.getAvailableCountries(),
+                            availableLanguages = currentProductModelState.item.getAvailableLanguages(),
+                            onFiltersApplied = { newFilters ->
+                                currentFilters = newFilters
+                                // Trigger your filtering/sorting here
+                            },
+                            onDismiss = { showFilterDialog = false }
+                        )
+                    }
+                }
 
-                }
-                //add selling table
-                if (currentProductModelState.item.sellOffers.isNotEmpty()) {
-                    OffersTable(currentProductModelState.item.sellOffers)
-                }
-                //TODO: add a row for inventory management
+
             }
+            //add selling table
+            if (currentProductModelState.item.sellOffers.isNotEmpty()) {
+                OffersTable(currentProductModelState.item.sellOffers)
+            }
+            //TODO: add a row for inventory management
         }
-
     }
+
+
 
 }
 

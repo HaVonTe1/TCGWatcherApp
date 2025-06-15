@@ -125,13 +125,13 @@ class MapperTest {
     fun `toProductModel from ProductItemEntity with valid cmLink`() {
         // Arrange
         val cmLink = "/de/Pokemon/Products/Singles/set123/card456"
-        val entity = createSampleProductItemEntity(cmLink = cmLink)
+        val entity = createSampleProductItemEntity(id = 4, cmLink = cmLink, cmId = "/Pokemon/Products/Singles/set123/card456")
 
         // Act
         val result = entity.toProductModel()
 
         // Assert
-        assertEquals("card456", result.id)
+        assertEquals("4", result.id)
         assertCommonProductModelMapping(entity, result)
     }
 
@@ -378,6 +378,7 @@ class MapperTest {
         assertEquals("Test Set", productModel.set.name)
         assertEquals("https://product-images.s3.cardmarket.com/51/TR/274089/274089.jpg", productModel.imageUrl)
         assertEquals("/de/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36", productModel.detailsUrl)
+        assertEquals("/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36", productModel.externalId)
         assertEquals("Rare", productModel.rarity.cmCode)
         assertEquals("Rare", productModel.rarity.displayName)
         assertEquals("100.00", productModel.price)
@@ -443,7 +444,7 @@ class MapperTest {
             price = "100.00",
             priceTrend = PriceTrendType("+5%", true),
             set = SetDto("Test Set", "/$lang/Pokemon/Products/Singles/Team-Rocket/"),
-            cmId = "Dark-Gloom-TR36",
+            cmId = "/Pokemon/Products/Singles/Team-Rocket/Dark-Gloom-TR36",
             sellOffers = listOf(
                 when(lang) {
                     "de" -> createSampleSellOfferDtoDe()
@@ -494,12 +495,15 @@ class MapperTest {
     }
 
     private fun createSampleProductItemEntity(
+        id: Int = 0,
         cmLink: String = "/de/Pokemon/Products/Singles/set123/card456",
+        cmId: String = "/Pokemon/Products/Singles/set123/card456",
         type: String = "Singles",
         genre: String = "Pokemon",
         rarity: String = "Rare"
     ): ProductEntity {
         return ProductEntity(
+            id = id,
             searchId = 0,
             displayName = "Test Product",
             language = "en",
@@ -509,7 +513,7 @@ class MapperTest {
             code = "TEST123",
             orgName = "Org Name",
             externalLink = cmLink,
-            externalId = "External ID",
+            externalId = cmId,
             imgLink = "http://example.com/image.jpg",
             price = "100.00",
             priceTrend = "+5%",
@@ -559,6 +563,7 @@ class MapperTest {
         assertEquals(entity.type, model.type.cmCode)
         assertEquals(entity.rarity, model.rarity.cmCode)
         assertEquals(entity.code, model.code)
+        assertEquals(entity.externalId, model.externalId)
         assertEquals(entity.externalLink, model.detailsUrl)
         assertEquals(entity.imgLink, model.imageUrl)
         assertEquals(entity.price, model.price)

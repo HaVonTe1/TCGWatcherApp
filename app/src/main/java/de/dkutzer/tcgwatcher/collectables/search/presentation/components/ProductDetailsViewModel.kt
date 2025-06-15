@@ -9,8 +9,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
-import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
 import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
+import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
@@ -25,6 +25,7 @@ import de.dkutzer.tcgwatcher.collectables.search.presentation.SingleItemReloadSt
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
 import de.dkutzer.tcgwatcher.settings.data.SettingsRepositoryImpl
 import de.dkutzer.tcgwatcher.settings.data.toModel
+import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
 import de.dkutzer.tcgwatcher.settings.domain.ConfigFactory
 import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
@@ -76,29 +77,31 @@ class ProductDetailsViewModel(
         }
     }
 
-    private val apiConfig = ConfigFactory(settingsModel = settings).create()
-    private val productsApiClient: ProductsApiClient = ApiClientFactory(apiConfig).create()
+    private val apiConfig : BaseConfig by lazy { ConfigFactory(settingsModel = settings).create() }
+    private val productsApiClient: ProductsApiClient by lazy { ApiClientFactory(apiConfig).create() }
     private val searchCacheRepository = SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao)
 
-    private val productSearchService: ProductSearchService = ProductsSearchServiceFactory(productsApiClient, searchCacheRepository, apiConfig).create()
-
+    private val productSearchService: ProductSearchService by lazy {
+        ProductsSearchServiceFactory(productsApiClient, searchCacheRepository, apiConfig).create()
+    }
 
     var reloadedSingleItem by     mutableStateOf(SingleItemReloadState(RefreshState.IDLE,
         ProductModel.empty()))
         private set
 
     fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
-        logger.debug { "SearchViewModel::onLoadSingleItem for $productModel" }
-        reloadedSingleItem = SingleItemReloadState(RefreshState.REFRESH_ITEM, ProductModel.empty())
+        logger.debug { "ProductDetailsViewModel::onLoadSingleItem for $productModel with cacheOnly: $cacheOnly" }
+        //reloadedSingleItem = SingleItemReloadState(RefreshState.REFRESH_ITEM, reloadedSingleItem.item)
 
         viewModelScope.launch(Dispatchers.IO) {
-
-            val productModel = productSearchService.refreshProduct(productModel, cacheOnly)
-            logger.debug { "SearchViewModel::onLoadSingleItem: $productModel" }
-
-
-            reloadedSingleItem = SingleItemReloadState(RefreshState.IDLE, productModel)
+            val result = productSearchService.refreshProduct(productModel, cacheOnly)
+            reloadedSingleItem = SingleItemReloadState(RefreshState.IDLE, result)
+            logger.debug { "ProductDetailsViewModel::onLoadSingleItem: $reloadedSingleItem" }
         }
+
+    }
+    fun resetToProduct(productModel: ProductModel) {
+        reloadedSingleItem = SingleItemReloadState(RefreshState.IDLE, productModel)
     }
 }
 
