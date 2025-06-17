@@ -91,7 +91,6 @@ class ProductDetailsViewModel(
 
     fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
         logger.debug { "ProductDetailsViewModel::onLoadSingleItem for $productModel with cacheOnly: $cacheOnly" }
-        //reloadedSingleItem = SingleItemReloadState(RefreshState.REFRESH_ITEM, reloadedSingleItem.item)
 
         viewModelScope.launch(Dispatchers.IO) {
             val result = productSearchService.refreshProduct(productModel, cacheOnly)
