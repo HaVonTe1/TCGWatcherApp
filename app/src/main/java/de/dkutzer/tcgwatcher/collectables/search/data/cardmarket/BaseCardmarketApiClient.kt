@@ -98,10 +98,10 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         val name = displayName
         val code = matchResult?.groupValues?.getOrNull(2)
         val orgName = link.split("/").last()
-        val typePath =
-            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
+//        val typePath =
+//            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
 
-        val parsedLink = parseLink(typePath)
+        val parsedLink = parseLink(link)
 
         val infoDivs = document.getElementsByClass("info-list-container")
         val infoDiv = infoDivs.first()

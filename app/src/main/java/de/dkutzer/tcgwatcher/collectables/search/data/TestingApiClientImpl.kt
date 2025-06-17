@@ -7,6 +7,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.CodeType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.SearchResultsPageDto
+import org.jsoup.Jsoup
 
 class TestingApiClientImpl : BaseCardmarketApiClient() {
     override suspend fun search(searchString: String, page: Int): SearchResultsPageDto {
@@ -70,7 +71,11 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
 
 
     override suspend fun getProductDetails(link: String): CardmarketProductDetailsDto {
-        TODO("Not yet implemented")
+
+        val html =
+            Thread.currentThread().contextClassLoader?.getResource("evoli_details.html")?.readText()
+        val document = Jsoup.parse(html!!)
+        return parseProductDetails(document, link)
     }
 
 }
