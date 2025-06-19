@@ -30,6 +30,7 @@ import de.dkutzer.tcgwatcher.settings.domain.ConfigFactory
 import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 import de.dkutzer.tcgwatcher.settings.presentation.SettingModelCreationKeys
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -38,7 +39,7 @@ private val logger = KotlinLogging.logger {}
 class ProductDetailsViewModel(
     private val searchCacheDatabase: SearchCacheDatabase,
     private val settingsDatabase: SettingsDatabase,
-
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO // Add this
     ): ViewModel() {
 
 
@@ -70,7 +71,7 @@ class ProductDetailsViewModel(
 
     init {
         logger.debug { "ProductDetailsViewModel::init" }
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val settingsEntity = SettingsRepositoryImpl(settingsDatabase.settingsDao).load()
             logger.debug { "SettingsEntity: $settingsEntity" }
             settings = settingsEntity.toModel()
@@ -92,7 +93,7 @@ class ProductDetailsViewModel(
     fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
         logger.debug { "ProductDetailsViewModel::onLoadSingleItem for $productModel with cacheOnly: $cacheOnly" }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val result = productSearchService.refreshProduct(productModel, cacheOnly)
             reloadedSingleItem = SingleItemReloadState(RefreshState.IDLE, result)
             logger.debug { "ProductDetailsViewModel::onLoadSingleItem: $reloadedSingleItem" }
