@@ -42,7 +42,8 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     override suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers) {
 
         val productId = searchCacheDao.saveItem(productWithSellOffers.productEntity)
-        productWithSellOffers.offers.forEach { it.productId = productId.toInt() }
+        val newProductID = if(productId == -1L) productWithSellOffers.productEntity.id else productId.toInt()
+        productWithSellOffers.offers.forEach { it.productId = newProductID }
         searchCacheDao.saveSellOffers(productWithSellOffers.offers)
     }
 

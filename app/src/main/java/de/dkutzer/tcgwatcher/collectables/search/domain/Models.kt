@@ -79,13 +79,6 @@ data class LocationModel(
             sellerLocationString: String,
             language: String
         ): LocationModel {
-            val parts = sellerLocationString.split(": ")
-            if (parts.size < 2) {
-                // Handle cases where the format is unexpected
-                logger.debug{"Warning: sellerLocationString '$sellerLocationString' does not match expected format 'Prefix: CountryName'"}
-                return LocationModel(country = "unknown", code = "")
-            }
-            val countryName = parts.last().lowercase() // Lowercase once here
 
             val targetDisplayLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
@@ -100,7 +93,7 @@ data class LocationModel(
 
             // Find the matching locale once
             val foundLocale = AVAILABLE_LOCALES
-                .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == countryName }
+                .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == sellerLocationString }
 
             return if (foundLocale != null) {
                 LocationModel(
@@ -108,7 +101,7 @@ data class LocationModel(
                     code = foundLocale.country.lowercase()
                 )
             } else {
-                logger.debug{"Warning: Could not find locale for country '$countryName' in language '${targetDisplayLocale.language}'"}
+                logger.debug{"Warning: Could not find locale for country '$sellerLocationString' in language '${targetDisplayLocale.language}'"}
                 LocationModel(country = "unknown", code = "")
             }
         }
