@@ -122,7 +122,7 @@ class ProductDetailsViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun onLoadSingleItem() = testScope.runTest {
+    fun `Test onReloadSingleItem DE`() = testScope.runTest {
 
         runBlocking {
             SettingsRepositoryImpl(settingsDatabase.settingsDao).save(
@@ -178,7 +178,7 @@ class ProductDetailsViewModelTest {
             imageUrl = "https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg",
             detailsUrl = "/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
             rarity = RarityType.OTHER,
-            set = SetModel("Pokemon-Jungle", "Pokemon-Jungle"),
+            set = SetModel("/de/Pokemon/Expansions/Pokemon-Jungle", "Pokémon Jungle"),
             price = "0.02",
             priceTrend = "",
             sellOffers = emptyList(),
@@ -192,6 +192,36 @@ class ProductDetailsViewModelTest {
         assertEquals("4,58 €", viewModel.reloadedSingleItem.item.priceTrend)
         assertEquals(50, viewModel.reloadedSingleItem.item.sellOffers.size)
 
+        val seller1 = viewModel.reloadedSingleItem.item.sellOffers[0]
+        assertEquals("GeCaFeProject", seller1.sellerName)
+        assertEquals("Italien", seller1.sellerLocation.country)
+        assertEquals("it", seller1.sellerLocation.code)
+        assertEquals("Japanisch", seller1.productLanguage.displayName)
+        assertEquals("ja", seller1.productLanguage.code)
+        assertEquals("Poor", seller1.condition.cmCode)
+        assertEquals(1, seller1.amount)
+
+        val seller2 = viewModel.reloadedSingleItem.item.sellOffers[1]
+        assertEquals("FrlMeow", seller2.sellerName)
+        assertEquals("Deutschland", seller2.sellerLocation.country)
+        assertEquals("de", seller2.sellerLocation.code)
+        assertEquals("Japanisch", seller2.productLanguage.displayName)
+        assertEquals("ja", seller2.productLanguage.code)
+        assertEquals("Poor", seller2.condition.cmCode)
+        assertEquals(1, seller2.amount)
+
+        assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", viewModel.reloadedSingleItem.item.detailsUrl)
+        assertEquals("Evoli (PJU)", viewModel.reloadedSingleItem.item.name.value)
+        assertEquals("de", viewModel.reloadedSingleItem.item.name.languageCode)
+        assertEquals("Eevee", viewModel.reloadedSingleItem.item.name.i18n)
+        assertEquals(TypeEnum.CARD, viewModel.reloadedSingleItem.item.type)
+        assertEquals("Pokemon", viewModel.reloadedSingleItem.item.genre.cmCode)
+        assertEquals(GenreType.POKEMON, viewModel.reloadedSingleItem.item.genre)
+        assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", viewModel.reloadedSingleItem.item.imageUrl)
+        assertEquals("0,10 €", viewModel.reloadedSingleItem.item.price)
+        assertEquals("4,58 €", viewModel.reloadedSingleItem.item.priceTrend)
+        assertNotNull(viewModel.reloadedSingleItem.item.timestamp)
+
         val fromDB = searchCacheRepository.findProductWithSellOffersByExternalId(productModel.externalId)
         println(fromDB)
         assertNotNull(fromDB)
@@ -199,7 +229,31 @@ class ProductDetailsViewModelTest {
         assertEquals("4,58 €", fromDB.productEntity.priceTrend)
         assertEquals(RarityType.COMMON.cmCode, fromDB.productEntity.rarity)
         assertEquals("PJU", fromDB.productEntity.code)
+        assertEquals("Evoli (PJU)", fromDB.productEntity.displayName)
+        assertEquals("de", fromDB.productEntity.language)
+        assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", fromDB.productEntity.externalLink)
+        assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", fromDB.productEntity.imgLink)
+        assertEquals("Pokemon", fromDB.productEntity.genre)
+        assertEquals("Pokémon Jungle", fromDB.productEntity.setName)
+        assertEquals("/de/Pokemon/Expansions/Pokemon-Jungle", fromDB.productEntity.setId)
+        assertEquals("Singles", fromDB.productEntity.type)
+        assertNotNull(fromDB.productEntity.lastUpdated)
 
+
+        val sellOfferEntity1 = fromDB.offers[0]
+        assertEquals("GeCaFeProject", sellOfferEntity1.sellerName)
+        assertEquals("it", sellOfferEntity1.sellerLocation)
+        assertEquals("ja", sellOfferEntity1.productLanguage)
+        assertEquals("Poor", sellOfferEntity1.condition)
+        assertEquals(1, sellOfferEntity1.amount)
+
+
+        val sellOfferEntity2 = fromDB.offers[1]
+        assertEquals("FrlMeow", sellOfferEntity2.sellerName)
+        assertEquals("de", sellOfferEntity2.sellerLocation)
+        assertEquals("ja", sellOfferEntity2.productLanguage)
+        assertEquals("Poor", sellOfferEntity2.condition)
+        assertEquals(1, sellOfferEntity2.amount)
 
     }
 

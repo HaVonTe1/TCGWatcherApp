@@ -98,8 +98,6 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         val name = displayName
         val code = matchResult?.groupValues?.getOrNull(2)
         val orgName = link.split("/").last()
-//        val typePath =
-//            document.getElementsByTag("nav").first()?.getElementsByTag("a")?.last { a -> a.hasAttr("href") }?.attr("href")
 
         val parsedLink = parseLink(link)
 
@@ -130,15 +128,25 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
             val sellerHrefTag = sellerCol?.getElementsByTag("a")
             val sellerName = sellerHrefTag?.text()
 
-            val productLocationTag = sellerCol?.getElementsByClass("icon")
-            val productLocation = productLocationTag?.first()?.attr("title")
+            val sellerLocationTag = sellerCol?.getElementsByClass("icon")
+            val sellerLocation = sellerLocationTag?.first()?.attr("title")
+            val parts = sellerLocation?.split(": ")
+            val sellerLocationSanatized = parts?.size?.let {
+                if (it < 2) {
+                    // Handle cases where the format is unexpected
+                    logger.debug{"Warning: sellerLocationString '$sellerLocation' does not match expected format 'Prefix: CountryName'"}
+                    sellerLocation
+                } else {
+                    parts.last().lowercase()
+                }
+            }
 
-            val productAttributesDiv = sellOfferRow?.getElementsByClass("product-attributes")
+            val sellerAttributDiv = sellOfferRow?.getElementsByClass("product-attributes")
 
-            val productCondition = productAttributesDiv?.first()?.getElementsByClass("article-condition")?.first()
+            val productCondition = sellerAttributDiv?.first()?.getElementsByClass("article-condition")?.first()
                 ?.attr("title")
 
-            val productAttributIcons = productAttributesDiv?.first()?.getElementsByClass("icon")
+            val productAttributIcons = sellerAttributDiv?.first()?.getElementsByClass("icon")
             val productLanguage = productAttributIcons?.first()
                 ?.attr("title")
             var productSpeciality = ""
@@ -154,10 +162,10 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
 
             val productAmount = sellOfferRow?.getElementsByClass("amount-container")?.first()?.getElementsByTag("span")?.first()?.text()
 
-            if(sellerName!=null && productLocation!=null && productLanguage!=null && price!=null && productAmount!=null && productCondition!=null) {
+            if(sellerName!=null && sellerLocation!=null && productLanguage!=null && price!=null && productAmount!=null && productCondition!=null) {
                 val cardmarketSellOfferDto = CardmarketSellOfferDto(
                     sellerName = sellerName,
-                    sellerLocation = productLocation,
+                    sellerLocation = sellerLocationSanatized?: "",
                     productLanguage = productLanguage,
                     special = productSpeciality,
                     condition = productCondition,

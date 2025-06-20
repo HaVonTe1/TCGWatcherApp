@@ -259,21 +259,21 @@ class MapperTest {
     fun `test LocationModel fromSellerLocation`() {
 
 
-        var locationModel = LocationModel.fromSellerLocation("Artikelstandort: Deutschland", "de")
+        var locationModel = LocationModel.fromSellerLocation("Deutschland", "de")
         assertEquals("Deutschland", locationModel.country)
         assertEquals("de", locationModel.code)
 
 
-        locationModel = LocationModel.fromSellerLocation("Item location: Germany", "en")
+        locationModel = LocationModel.fromSellerLocation("Germany", "en")
         assertEquals("Germany", locationModel.country)
         assertEquals("de", locationModel.code)
 
-        locationModel = LocationModel.fromSellerLocation("Artikelstandort: Italien", "de")
+        locationModel = LocationModel.fromSellerLocation("Italien", "de")
         assertEquals("Italien", locationModel.country)
         assertEquals("it", locationModel.code)
 
 
-        locationModel = LocationModel.fromSellerLocation("Item location: Italy", "en")
+        locationModel = LocationModel.fromSellerLocation("Italy", "en")
         assertEquals("Italy", locationModel.country)
         assertEquals("it", locationModel.code)
     }
@@ -458,7 +458,7 @@ class MapperTest {
 
     private fun createSampleSellOfferDtoDe(): CardmarketSellOfferDto = CardmarketSellOfferDto(
         sellerName = "Seller 1",
-        sellerLocation = "Artikelstandort: Deutschland",
+        sellerLocation = "Deutschland",
         productLanguage = "Deutsch",
         special = "Reverse Holo",
         condition = "Near Mint",
@@ -469,7 +469,7 @@ class MapperTest {
 
     private fun createSampleSellOfferDtoEn(): CardmarketSellOfferDto = CardmarketSellOfferDto(
         sellerName = "Seller 1",
-        sellerLocation = "Location: Germany",
+        sellerLocation = "Germany",
         productLanguage = "German",
         special = "Reverse Holo",
         condition = "Near Mint",
