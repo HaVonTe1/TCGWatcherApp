@@ -181,7 +181,6 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             detailsUrl = detailsUrl,
             price = itemEntity.price,
             priceTrend = itemEntity.priceTrend,
-            orgName = itemEntity.orgName,
             setName = itemEntity.setName,
             setLink = itemEntity.setId,
             rarity = itemEntity.rarity,

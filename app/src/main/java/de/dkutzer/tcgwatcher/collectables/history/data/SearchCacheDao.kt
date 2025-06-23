@@ -79,7 +79,6 @@ interface SearchCacheDao {
     @Query("UPDATE search_result_item SET " +
             "price = :price, " +
             "priceTrend = :priceTrend, " +
-            "orgName = :orgName, " +
             "setName = :setName, " +
             "setId = :setLink, " +
             "rarity = :rarity, " +
@@ -87,7 +86,7 @@ interface SearchCacheDao {
             "lastUpdated = :lastUpdated WHERE " +
             "externalLink = :detailsUrl"
     )
-    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String, orgName: String,setName: String,setLink:String,rarity:String,type:String, lastUpdated: Long)
+    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String,setName: String,setLink:String,rarity:String,type:String, lastUpdated: Long)
 
 
 }

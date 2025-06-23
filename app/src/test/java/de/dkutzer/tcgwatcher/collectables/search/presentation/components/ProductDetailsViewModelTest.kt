@@ -148,7 +148,6 @@ class ProductDetailsViewModelTest {
                     rarity = "Other",
                     code = "",
                     externalId = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
-                    orgName = "Evee",
                     externalLink = "/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
                     imgLink = "https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg",
                     price = "0.02",
@@ -170,7 +169,7 @@ class ProductDetailsViewModelTest {
 
         val productModel = ProductModel(
             id = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
-            name = NameModel("Eevee", "de", "Eevee"),
+            name = NameModel("Eevee", "de"),
             type = TypeEnum.CARD,
             genre = GenreType.POKEMON,
             code = "",
@@ -211,9 +210,8 @@ class ProductDetailsViewModelTest {
         assertEquals(1, seller2.amount)
 
         assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", viewModel.reloadedSingleItem.item.detailsUrl)
-        assertEquals("Evoli (PJU)", viewModel.reloadedSingleItem.item.name.value)
+        assertEquals("Evoli", viewModel.reloadedSingleItem.item.name.value)
         assertEquals("de", viewModel.reloadedSingleItem.item.name.languageCode)
-        assertEquals("Eevee", viewModel.reloadedSingleItem.item.name.i18n)
         assertEquals(TypeEnum.CARD, viewModel.reloadedSingleItem.item.type)
         assertEquals("Pokemon", viewModel.reloadedSingleItem.item.genre.cmCode)
         assertEquals(GenreType.POKEMON, viewModel.reloadedSingleItem.item.genre)
@@ -229,7 +227,7 @@ class ProductDetailsViewModelTest {
         assertEquals("4,58 €", fromDB.productEntity.priceTrend)
         assertEquals(RarityType.COMMON.cmCode, fromDB.productEntity.rarity)
         assertEquals("PJU", fromDB.productEntity.code)
-        assertEquals("Evoli (PJU)", fromDB.productEntity.displayName)
+        assertEquals("Evoli", fromDB.productEntity.displayName)
         assertEquals("de", fromDB.productEntity.language)
         assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", fromDB.productEntity.externalLink)
         assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", fromDB.productEntity.imgLink)

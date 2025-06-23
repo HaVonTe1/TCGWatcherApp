@@ -38,15 +38,25 @@ data class ProductModel(
         return this.sellOffers.map(SellOfferModel::sellerLocation).toSet()
     }
 
-    fun cmLink(): String {
-        val base ="${this.name.languageCode}/${this.genre.cmCode}/Products/${this.type.cmCode}/"
-        if(this.type == TypeEnum.CARD)
-            return base + "${this.set.link}/${this.externalId}"
-        return base + this.externalId
-
+    companion object {
+        fun empty(): ProductModel = ProductModel(
+            id = 1.toString(),
+            name = NameModel(value = "", languageCode = ""),
+            genre = GenreType.POKEMON,
+            code = "",
+            imageUrl = "",
+            detailsUrl = "",
+            rarity = RarityType.OTHER,
+            set = SetModel(link = "", name = ""),
+            price = "",
+            priceTrend = "",
+            sellOffers = emptyList(),
+            timestamp = System.currentTimeMillis(),
+            type = TypeEnum.CARD,
+            externalId = "bla_blub"
+        )
     }
 
-    companion object
 }
 
 @Parcelize
@@ -75,6 +85,7 @@ data class LocationModel(
     companion object {
         private val AVAILABLE_LOCALES: Array<Locale> by lazy { Locale.getAvailableLocales() } // Lazy initialization
 
+        //TODO: add caching to this function
         fun fromSellerLocation(
             sellerLocationString: String,
             language: String
@@ -106,6 +117,7 @@ data class LocationModel(
             }
         }
 
+        //TODO: add caching to this function
         fun fromCode(code: String, language: String): LocationModel {
             val targetDisplayLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
@@ -140,6 +152,7 @@ data class LanguageModel(
     companion object {
         private val AVAILABLE_LOCALES: Array<Locale> by lazy { Locale.getAvailableLocales() } // Lazy initialization
 
+        //TODO: add caching to this function
         fun fromProductLanguage(
             productLanguage: String,
             searchLanguage: String
@@ -165,6 +178,7 @@ data class LanguageModel(
             } ?: LanguageModel(code = "", displayName = "")
         }
 
+        //TODO: add caching to this function
         fun fromCode(code: String, language: String): LanguageModel {
             val targetSearchLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
@@ -237,7 +251,7 @@ enum class ConditionType(override val cmCode: String): KeyedEnum {
 }
 
 @Parcelize
-data class NameModel(val value: String, val languageCode: String, val i18n: String): Parcelable
+data class NameModel(val value: String, val languageCode: String): Parcelable
 
 
 data class SearchResultsPage(
@@ -261,7 +275,7 @@ data class QuickSearchItem(
     fun toProductModel( currentLanguageCode : String = "de"): ProductModel {
         return ProductModel(
             id = id,
-            name = NameModel(displayName, currentLanguageCode, this.nameEn),
+            name = NameModel(displayName, currentLanguageCode),
             code = code,
             externalId = cmCardId,
             type = TypeEnum.CARD,

@@ -15,7 +15,7 @@ data class SearchEntity(
     @ColumnInfo(index = true)
     val searchTerm: String,
     val size: Int,
-    val language: String,
+    val language: String, // the language setting at the time of this search
     val lastUpdated: Long,
     val history: Boolean
 )
@@ -27,6 +27,7 @@ data class ProductEntity(
     @ColumnInfo(index = true)
     var searchId: Int,
 
+    //TODO: add a seperate table for all localized names of the card
     val displayName: String,
     val language: String,
     val genre: String = "",
@@ -34,13 +35,14 @@ data class ProductEntity(
     val rarity: String = "",
     val code: String,
     val externalId: String,
-    val orgName: String,
     val externalLink: String,
     val imgLink: String,
     val price: String,
     val priceTrend: String,
+    //TODO: refactore the sets into a separate table
     val setName: String,
     val setId: String,
+
     val lastUpdated: Long
 )
 
