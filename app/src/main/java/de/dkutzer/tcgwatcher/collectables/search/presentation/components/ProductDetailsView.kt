@@ -388,7 +388,7 @@ fun ProductDetailsViewPreview() {
     val previewProducts = listOf(
         ProductModel(
             id = "prev2",
-            name = NameModel("Preview Product 1", languageCode = "de", "dfdsf"),
+            name = NameModel("Preview Product 1", languageCode = "de"),
             code = "PRV002",
             price = "29.99",
             imageUrl = "http://example.com/image2.png",

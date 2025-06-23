@@ -95,7 +95,7 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         val displayName = h1Tag?.ownText() ?: ""
 
         val matchResult = nameAndCodePattern.find(displayName)
-        val name = displayName
+        val name = matchResult?.groupValues?.getOrNull(1)
         val code = matchResult?.groupValues?.getOrNull(2)
         val orgName = link.split("/").last()
 
@@ -179,7 +179,7 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         }
 
         val cardmarketProductDetailsDto = CardmarketProductDetailsDto(
-            name = NameDto(value = name, languageCode = parsedLink.language ?: "", i18n = orgName),
+            name = NameDto(value = name ?: orgName, languageCode = parsedLink.language ?: "", i18n = orgName),
             code = CodeType(code ?: "", code != null),
             type = parsedLink.type ?: "",
             genre = parsedLink.genre ?: "",

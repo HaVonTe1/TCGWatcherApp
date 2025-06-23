@@ -11,15 +11,10 @@ import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.collectables.search.data.ApiClientFactory
 import de.dkutzer.tcgwatcher.collectables.search.data.ProductsSearchServiceFactory
-import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
-import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductsApiClient
-import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
-import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
-import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SearchModelCreationKeys
 import de.dkutzer.tcgwatcher.collectables.search.presentation.SingleItemReloadState
 import de.dkutzer.tcgwatcher.settings.data.SettingsDatabase
@@ -86,8 +81,7 @@ class ProductDetailsViewModel(
         ProductsSearchServiceFactory(productsApiClient, searchCacheRepository, apiConfig).create()
     }
 
-    var reloadedSingleItem by     mutableStateOf(SingleItemReloadState(RefreshState.IDLE,
-        ProductModel.empty()))
+    var reloadedSingleItem by     mutableStateOf(SingleItemReloadState(RefreshState.IDLE, ProductModel.empty()))
         private set
 
     fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
@@ -106,19 +100,3 @@ class ProductDetailsViewModel(
     }
 }
 
-fun ProductModel.Companion.empty(): ProductModel = ProductModel(
-    id = 1.toString(),
-    name = NameModel(value = "", languageCode = "", i18n = ""),
-    genre = GenreType.POKEMON,
-    code = "",
-    imageUrl = "",
-    detailsUrl = "",
-    rarity = RarityType.OTHER,
-    set = SetModel(link = "", name = ""),
-    price = "",
-    priceTrend = "",
-    sellOffers = emptyList(),
-    timestamp = System.currentTimeMillis(),
-    type = TypeEnum.CARD,
-    externalId = "bla_blub"
-)

@@ -369,7 +369,6 @@ class MapperTest {
         val productModel = productDetailsDto.toProductModel("de")
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("de", productModel.name.languageCode)
-        assertEquals("Test Product", productModel.name.i18n)
         assertEquals("TEST123", productModel.code)
         assertEquals("Pokemon", productModel.genre.cmCode)
         assertEquals("Pokemon", productModel.genre.displayName)
@@ -403,7 +402,6 @@ class MapperTest {
         val productModel = productDetailsDto.toProductModel("en")
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("en", productModel.name.languageCode)
-        assertEquals("Test Product", productModel.name.i18n)
         assertEquals("TEST123", productModel.code)
         assertEquals("Pokemon", productModel.genre.cmCode)
         assertEquals("Pokemon", productModel.genre.displayName)
@@ -511,7 +509,6 @@ class MapperTest {
             type = type,
             rarity = rarity,
             code = "TEST123",
-            orgName = "Org Name",
             externalLink = cmLink,
             externalId = cmId,
             imgLink = "http://example.com/image.jpg",
@@ -526,7 +523,7 @@ class MapperTest {
     private fun createSampleProductModel(): ProductModel {
         return ProductModel(
             id = "Lillies-Clefairy-ex-V1-JTG056",
-            name = NameModel("Test Product", "en", "Test Product"),
+            name = NameModel("Test Product", "en"),
             type = TypeEnum.CARD,
             genre = GenreType.POKEMON,
             code = "TEST123",

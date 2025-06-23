@@ -39,7 +39,6 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         displayName = this.name.value,
         code = if (this.code.valid) this.code.value else "",
         imgLink = this.imgLink,
-        orgName = this.name.i18n,
         language = this.name.languageCode,
         genre = this.genre,
         type = this.type,
@@ -60,7 +59,7 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
 fun ProductEntity.toProductModel() : ProductModel {
     return ProductModel(
         id = this.id.toString(),
-        name = NameModel(this.displayName, this.language, this.orgName),
+        name = NameModel(this.displayName, this.language),
         code = this.code,
         type = fromString<TypeEnum>(this.type) ,
         genre = fromString<GenreType>(this.genre) ,
@@ -81,7 +80,7 @@ fun ProductWithSellOffers.toProductModel(language: String) : ProductModel {
     return ProductModel(
 
         id = URI(productEntity.externalLink).path.split("/").last(),
-        name = NameModel(productEntity.displayName, productEntity.language, productEntity.orgName),
+        name = NameModel(productEntity.displayName, productEntity.language),
         code = productEntity.code,
         type = fromString<TypeEnum>(productEntity.type) ,
         genre = fromString<GenreType>(productEntity.genre) ,
@@ -107,7 +106,7 @@ fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : Pr
         type = this.type.cmCode,
         rarity = this.rarity.cmCode,
         imgLink = this.imageUrl,
-        orgName = this.name.i18n, //FixMe
+        //FixMe
         price = this.price,
         externalLink = this.detailsUrl,
         externalId = this.externalId,
@@ -190,7 +189,7 @@ fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productI
     return ProductEntity(
         displayName = this.name.value,
         imgLink = this.imageUrl,
-        orgName = this.name.i18n, //??
+        //??
         language = this.name.languageCode,
         genre = this.genre,
         type = this.type,
@@ -243,7 +242,7 @@ private fun CardmarketSellOfferDto.toSellOfferModel(language: String): SellOffer
 
 
 fun NameDto.toModel(): NameModel {
-    return NameModel(this.value, this.languageCode, this.i18n)
+    return NameModel(this.value, this.languageCode)
 }
 
 
