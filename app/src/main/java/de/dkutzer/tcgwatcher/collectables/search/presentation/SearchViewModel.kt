@@ -106,7 +106,7 @@ class SearchViewModel(
                 )
             val pokemonRepositoryImpl = PagingProductsRepositoryAdapter(pokemonPager)
             logger.debug { "getPokemonList now" }
-            val getProductsList = GetProductsList(pokemonRepositoryImpl)
+            val getProductsList = GetProductsList(pokemonRepositoryImpl, apiConfig)
             logger.debug { "getPokemonList done" }
             val pagingDataFlow = getProductsList().cachedIn(viewModelScope)
             pagingDataFlow

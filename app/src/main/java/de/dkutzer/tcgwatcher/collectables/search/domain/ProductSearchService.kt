@@ -8,9 +8,12 @@ interface ProductSearchService {
     val cache: SearchCacheRepository
     val config: BaseConfig
 
-    suspend fun loadQuicksearchProductIntoResultPage(quickSearchProduct: ProductModel) : SearchResultsPage
+    suspend fun loadQuicksearchProductIntoResultPage(
+        quickSearchProduct: ProductModel,
+        language: String
+    ) : SearchResultsPage
 
-    suspend fun refreshProduct(productModel: ProductModel, cacheOnly: Boolean) : ProductModel
+    suspend fun refreshProduct(productModel: ProductModel, cacheOnly: Boolean, language: String) : ProductModel
 
     suspend fun searchByPage(searchString : String, page: Int = 1, limit: Int = 5) : SearchResultsPage
 

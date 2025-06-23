@@ -48,7 +48,7 @@ import kotlin.test.assertNotNull
 
 @ExperimentalCoroutinesApi
 class MainDispatcherRule(
-    val testDispatcher: TestCoroutineScheduler = TestCoroutineScheduler()
+    testDispatcher: TestCoroutineScheduler = TestCoroutineScheduler()
 ) : TestWatcher() {
     val standardTestDispatcher = StandardTestDispatcher(testDispatcher)
     override fun starting(description: Description) {

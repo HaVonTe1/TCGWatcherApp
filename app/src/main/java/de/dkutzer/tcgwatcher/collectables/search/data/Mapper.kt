@@ -77,7 +77,7 @@ fun ProductEntity.toProductModel() : ProductModel {
     )
 }
 
-fun ProductWithSellOffers.toProductModel() : ProductModel {
+fun ProductWithSellOffers.toProductModel(language: String) : ProductModel {
     return ProductModel(
 
         id = URI(productEntity.externalLink).path.split("/").last(),
@@ -92,7 +92,7 @@ fun ProductWithSellOffers.toProductModel() : ProductModel {
         imageUrl = productEntity.imgLink,
         price = productEntity.price,
         priceTrend = productEntity.priceTrend,
-        sellOffers = offers.map { it.toSellOfferModel(productEntity.language) },
+        sellOffers = offers.map { it.toSellOfferModel(language) },
         timestamp = productEntity.lastUpdated
     )
 
@@ -167,7 +167,7 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
         priceTrend = this.priceTrend)
 }
 
-fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
+fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
     return ProductModel(
         name = this.name.toModel(),
         type = fromString<TypeEnum>(this.type) ,
@@ -181,7 +181,7 @@ fun CardmarketProductDetailsDto.toProductModel(): ProductModel {
         price = this.price,
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         id = URI(this.detailsUrl).path.split("/").last(),
-        sellOffers = this.sellOffers.map { it.toSellOfferModel(this.name.languageCode) },
+        sellOffers = this.sellOffers.map { it.toSellOfferModel(language) },
         timestamp = Instant.now().epochSecond
     )
 }
@@ -208,12 +208,12 @@ fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productI
     )
 }
 
-fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int): SellOfferEntity {
+fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): SellOfferEntity {
     return SellOfferEntity(
         productId = productId,
         sellerName = this.sellerName,
-        sellerLocation = this.sellerLocation,
-        productLanguage = this.productLanguage,
+        sellerLocation = LocationModel.fromSellerLocation(this.sellerLocation, language).code,
+        productLanguage = LanguageModel.fromProductLanguage(this.productLanguage, language).code,
         condition = this.condition,
         amount = this.amount.toInt(),
         price = this.price,
@@ -221,10 +221,10 @@ fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int): SellOfferEntity {
     )
 }
 
-fun CardmarketProductDetailsDto.toProduct(searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
+fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
     return ProductWithSellOffers(
         productEntity = this.toProductItemEntity(searchId, productId),
-        offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
+        offers = this.sellOffers.map { it.toSellOfferEntity(productId, language) }
     )
 }
 

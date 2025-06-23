@@ -366,7 +366,7 @@ class MapperTest {
     fun `test ProductDetailsDto ToProductModel de`() {
 
         val productDetailsDto = createSampleProductDetailsDto("de")
-        val productModel = productDetailsDto.toProductModel()
+        val productModel = productDetailsDto.toProductModel("de")
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("de", productModel.name.languageCode)
         assertEquals("Test Product", productModel.name.i18n)
@@ -400,7 +400,7 @@ class MapperTest {
     fun `test ProductDetailsDto ToProductModel en`() {
 
         val productDetailsDto = createSampleProductDetailsDto("en")
-        val productModel = productDetailsDto.toProductModel()
+        val productModel = productDetailsDto.toProductModel("en")
         assertEquals("Test Produkt", productModel.name.value)
         assertEquals("en", productModel.name.languageCode)
         assertEquals("Test Product", productModel.name.i18n)

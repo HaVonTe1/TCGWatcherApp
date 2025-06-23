@@ -58,7 +58,7 @@ class SearchRemoteMediator (
         // cached room stuff
 
         val searchResultsPage =  if (quicksearchItem != null) {
-            productSearchService.loadQuicksearchProductIntoResultPage(quicksearchItem)
+            productSearchService.loadQuicksearchProductIntoResultPage(quicksearchItem,productSearchService.config.lang.name)
         }
         else {
             productSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)

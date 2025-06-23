@@ -93,7 +93,7 @@ data class LocationModel(
 
             // Find the matching locale once
             val foundLocale = AVAILABLE_LOCALES
-                .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == sellerLocationString }
+                .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == sellerLocationString.lowercase() }
 
             return if (foundLocale != null) {
                 LocationModel(

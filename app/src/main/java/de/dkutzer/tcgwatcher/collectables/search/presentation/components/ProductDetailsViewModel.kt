@@ -92,9 +92,10 @@ class ProductDetailsViewModel(
 
     fun onLoadSingleItem(productModel: ProductModel, cacheOnly: Boolean)  {
         logger.debug { "ProductDetailsViewModel::onLoadSingleItem for $productModel with cacheOnly: $cacheOnly" }
+        reloadedSingleItem = SingleItemReloadState(RefreshState.REFRESH_ITEM, productModel)
 
         viewModelScope.launch(ioDispatcher) {
-            val result = productSearchService.refreshProduct(productModel, cacheOnly)
+            val result = productSearchService.refreshProduct(productModel, cacheOnly, settings.language.name)
             reloadedSingleItem = SingleItemReloadState(RefreshState.IDLE, result)
             logger.debug { "ProductDetailsViewModel::onLoadSingleItem: $reloadedSingleItem" }
         }
