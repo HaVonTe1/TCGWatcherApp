@@ -4,5 +4,5 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface PagingProductsRepository {
-    fun getPagingProductsFlow(): Flow<PagingData<ProductModel>>
+    fun getPagingProductsFlow(lang: String): Flow<PagingData<ProductModel>>
 }

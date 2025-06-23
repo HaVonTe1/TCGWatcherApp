@@ -37,7 +37,10 @@ class CardmarketProductSearchService
     /*
     product is a quicksearchitem - so a previously saved search might exists
      */
-    override suspend fun loadQuicksearchProductIntoResultPage(product: ProductModel): SearchResultsPage {
+    override suspend fun loadQuicksearchProductIntoResultPage(
+        product: ProductModel,
+        language: String
+    ): SearchResultsPage {
 
         logger.debug { "CardmarketProductSearchService: loadQuicksearchProductIntoResultPage: $product" }
 
@@ -46,12 +49,12 @@ class CardmarketProductSearchService
         if (searchAndProductsAndSelloffersEntity != null) {
             logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
             return SearchResultsPage(
-                searchAndProductsAndSelloffersEntity.productWithSellOffers.map { it.toProductModel() },
+                searchAndProductsAndSelloffersEntity.productWithSellOffers.map { it.toProductModel(language) },
                 1,
                 1)
         }
-        val searchEntity = createAndPersistSearchEntity(product, true)
-        val productModel = searchEntity.productWithSellOffers.first().toProductModel()
+        val searchEntity = createAndPersistSearchEntity(product, true, language)
+        val productModel = searchEntity.productWithSellOffers.first().toProductModel(language)
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         logger.debug { "Adapter: Finally returning results: $result" }
@@ -65,14 +68,14 @@ class CardmarketProductSearchService
         --> the item loaded only minimal data but now all details are needed BUT it should be fast so: cacheOnly = true
     - an item is shown in the details view and no details have been available so far but we want to load all details now: cacheOnly = false
      */
-    override suspend fun refreshProduct(product: ProductModel, cacheOnly: Boolean): ProductModel {
+    override suspend fun refreshProduct(product: ProductModel, cacheOnly: Boolean, language: String): ProductModel {
         logger.debug { "CardmarketProductSearchService: getProductWithDetails: $product" }
         logger.debug { "CardmarketProductSearchService: useCache $cacheOnly"}
 
         val refreshedProduct: ProductModel?  = if (cacheOnly) {
             val product =
                 cache.findProductWithSellOffersByExternalId(product.externalId)
-            product?.toProductModel()
+            product?.toProductModel(language)
 
         } else {
             val productDetailsDto = client.getProductDetails(product.detailsUrl)
@@ -82,13 +85,14 @@ class CardmarketProductSearchService
             cachedProducts.forEach { product ->
                 logger.debug { "CardmarketProductSearchService: updating product: $product" }
                 val updatedProduct = productDetailsDto.toProduct(
+                    language,
                     product.productEntity.searchId.toLong(),
                     product.productEntity.id
                 )
                 cache.updateProduct(updatedProduct)
             }
 
-            productDetailsDto.toProductModel()
+            productDetailsDto.toProductModel(language)
         }
 
         if(refreshedProduct==null){
@@ -99,9 +103,9 @@ class CardmarketProductSearchService
     }
 
 
-    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean): SearchWithProductsAndSellOffers {
+    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean, language: String): SearchWithProductsAndSellOffers {
         val productWithDetails = if(loadDetails) {
-            enrichProductWithDetails(product)
+            enrichProductWithDetails(product, language)
         } else {
             product
         }
@@ -121,9 +125,9 @@ class CardmarketProductSearchService
         }
     }
 
-    private suspend fun enrichProductWithDetails(productModel: ProductModel) : ProductModel {
+    private suspend fun enrichProductWithDetails(productModel: ProductModel, language: String) : ProductModel {
         val productDetails = client.getProductDetails(productModel.detailsUrl)
-        val productModel = productDetails.toProductModel()
+        val productModel = productDetails.toProductModel(language)
         return productModel
     }
 

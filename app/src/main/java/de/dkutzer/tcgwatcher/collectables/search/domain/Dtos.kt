@@ -64,8 +64,8 @@ data class CardmarketProductDetailsDto(
 
 data class CardmarketSellOfferDto(
     val sellerName: String,
-    val sellerLocation: String,
-    val productLanguage: String,
+    val sellerLocation: String, //e.g. "Deutschland", "Germany"
+    val productLanguage: String,// e.g. "Japanisch", "japanese"
     val special: String,
     val condition: String,
     val amount: String,
