@@ -276,6 +276,9 @@ class MapperTest {
         locationModel = LocationModel.fromSellerLocation("Italy", "en")
         assertEquals("Italy", locationModel.country)
         assertEquals("it", locationModel.code)
+
+
+
     }
 
     @Test

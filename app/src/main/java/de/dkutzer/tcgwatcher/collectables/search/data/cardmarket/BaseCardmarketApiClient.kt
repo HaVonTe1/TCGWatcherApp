@@ -196,7 +196,6 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
         return cardmarketProductDetailsDto
     }
 
-    // Data class to hold all four components (language, genre, type, id)
     private data class ParsedLink(
         val language: String?,
         val genre: String?,
