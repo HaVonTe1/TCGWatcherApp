@@ -97,6 +97,7 @@ fun countryCodeToFlag(countryCode: String): String {
     if (countryCode.length != 2) return ""
     val mappedCode = when (countryCode) {
         "en" -> "gb"
+        "ja" -> "jp"
         else -> countryCode
     }
     val countryCodeUpper = mappedCode.uppercase()
@@ -152,7 +153,7 @@ fun OffersTablePreview() {
             SellOfferModel(
                 sellerName = "Card Kingdom",
                 sellerLocation = LocationModel("Österreich", "at"),
-                productLanguage = LanguageModel("en", "Englisch"),
+                productLanguage = LanguageModel("ja", "Japanisch"),
                 condition = ConditionType.MINT,
                 amount = 1,
                 price = "24.99",
