@@ -328,5 +328,64 @@ data class OfferFilters(
     val priceRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
     val sortBy: SortField = SortField.PRICE,
     val sortOrder: SortOrder = SortOrder.ASCENDING
-)
+) {
+    fun filter(model: SellOfferModel): Boolean {
+
+        if(sellerCountries.isNotEmpty())
+        {
+            if(model.sellerLocation !in sellerCountries)
+                return false
+        }
+        if(languages.isNotEmpty())
+        {
+            if(model.productLanguage !in languages)
+                return false
+        }
+        if(conditions.isNotEmpty())
+        {
+            if(model.condition !in conditions)
+                return false
+
+        }
+        //TODO: price
+
+        return true
+    }
+
+    fun sorter(m1: SellOfferModel, m2: SellOfferModel): Int {
+
+        return when (sortBy) {
+            SortField.PRICE -> {
+                when (sortOrder) {
+                    SortOrder.ASCENDING -> m1.price.compareTo(m2.price)
+                    SortOrder.DESCENDING -> m2.price.compareTo(m1.price)
+                }
+            }
+            SortField.CONDITION -> {
+                when (sortOrder) {
+                    SortOrder.ASCENDING -> m1.condition.ordinal.compareTo(m2.condition.ordinal)
+                    SortOrder.DESCENDING -> m2.condition.ordinal.compareTo(m1.condition.ordinal)
+                }
+            }
+            SortField.SELLER_COUNTRY -> {
+                when (sortOrder) {
+                    SortOrder.ASCENDING -> m1.sellerLocation.country.compareTo(m2.sellerLocation.country)
+                    SortOrder.DESCENDING -> m2.sellerLocation.country.compareTo(m1.sellerLocation.country)
+                }
+            }
+            SortField.LANGUAGE -> {
+                when (sortOrder) {
+                    SortOrder.ASCENDING -> m1.productLanguage.displayName.compareTo(m2.productLanguage.displayName)
+                    SortOrder.DESCENDING -> m2.productLanguage.displayName.compareTo(m1.productLanguage.displayName)
+                }
+            }
+            SortField.SELLER_NAME -> {
+                when (sortOrder) {
+                    SortOrder.ASCENDING -> m1.sellerName.compareTo(m2.sellerName)
+                    SortOrder.DESCENDING -> m2.sellerName.compareTo(m1.sellerName)
+                }
+            }
+        }
+    }
+}
 

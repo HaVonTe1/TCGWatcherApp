@@ -19,24 +19,32 @@ import androidx.compose.ui.unit.dp
 import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
 import de.dkutzer.tcgwatcher.collectables.search.domain.LanguageModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.LocationModel
+import de.dkutzer.tcgwatcher.collectables.search.domain.OfferFilters
 import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.ui.theme.TCGWatcherTheme
+import io.github.oshai.kotlinlogging.KotlinLogging
 
+private val logger = KotlinLogging.logger {}
 
 @Composable
-fun OffersTable(offers: List<SellOfferModel>) {
+fun OffersTable(offers: List<SellOfferModel>, filter: OfferFilters) {
 
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        offers.forEach { offer ->
-            OfferRow(offer = offer)
+        logger.debug { "OffersTable::recompose" }
+        offers.sortedWith { o1, o2 ->
+            filter.sorter(o1, o2)
+        }.forEach { offer ->
+            if (filter.filter(offer))
+                OfferRow(offer = offer)
         }
     }
 }
+
 @Composable
 private fun OfferRow(offer: SellOfferModel) {
     Row(
@@ -52,7 +60,7 @@ private fun OfferRow(offer: SellOfferModel) {
         TableCell(text = countryCodeToFlag(offer.productLanguage.code), weight = 1f)
 
         // Condition
-        // TODO: replace with an icon
+        // TODO: replace with an icon or color
         TableCell(text = offer.condition.cmCode, weight = 1.5f)
 
         // Price
@@ -69,7 +77,10 @@ private fun RowScope.TableCell(
 ) {
     Box(
         modifier = Modifier
-            .border(border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline), shape = MaterialTheme.shapes.small)
+            .border(
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                shape = MaterialTheme.shapes.small
+            )
             .weight(weight)
             .padding(4.dp),
         contentAlignment = Alignment.CenterStart
@@ -84,11 +95,17 @@ private fun RowScope.TableCell(
 
 fun countryCodeToFlag(countryCode: String): String {
     if (countryCode.length != 2) return ""
-    val countryCodeUpper = countryCode.uppercase()
+    val mappedCode = when (countryCode) {
+        "en" -> "gb"
+        else -> countryCode
+    }
+    val countryCodeUpper = mappedCode.uppercase()
     val firstChar = countryCodeUpper[0].code - 'A'.code + 0x1F1E6
     val secondChar = countryCodeUpper[1].code - 'A'.code + 0x1F1E6
     return String(Character.toChars(firstChar)) + String(Character.toChars(secondChar))
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
@@ -114,9 +131,36 @@ fun OffersTablePreview() {
                 price = "24.99",
                 special = SpecialType.REVERSED
             ),
+            SellOfferModel(
+                sellerName = "Card Kingdom",
+                sellerLocation = LocationModel("Korea", "kr"),
+                productLanguage = LanguageModel("en", "Englisch"),
+                condition = ConditionType.MINT,
+                amount = 1,
+                price = "24.99",
+                special = SpecialType.REVERSED
+            ),
+            SellOfferModel(
+                sellerName = "Card Kingdom",
+                sellerLocation = LocationModel("austria", "at"),
+                productLanguage = LanguageModel("en", "Englisch"),
+                condition = ConditionType.MINT,
+                amount = 1,
+                price = "24.99",
+                special = SpecialType.REVERSED
+            ),
+            SellOfferModel(
+                sellerName = "Card Kingdom",
+                sellerLocation = LocationModel("Österreich", "at"),
+                productLanguage = LanguageModel("en", "Englisch"),
+                condition = ConditionType.MINT,
+                amount = 1,
+                price = "24.99",
+                special = SpecialType.REVERSED
+            ),
         )
 
-        OffersTable(offers = sampleOffers)
+        OffersTable(offers = sampleOffers, filter = OfferFilters())
 
     }
 }

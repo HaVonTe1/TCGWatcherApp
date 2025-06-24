@@ -313,6 +313,9 @@ fun ProductDetailsView(
                     }
 
                 }
+                var showFilterDialog by remember { mutableStateOf(false) }
+                var currentFilters by remember { mutableStateOf(OfferFilters()) }
+
                 Column(
                     modifier = Modifier
                         .padding(1.dp)
@@ -338,8 +341,6 @@ fun ProductDetailsView(
                                 .padding(4.dp)
                                 .align(Alignment.CenterVertically)
                         )
-                        var showFilterDialog by remember { mutableStateOf(false) }
-                        var currentFilters by remember { mutableStateOf(OfferFilters()) }
 
                         IconButton(onClick = {
                             showFilterDialog = true
@@ -372,7 +373,7 @@ fun ProductDetailsView(
                 }
                 //add selling table
                 if (currentProductModelState.item.sellOffers.isNotEmpty()) {
-                    OffersTable(currentProductModelState.item.sellOffers)
+                    OffersTable(currentProductModelState.item.sellOffers, currentFilters)
                 }
                 //TODO: add a row for inventory management
             }
