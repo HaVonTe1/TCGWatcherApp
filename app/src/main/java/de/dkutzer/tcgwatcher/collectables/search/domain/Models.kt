@@ -1,5 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
+import java.util.concurrent.ConcurrentHashMap
+
 import android.os.Parcelable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.parcelize.Parcelize
@@ -85,11 +87,13 @@ data class LocationModel(
     companion object {
         private val AVAILABLE_LOCALES: Array<Locale> by lazy { Locale.getAvailableLocales() } // Lazy initialization
 
-        //TODO: add caching to this function
         fun fromSellerLocation(
             sellerLocationString: String,
             language: String
         ): LocationModel {
+            val cacheKey = sellerLocationString.lowercase() to language.lowercase()
+            val locationCacheBySellerLocation = Companion.locationCacheBySellerLocation
+            locationCacheBySellerLocation[cacheKey]?.let { return it }
 
             val targetDisplayLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
@@ -99,26 +103,32 @@ data class LocationModel(
 
             if (targetDisplayLocale == null) {
                 logger.debug{"Warning: Unsupported language '$language'"}
-                return LocationModel(country = "unknown", code = "")
+                val unknown = LocationModel(country = "unknown", code = "")
+                locationCacheBySellerLocation[cacheKey] = unknown
+                return unknown
             }
 
-            // Find the matching locale once
             val foundLocale = AVAILABLE_LOCALES
                 .firstOrNull { it.getDisplayCountry(targetDisplayLocale).lowercase() == sellerLocationString.lowercase() }
 
-            return if (foundLocale != null) {
+            val result = if (foundLocale != null) {
                 LocationModel(
-                    country = foundLocale.getDisplayCountry(targetDisplayLocale), // Use the determined display locale
+                    country = foundLocale.getDisplayCountry(targetDisplayLocale),
                     code = foundLocale.country.lowercase()
                 )
             } else {
-                logger.debug{"Warning: Could not find locale for country '$sellerLocationString' in language '${targetDisplayLocale.language}'"}
+                logger.debug{"Warning: Could not find locale for country '$sellerLocationString' in language '[${targetDisplayLocale.language}'"}
                 LocationModel(country = "unknown", code = "")
             }
+            locationCacheBySellerLocation[cacheKey] = result
+            return result
         }
 
-        //TODO: add caching to this function
         fun fromCode(code: String, language: String): LocationModel {
+            val cacheKey = code.lowercase() to language.lowercase()
+            val locationCacheByCode = Companion.locationCacheByCode
+            locationCacheByCode[cacheKey]?.let { return it }
+
             val targetDisplayLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
                 "en" -> Locale.ENGLISH
@@ -126,19 +136,27 @@ data class LocationModel(
             }
             if (targetDisplayLocale == null) {
                 logger.debug{"Warning: Unsupported language '$language'"}
-                return LocationModel(country = "unknown", code = "")
+                val unknown = LocationModel(country = "unknown", code = "")
+                locationCacheByCode[cacheKey] = unknown
+                return unknown
             }
             val foundLocale = AVAILABLE_LOCALES.firstOrNull { it.country.lowercase() == code.lowercase() }
-            return if (foundLocale != null) {
+            val result = if (foundLocale != null) {
                 LocationModel(
-                    country = foundLocale.getDisplayCountry(targetDisplayLocale), // Use the determined display locale
+                    country = foundLocale.getDisplayCountry(targetDisplayLocale),
                     code = foundLocale.country.lowercase()
                 )
-                } else {
-                logger.debug { "Warning: Could not find locale for country '$code' in language '${targetDisplayLocale.language}'" }
+            } else {
+                logger.debug { "Warning: Could not find locale for country '$code' in language '[${targetDisplayLocale.language}'" }
                 LocationModel(country = "unknown", code = "")
             }
+            locationCacheByCode[cacheKey] = result
+            return result
         }
+
+        // Caching maps in companion object for function scope
+        private val locationCacheBySellerLocation = ConcurrentHashMap<Pair<String, String>, LocationModel>()
+        private val locationCacheByCode = ConcurrentHashMap<Pair<String, String>, LocationModel>()
     }
 }
 
@@ -152,49 +170,67 @@ data class LanguageModel(
     companion object {
         private val AVAILABLE_LOCALES: Array<Locale> by lazy { Locale.getAvailableLocales() } // Lazy initialization
 
-        //TODO: add caching to this function
         fun fromProductLanguage(
             productLanguage: String,
             searchLanguage: String
         ): LanguageModel {
+            val cacheKey = productLanguage.lowercase() to searchLanguage.lowercase()
+            val languageCacheByProductLanguage = Companion.languageCacheByProductLanguage
+            languageCacheByProductLanguage[cacheKey]?.let { return it }
+
             val targetSearchLocale = when (searchLanguage.lowercase()) {
                 "de" -> Locale.GERMAN
                 "en" -> Locale.ENGLISH
-                else -> return LanguageModel(code = "", displayName = "")
+                else -> {
+                    val unknown = LanguageModel(code = "", displayName = "")
+                    languageCacheByProductLanguage[cacheKey] = unknown
+                    return unknown
+                }
             }
 
             val productLanguageLower = productLanguage.lowercase()
-
-            // Use the cached list
             val foundLocale = AVAILABLE_LOCALES.firstOrNull { locale ->
                 locale.getDisplayLanguage(targetSearchLocale).lowercase() == productLanguageLower
             }
 
-            return foundLocale?.let {
+            val result = foundLocale?.let {
                 LanguageModel(
                     code = it.language,
                     displayName = it.getDisplayLanguage(targetSearchLocale)
                 )
             } ?: LanguageModel(code = "", displayName = "")
+            languageCacheByProductLanguage[cacheKey] = result
+            return result
         }
 
-        //TODO: add caching to this function
         fun fromCode(code: String, language: String): LanguageModel {
+            val cacheKey = code.lowercase() to language.lowercase()
+            val languageCacheByCode = Companion.languageCacheByCode
+            languageCacheByCode[cacheKey]?.let { return it }
+
             val targetSearchLocale = when (language.lowercase()) {
                 "de" -> Locale.GERMAN
                 "en" -> Locale.ENGLISH
-                else -> return LanguageModel(code = "", displayName = "")
+                else -> {
+                    val unknown = LanguageModel(code = "", displayName = "")
+                    languageCacheByCode[cacheKey] = unknown
+                    return unknown
+                }
             }
             val foundLocale = AVAILABLE_LOCALES.firstOrNull { it.language.lowercase() == code.lowercase() }
-
-            return foundLocale?.let {
+            val result = foundLocale?.let {
                 LanguageModel(
                     code = it.language,
                     displayName = it.getDisplayLanguage(targetSearchLocale)
                 )
-
-                } ?: LanguageModel(code = "", displayName = "")
+            } ?: LanguageModel(code = "", displayName = "")
+            languageCacheByCode[cacheKey] = result
+            return result
         }
+
+        // Caching maps in companion object for function scope
+        private val languageCacheByProductLanguage = ConcurrentHashMap<Pair<String, String>, LanguageModel>()
+        private val languageCacheByCode = ConcurrentHashMap<Pair<String, String>, LanguageModel>()
     }
 }
 
