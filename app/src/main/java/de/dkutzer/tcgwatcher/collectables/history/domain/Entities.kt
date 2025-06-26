@@ -27,8 +27,6 @@ data class ProductEntity(
     @ColumnInfo(index = true)
     var searchId: Int,
 
-    //TODO: add a seperate table for all localized names of the card
-    val displayName: String,
     val language: String,
     val genre: String = "",
     val type: String = "",
@@ -39,11 +37,28 @@ data class ProductEntity(
     val imgLink: String,
     val price: String,
     val priceTrend: String,
-    //TODO: refactore the sets into a separate table
+    val lastUpdated: Long
+)
+
+@Entity(tableName = "product_name")
+data class ProductNameEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(index = true)
+    val productId: Int,
+    val language: String,
+    val name: String
+)
+
+@Entity(tableName = "product_set")
+data class ProductSetEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(index = true)
+    val productId: Int,
     val setName: String,
     val setId: String,
-
-    val lastUpdated: Long
+    val language: String // Sprache des Sets
 )
 
 @Entity(tableName = "product_offer")
@@ -101,5 +116,19 @@ data class ProductWithSellOffers(
         entityColumn = "productId"
     )
     val offers: List<SellOfferEntity>
+)
+
+data class ProductWithNamesAndSets(
+    @Embedded val productEntity: ProductEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "productId"
+    )
+    val names: List<ProductNameEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "productId"
+    )
+    val sets: List<ProductSetEntity>
 )
 
