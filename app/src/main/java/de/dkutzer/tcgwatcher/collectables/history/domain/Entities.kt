@@ -24,9 +24,6 @@ data class SearchEntity(
 data class ProductEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    @ColumnInfo(index = true)
-    var searchId: Int,
-
     val language: String,
     val genre: String = "",
     val type: String = "",
@@ -38,6 +35,12 @@ data class ProductEntity(
     val price: String,
     val priceTrend: String,
     val lastUpdated: Long
+)
+
+@Entity(primaryKeys = ["searchId", "productId"])
+data class SearchProductCrossRef(
+    val searchId: Int,
+    val productId: Int
 )
 
 @Entity(tableName = "product_name")
@@ -88,7 +91,8 @@ data class SearchWithProducts(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "searchId"
+        entityColumn = "id",
+        associateBy = androidx.room.Junction(SearchProductCrossRef::class)
     )
     val products: List<ProductEntity>
 
@@ -103,7 +107,8 @@ data class SearchWithProductsAndSellOffers(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "searchId"
+        entityColumn = "id",
+        associateBy = androidx.room.Junction(SearchProductCrossRef::class)
     )
     val productWithSellOffers: List<ProductWithSellOffers>
 

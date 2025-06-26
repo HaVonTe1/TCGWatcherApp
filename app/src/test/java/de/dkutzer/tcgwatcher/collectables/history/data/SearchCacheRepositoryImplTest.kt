@@ -167,8 +167,6 @@ class SearchCacheRepositoryImplTest {
             price = "10.00",
             lastUpdated = 0,
             id = 0,
-            searchId = 0,
-            displayName = "sdf",
             language = "de",
             genre = GenreType.POKEMON.cmCode,
             type = TypeEnum.CARD.cmCode,
@@ -176,13 +174,9 @@ class SearchCacheRepositoryImplTest {
             code = "sdf",
             imgLink = "sdf",
             priceTrend = "sdfg",
-            setName = "sdfgdg",
-            externalId = "sdf",
-            setId = "sdg"
+            externalId = "sdf"
         )
-
         repository.persistSearchItems(listOf(initialItem))
-
         // Name und Set anlegen
         val nameEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity(
             productId = initialItem.id,
@@ -195,24 +189,19 @@ class SearchCacheRepositoryImplTest {
             setId = "set-123",
             language = "de"
         )
-
         // Update
         val updatedItem = initialItem.copy(
             price = "15.00",
             lastUpdated = System.currentTimeMillis()
         )
-
         repository.updateItemByLink(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
-
         // Verify Product
         val items = repository.findItemsByLink(link)
         assertEquals("15.00", items[0].price)
         assertTrue(items[0].lastUpdated > 0)
-
         // Verify Name
         val names = repository.getProductNames(items[0].id)
         assertTrue(names.any { it.name == "Testkarte" && it.language == "de" })
-
         // Verify Set
         val sets = repository.getProductSets(items[0].id)
         assertTrue(sets.any { it.setName == "TestSet" && it.setId == "set-123" && it.language == "de" })
@@ -336,20 +325,17 @@ class SearchCacheRepositoryImplTest {
 
     private fun createSampleProductItemEntity(code : String = "DRG-1"): ProductEntity =
         ProductEntity(
-            searchId = 0, code = code,
             id = 0,
-            displayName = "sdfsdf",
             language = "de",
             genre = GenreType.POKEMON.cmCode,
             type = TypeEnum.CARD.cmCode,
             rarity = RarityType.UNCOMMON.cmCode,
+            code = code,
+            externalId = "blub",
             externalLink = "/de/pokemon/Products/Singles/bla/blub",
             imgLink = "https://fddgf.dsdfdfg.jpg",
             price = "10.00",
             priceTrend = "11.00",
-            setName = "bla",
-            setId = "/de/Pokemon/Products/bla",
-            externalId = "blub",
             lastUpdated = 2111111111111111111
         )
 

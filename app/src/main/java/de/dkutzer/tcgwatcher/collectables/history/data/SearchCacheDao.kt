@@ -16,6 +16,8 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
 
 @Dao
 interface SearchCacheDao {
@@ -26,9 +28,6 @@ interface SearchCacheDao {
 
     @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
     fun findSearch(searchTerm: String) : SearchEntity?
-
-    @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
-    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
     @Transaction
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
@@ -98,6 +97,19 @@ interface SearchCacheDao {
     @Delete
     fun deleteProductSets(sets: List<ProductSetEntity>)
 
+    // CrossRef-Operationen für M:N
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertSearchProductCrossRefs(crossRefs: List<SearchProductCrossRef>): List<Long>
+
+    @Query("DELETE FROM SearchProductCrossRef WHERE searchId = :searchId")
+    fun deleteCrossRefsBySearchId(searchId: Int)
+
+    @Query("DELETE FROM SearchProductCrossRef WHERE productId = :productId")
+    fun deleteCrossRefsByProductId(productId: Int)
+
+    @Transaction
+    @Query("SELECT * FROM search WHERE id = :searchId")
+    fun getSearchWithProducts(searchId: Int): SearchWithProducts?
 }
 
 @Dao

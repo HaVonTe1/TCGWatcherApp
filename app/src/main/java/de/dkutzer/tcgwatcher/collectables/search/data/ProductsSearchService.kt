@@ -81,13 +81,13 @@ class CardmarketProductSearchService
             val productDetailsDto = client.getProductDetails(product.detailsUrl)
 
             //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
-            val cachedProducts = cache.getProductsByExternalId(product.externalId)
-            cachedProducts.forEach { product ->
-                logger.debug { "CardmarketProductSearchService: updating product: $product" }
+            val cachedProduct = cache.getProductsByExternalId(product.externalId)
+            if (cachedProduct != null) {
+                logger.debug { "CardmarketProductSearchService: updating product: $cachedProduct" }
                 val updatedProduct = productDetailsDto.toProduct(
                     language,
-                    product.productEntity.searchId.toLong(),
-                    product.productEntity.id
+                    /*searchId*/ 0L, // searchId entfällt, da M:N
+                    cachedProduct.productEntity.id
                 )
                 cache.updateProduct(updatedProduct)
             }
