@@ -183,18 +183,39 @@ class SearchCacheRepositoryImplTest {
 
         repository.persistSearchItems(listOf(initialItem))
 
+        // Name und Set anlegen
+        val nameEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity(
+            productId = initialItem.id,
+            language = "de",
+            name = "Testkarte"
+        )
+        val setEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity(
+            productId = initialItem.id,
+            setName = "TestSet",
+            setId = "set-123",
+            language = "de"
+        )
+
         // Update
         val updatedItem = initialItem.copy(
             price = "15.00",
             lastUpdated = System.currentTimeMillis()
         )
 
-        repository.updateItemByLink(link, updatedItem)
+        repository.updateItemByLink(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
 
-        // Verify
+        // Verify Product
         val items = repository.findItemsByLink(link)
         assertEquals("15.00", items[0].price)
         assertTrue(items[0].lastUpdated > 0)
+
+        // Verify Name
+        val names = repository.getProductNames(items[0].id)
+        assertTrue(names.any { it.name == "Testkarte" && it.language == "de" })
+
+        // Verify Set
+        val sets = repository.getProductSets(items[0].id)
+        assertTrue(sets.any { it.setName == "TestSet" && it.setId == "set-123" && it.language == "de" })
     }
 
     @Test

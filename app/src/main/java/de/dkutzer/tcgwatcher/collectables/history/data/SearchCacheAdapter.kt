@@ -6,6 +6,8 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 
@@ -172,20 +174,36 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         return searchCacheDao.findItemsByLink(link)
     }
 
+    // Hilfsmethoden für Namen und Sets
+    suspend fun saveProductNames(names: List<ProductNameEntity>) {
+        searchCacheDao.insertProductNames(names)
+    }
+    suspend fun saveProductSets(sets: List<ProductSetEntity>) {
+        searchCacheDao.insertProductSets(sets)
+    }
+    suspend fun getProductNames(productId: Int): List<ProductNameEntity> {
+        return searchCacheDao.getProductNames(productId)
+    }
+    suspend fun getProductSets(productId: Int): List<ProductSetEntity> {
+        return searchCacheDao.getProductSets(productId)
+    }
+
     override suspend fun updateItemByLink(
         detailsUrl: String,
-        itemEntity: ProductEntity
+        itemEntity: ProductEntity,
+        names: List<ProductNameEntity> = emptyList(),
+        sets: List<ProductSetEntity> = emptyList()
     ) {
-        //alle search items mit diesem link mit den daten aus der entity aktualisiern
-        searchCacheDao.updateItemsByLink(
-            detailsUrl = detailsUrl,
-            price = itemEntity.price,
-            priceTrend = itemEntity.priceTrend,
-            setName = itemEntity.setName,
-            setLink = itemEntity.setId,
-            rarity = itemEntity.rarity,
-            type = itemEntity.type,
-            lastUpdated = itemEntity.lastUpdated)
+        // Produkt aktualisieren (z.B. Preis, Trend, Rarität, Typ, etc.)
+        searchCacheDao.saveItem(itemEntity)
+        // Namen aktualisieren, falls übergeben
+        if (names.isNotEmpty()) {
+            searchCacheDao.insertProductNames(names)
+        }
+        // Sets aktualisieren, falls übergeben
+        if (sets.isNotEmpty()) {
+            searchCacheDao.insertProductSets(sets)
+        }
     }
 
 }

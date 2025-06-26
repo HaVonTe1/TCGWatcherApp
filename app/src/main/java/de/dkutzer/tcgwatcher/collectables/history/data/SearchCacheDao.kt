@@ -10,6 +10,8 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
@@ -76,18 +78,25 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE externalLink = :link")
     fun findItemsByLink(link: String) : List<ProductEntity>
 
-    @Query("UPDATE search_result_item SET " +
-            "price = :price, " +
-            "priceTrend = :priceTrend, " +
-            "setName = :setName, " +
-            "setId = :setLink, " +
-            "rarity = :rarity, " +
-            "type = :type, " +
-            "lastUpdated = :lastUpdated WHERE " +
-            "externalLink = :detailsUrl"
-    )
-    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String,setName: String,setLink:String,rarity:String,type:String, lastUpdated: Long)
+    // --- ProductNameEntity ---
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertProductNames(names: List<ProductNameEntity>): List<Long>
 
+    @Query("SELECT * FROM product_name WHERE productId = :productId")
+    fun getProductNames(productId: Int): List<ProductNameEntity>
+
+    @Delete
+    fun deleteProductNames(names: List<ProductNameEntity>)
+
+    // --- ProductSetEntity ---
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertProductSets(sets: List<ProductSetEntity>): List<Long>
+
+    @Query("SELECT * FROM product_set WHERE productId = :productId")
+    fun getProductSets(productId: Int): List<ProductSetEntity>
+
+    @Delete
+    fun deleteProductSets(sets: List<ProductSetEntity>)
 
 }
 
