@@ -10,10 +10,14 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
 
 @Dao
 interface SearchCacheDao {
@@ -24,9 +28,6 @@ interface SearchCacheDao {
 
     @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
     fun findSearch(searchTerm: String) : SearchEntity?
-
-    @Query("SELECT * FROM search_result_item WHERE searchId = :searchId LIMIT :pageSize OFFSET :offset")
-    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
     @Transaction
     @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
@@ -76,19 +77,39 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_result_item WHERE externalLink = :link")
     fun findItemsByLink(link: String) : List<ProductEntity>
 
-    @Query("UPDATE search_result_item SET " +
-            "price = :price, " +
-            "priceTrend = :priceTrend, " +
-            "setName = :setName, " +
-            "setId = :setLink, " +
-            "rarity = :rarity, " +
-            "type = :type, " +
-            "lastUpdated = :lastUpdated WHERE " +
-            "externalLink = :detailsUrl"
-    )
-    fun updateItemsByLink(detailsUrl: String, price: String, priceTrend: String,setName: String,setLink:String,rarity:String,type:String, lastUpdated: Long)
+    // --- ProductNameEntity ---
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertProductNames(names: List<ProductNameEntity>): List<Long>
 
+    @Query("SELECT * FROM product_name WHERE productId = :productId")
+    fun getProductNames(productId: Int): List<ProductNameEntity>
 
+    @Delete
+    fun deleteProductNames(names: List<ProductNameEntity>)
+
+    // --- ProductSetEntity ---
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertProductSets(sets: List<ProductSetEntity>): List<Long>
+
+    @Query("SELECT * FROM product_set WHERE productId = :productId")
+    fun getProductSets(productId: Int): List<ProductSetEntity>
+
+    @Delete
+    fun deleteProductSets(sets: List<ProductSetEntity>)
+
+    // CrossRef-Operationen für M:N
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertSearchProductCrossRefs(crossRefs: List<SearchProductCrossRef>): List<Long>
+
+    @Query("DELETE FROM SearchProductCrossRef WHERE searchId = :searchId")
+    fun deleteCrossRefsBySearchId(searchId: Int)
+
+    @Query("DELETE FROM SearchProductCrossRef WHERE productId = :productId")
+    fun deleteCrossRefsByProductId(productId: Int)
+
+    @Transaction
+    @Query("SELECT * FROM search WHERE id = :searchId")
+    fun getSearchWithProducts(searchId: Int): SearchWithProducts?
 }
 
 @Dao

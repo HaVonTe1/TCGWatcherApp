@@ -8,9 +8,12 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
 
 @Database(
-    entities = [SearchEntity::class, ProductEntity::class, SellOfferEntity::class, RemoteKeyEntity::class],
+    entities = [SearchEntity::class, ProductEntity::class, SellOfferEntity::class, RemoteKeyEntity::class, ProductNameEntity::class, ProductSetEntity::class, SearchProductCrossRef::class],
     version = 1,
     exportSchema = false
 )

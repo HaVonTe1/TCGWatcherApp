@@ -6,6 +6,9 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 
@@ -21,22 +24,21 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
         val search = searchCacheDao.findSearch(searchTerm)
         if(search!=null) {
-            val resultItemEntities = searchCacheDao.findSearchResultsBySearchId(
-                search.id,
-                limit,
-                (page - 1) * limit
-            )
-            return SearchWithProducts(search = search, products =  resultItemEntities)
+            // Produkte über Relation laden (Paging ggf. anpassen)
+            val relation = getSearchWithProducts(search.id)
+            return relation
         }
         return null
 
     }
 
+    suspend fun getSearchWithProducts(searchId: Int): SearchWithProducts? {
+        return searchCacheDao.getSearchWithProducts(searchId)
+    }
+
     //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
-    override suspend fun getProductsByExternalId(externalId: String): List<ProductWithSellOffers> {
-
-       return  searchCacheDao.findProductsByExternalId(externalId)
-
+    override suspend fun getProductsByExternalId(externalId: String): ProductWithSellOffers? {
+        return searchCacheDao.findItemWithSellOffersByProductId(externalId)
     }
 
     override suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers) {
@@ -114,13 +116,15 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             language = language,
             history = searchWithProducts.search.history
         )
-
-        searchWithProducts.products.forEach { it.searchId = searchId }
+        // Produkte speichern (nur einmalig)
         searchCacheDao.saveItems(searchWithProducts.products)
-
+        // CrossRefs anlegen
+        val crossRefs = searchWithProducts.products.map { product ->
+            SearchProductCrossRef(searchId = searchId, productId = product.id)
+        }
+        searchCacheDao.insertSearchProductCrossRefs(crossRefs)
         return SearchWithProducts(searchEntity, searchWithProducts.products)
     }
-
 
     override suspend fun persistSearchWithProductAndSellOffers(
         searchWithProducts: SearchWithProductsAndSellOffers,
@@ -132,16 +136,15 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             language = language,
             history = searchWithProducts.search.history
         )
-
         val updatedProductWithSellOffers = searchWithProducts.productWithSellOffers.map { product ->
-            product.productEntity.searchId = searchId
             val productId = searchCacheDao.saveItem(product.productEntity)
             val updatedProductItemEntity = product.productEntity.copy(id = productId.toInt())
             product.offers.forEach { it.productId = productId.toInt() }
             searchCacheDao.saveSellOffers(product.offers)
+            // CrossRef anlegen
+            searchCacheDao.insertSearchProductCrossRefs(listOf(SearchProductCrossRef(searchId = searchId, productId = productId.toInt())))
             ProductWithSellOffers(updatedProductItemEntity, product.offers)
         }.toList()
-
         return SearchWithProductsAndSellOffers(searchEntity, updatedProductWithSellOffers)
     }
 
@@ -172,20 +175,36 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         return searchCacheDao.findItemsByLink(link)
     }
 
+    // Hilfsmethoden für Namen und Sets
+    suspend fun saveProductNames(names: List<ProductNameEntity>) {
+        searchCacheDao.insertProductNames(names)
+    }
+    suspend fun saveProductSets(sets: List<ProductSetEntity>) {
+        searchCacheDao.insertProductSets(sets)
+    }
+    suspend fun getProductNames(productId: Int): List<ProductNameEntity> {
+        return searchCacheDao.getProductNames(productId)
+    }
+    suspend fun getProductSets(productId: Int): List<ProductSetEntity> {
+        return searchCacheDao.getProductSets(productId)
+    }
+
     override suspend fun updateItemByLink(
         detailsUrl: String,
-        itemEntity: ProductEntity
+        itemEntity: ProductEntity,
+        names: List<ProductNameEntity> = emptyList(),
+        sets: List<ProductSetEntity> = emptyList()
     ) {
-        //alle search items mit diesem link mit den daten aus der entity aktualisiern
-        searchCacheDao.updateItemsByLink(
-            detailsUrl = detailsUrl,
-            price = itemEntity.price,
-            priceTrend = itemEntity.priceTrend,
-            setName = itemEntity.setName,
-            setLink = itemEntity.setId,
-            rarity = itemEntity.rarity,
-            type = itemEntity.type,
-            lastUpdated = itemEntity.lastUpdated)
+        // Produkt aktualisieren (z.B. Preis, Trend, Rarität, Typ, etc.)
+        searchCacheDao.saveItem(itemEntity)
+        // Namen aktualisieren, falls übergeben
+        if (names.isNotEmpty()) {
+            searchCacheDao.insertProductNames(names)
+        }
+        // Sets aktualisieren, falls übergeben
+        if (sets.isNotEmpty()) {
+            searchCacheDao.insertProductSets(sets)
+        }
     }
 
 }
