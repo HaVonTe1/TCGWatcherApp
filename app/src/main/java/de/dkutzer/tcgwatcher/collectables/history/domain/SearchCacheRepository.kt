@@ -16,6 +16,6 @@ interface SearchCacheRepository {
     suspend fun persistSearch(search: SearchEntity)
     suspend fun deleteSearchItems(results: List<ProductEntity>)
     suspend fun findItemsByLink(link: String) : List<ProductEntity>
-    suspend fun updateItemByLink(detailsUrl: String, itemEntity: ProductEntity)
+    suspend fun updateItemByLink(detailsUrl: String, itemEntity: ProductEntity, names: List<ProductNameEntity> = emptyList(), sets: List<ProductSetEntity> = emptyList())
     suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers)
 }
