@@ -8,7 +8,7 @@ interface SearchCacheRepository {
     suspend fun persistsSearchWithItems(searchWithProducts: SearchWithProducts, language: String): SearchWithProducts
     suspend fun persistSearchWithProductAndSellOffers(searchWithProducts: SearchWithProductsAndSellOffers, language: String) : SearchWithProductsAndSellOffers
 
-    suspend fun getProductsByExternalId(externalId: String) : List<ProductWithSellOffers>
+    suspend fun getProductsByExternalId(externalId: String) : ProductWithSellOffers?
 
     suspend fun persistSearchItems(results: List<ProductEntity>)
     suspend fun getSearchHistory(): List<String>
