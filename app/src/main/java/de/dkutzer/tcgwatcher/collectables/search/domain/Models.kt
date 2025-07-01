@@ -15,7 +15,7 @@ private val logger = KotlinLogging.logger {}
 @Parcelize
 data class ProductModel(
     val id: String,
-    val name: NameModel,
+    val names: List<NameModel>,
     val type: TypeEnum = TypeEnum.CARD,
     val genre: GenreType,
     val code: String,
@@ -30,6 +30,24 @@ data class ProductModel(
     val timestamp: Long
 
 ) : Parcelable {
+
+
+    // Helper function to get name in preferred language, with fallback
+    fun getNameForLanguage(languageCode: String): NameModel {
+        return names.find { it.languageCode == languageCode }
+            ?: names.firstOrNull()
+            ?: NameModel("Unknown", languageCode)
+    }
+
+    // Helper function to get the display name string for a specific language
+    fun getDisplayName(languageCode: String): String {
+        return getNameForLanguage(languageCode).value
+    }
+
+    // Primary name (first available name)
+    val primaryName: NameModel
+        get() = names.firstOrNull() ?: NameModel("Unknown", "en")
+
 
     fun getAvailableLanguages(): Set<LanguageModel> {
         return this.sellOffers.map(SellOfferModel::productLanguage).toSet()

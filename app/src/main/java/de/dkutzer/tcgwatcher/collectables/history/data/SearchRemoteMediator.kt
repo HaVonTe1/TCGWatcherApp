@@ -5,7 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
@@ -22,13 +22,13 @@ class SearchRemoteMediator (
     private val quicksearchItem: ProductModel? = null,
     private val searchCacheDatabase: SearchCacheDatabase,
     private val productSearchService: ProductSearchService
-) : RemoteMediator<Int, ProductWithSellOffers>() {
+) : RemoteMediator<Int, ProductAggregate>() {
 
     private val REMOTE_KEY_ID = "cm"
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ProductWithSellOffers>,
+        state: PagingState<Int, ProductAggregate>,
     ): MediatorResult {
 
         logger.debug { "Mediator searchTerm: $searchTerm" }

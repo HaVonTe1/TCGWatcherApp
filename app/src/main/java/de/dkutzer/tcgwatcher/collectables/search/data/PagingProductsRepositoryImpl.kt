@@ -5,7 +5,7 @@ package de.dkutzer.tcgwatcher.collectables.search.data
 import androidx.paging.Pager
 import androidx.paging.PagingData
 import androidx.paging.map
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
 import de.dkutzer.tcgwatcher.collectables.search.domain.PagingProductsRepository
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
@@ -29,7 +29,7 @@ class GetProductsList(
 }
 
 class PagingProductsRepositoryAdapter(
-    private val productsPager: Pager<Int, ProductWithSellOffers>,
+    private val productsPager: Pager<Int, ProductAggregate>,
 ) : PagingProductsRepository {
     override fun getPagingProductsFlow(lang: String): Flow<PagingData<ProductModel>> {
         logger.debug { "PagingProductsRepositoryAdapter::getPagingProductsFlow" }

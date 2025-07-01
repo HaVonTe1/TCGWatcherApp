@@ -3,7 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.history.data
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
 import de.dkutzer.tcgwatcher.collectables.search.domain.RefreshState
@@ -27,7 +27,7 @@ abstract class PokemonPager {
     //Highlander Pattern
     companion object {
         @Volatile
-        private var Instance: Pager<Int, ProductWithSellOffers>? = null
+        private var Instance: Pager<Int, ProductAggregate>? = null
 
         @OptIn(ExperimentalPagingApi::class)
         fun providePokemonPager(
@@ -36,7 +36,7 @@ abstract class PokemonPager {
             quicksearchItem: ProductModel? = null,
             pokemonDatabase: SearchCacheDatabase,
             cardSearchService: ProductSearchService
-        ): Pager<Int, ProductWithSellOffers> {
+        ): Pager<Int, ProductAggregate> {
 
             logger.debug { "create Searching Pager" }
             return Instance ?: synchronized(this) {

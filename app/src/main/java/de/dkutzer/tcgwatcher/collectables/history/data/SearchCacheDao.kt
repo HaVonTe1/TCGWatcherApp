@@ -12,15 +12,25 @@ import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 
 @Dao
 interface SearchCacheDao {
+
+    @Query(
+        "SELECT DISTINCT p.* " +
+                "FROM search_result_item AS p " +
+                "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
+                "INNER JOIN search AS s ON s.id = ref.searchId " +
+                "WHERE s.id = :searchId LIMIT :pageSize OFFSET :offset"
+    )
+    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
 
     @Query("SELECT id FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
@@ -30,19 +40,30 @@ interface SearchCacheDao {
     fun findSearch(searchTerm: String) : SearchEntity?
 
     @Transaction
-    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
+    @Query(
+        "SELECT DISTINCT p.* " +
+                "FROM search_result_item AS p " +
+                "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
+                "INNER JOIN search AS s ON s.id = ref.searchId " +
+                "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)"
+    )
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductEntity>
 
     //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
     @Query("SELECT * FROM search_result_item WHERE externalId = :externalId")
-    fun findProductsByExternalId(externalId: String): List<ProductWithSellOffers>
+    fun findProductsByExternalId(externalId: String): List<ProductAggregate>
 
     @Transaction
-    @Query("SELECT sri.* FROM search_result_item sri left join search s on s.id = sri.searchId WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)")
-    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, ProductWithSellOffers>
+    @Query(
+        "SELECT DISTINCT p.* " +
+                "FROM search_result_item AS p " +
+                "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
+                "INNER JOIN search AS s ON s.id = ref.searchId " +
+                "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)"
+    )    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, ProductAggregate>
 
     @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId") //TODO: test
-    fun findItemWithSellOffersByProductId(productId: String) : ProductWithSellOffers?
+    fun findItemWithSellOffersByProductId(productId: String) : ProductAggregate?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>
@@ -101,15 +122,19 @@ interface SearchCacheDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertSearchProductCrossRefs(crossRefs: List<SearchProductCrossRef>): List<Long>
 
-    @Query("DELETE FROM SearchProductCrossRef WHERE searchId = :searchId")
+    @Query("DELETE FROM search_product_cross_ref WHERE searchId = :searchId")
     fun deleteCrossRefsBySearchId(searchId: Int)
 
-    @Query("DELETE FROM SearchProductCrossRef WHERE productId = :productId")
+    @Query("DELETE FROM search_product_cross_ref WHERE productId = :productId")
     fun deleteCrossRefsByProductId(productId: Int)
 
     @Transaction
     @Query("SELECT * FROM search WHERE id = :searchId")
-    fun getSearchWithProducts(searchId: Int): SearchWithProducts?
+    fun getSearchWithProducts(searchId: Int): SearchWithMinimalProducts?
+
+    @Transaction
+    @Query("SELECT * FROM search WHERE id = :searchId")
+    fun getSearchWithProductsNamesAndSets(searchId: Int): SearchWithFullProductInfo?
 }
 
 @Dao
