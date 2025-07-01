@@ -2,7 +2,10 @@ package de.dkutzer.tcgwatcher.collectables.search.data
 
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
@@ -36,7 +39,7 @@ inline fun <reified T> fromString(value: String): T
 
 fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
     return ProductEntity(
-        displayName = this.name.value,
+//        displayName = this.name.value,
         code = if (this.code.valid) this.code.value else "",
         imgLink = this.imgLink,
         language = this.name.languageCode,
@@ -46,46 +49,53 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         price = this.price,
         externalId = this.cmId,
         externalLink = this.cmLink,
-        setName = "",
-        setId = "",
+//        setName = "",
+//        setId = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
-        searchId = searchId.toInt(),
+//        searchId = searchId.toInt(),
         id = productId,
         lastUpdated = Instant.now().epochSecond
     )
 }
 
 
-fun ProductEntity.toProductModel() : ProductModel {
-    return ProductModel(
-        id = this.id.toString(),
-        name = NameModel(this.displayName, this.language),
-        code = this.code,
-        type = fromString<TypeEnum>(this.type) ,
-        genre = fromString<GenreType>(this.genre) ,
-        rarity = fromString<RarityType>(this.rarity) ,
-        set = SetModel(link = this.setId, name = this.setName),
-        detailsUrl = this.externalLink,
-        externalId = this.externalId,
-        imageUrl = this.imgLink,
-        price = this.price,
-        priceTrend = this.priceTrend,
-        sellOffers = listOf(),
-        timestamp = this.lastUpdated
+fun ProductComposite.toProductModel(): ProductModel {
+    // Convert ProductNameEntity list to NameModel list
+    val nameModels = names.map { NameModel(it.name, it.language) }
 
+    return ProductModel(
+        id = productEntity.id.toString(),
+        names = nameModels, // Now using the list of names
+        code = productEntity.code,
+        type = fromString<TypeEnum>(productEntity.type),
+        genre = fromString<GenreType>(productEntity.genre),
+        rarity = fromString<RarityType>(productEntity.rarity),
+        set = SetModel(
+            link = set?.setId ?: "",
+            name = set?.setName ?: ""
+        ),
+        detailsUrl = productEntity.externalLink,
+        externalId = productEntity.externalId,
+        imageUrl = productEntity.imgLink,
+        price = productEntity.price,
+        priceTrend = productEntity.priceTrend,
+        sellOffers = listOf(),
+        timestamp = productEntity.lastUpdated
     )
 }
 
-fun ProductWithSellOffers.toProductModel(language: String) : ProductModel {
-    return ProductModel(
+fun ProductAggregate.toProductModel(language: String): ProductModel {
+    // Convert ProductNameEntity list to NameModel list
+    val nameModels = names.map { NameModel(it.name, it.language) }
 
+    return ProductModel(
         id = URI(productEntity.externalLink).path.split("/").last(),
-        name = NameModel(productEntity.displayName, productEntity.language),
+        names = nameModels,
         code = productEntity.code,
-        type = fromString<TypeEnum>(productEntity.type) ,
-        genre = fromString<GenreType>(productEntity.genre) ,
-        rarity = fromString<RarityType>(productEntity.rarity) ,
-        set = SetModel(link = productEntity.setId, name = productEntity.setName),
+        type = fromString<TypeEnum>(productEntity.type),
+        genre = fromString<GenreType>(productEntity.genre),
+        rarity = fromString<RarityType>(productEntity.rarity),
+        set = SetModel(link = set?.setId ?: "", name = set?.setName ?: ""), // Set info no longer in ProductEntity
         externalId = productEntity.externalId,
         detailsUrl = productEntity.externalLink,
         imageUrl = productEntity.imgLink,
@@ -94,34 +104,31 @@ fun ProductWithSellOffers.toProductModel(language: String) : ProductModel {
         sellOffers = offers.map { it.toSellOfferModel(language) },
         timestamp = productEntity.lastUpdated
     )
-
 }
 
-fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductEntity {
+private fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductEntity {
     return ProductEntity(
-        displayName = this.name.value,
         code = this.code,
-        language = this.name.languageCode,
+        language = this.primaryName.languageCode,
         genre = this.genre.cmCode,
         type = this.type.cmCode,
         rarity = this.rarity.cmCode,
         imgLink = this.imageUrl,
-        //FixMe
         price = this.price,
         externalLink = this.detailsUrl,
         externalId = this.externalId,
         priceTrend = this.priceTrend,
         lastUpdated = this.timestamp,
-        setName = this.set.name,
-        setId = this.set.link,
-        id = productId,
-        searchId = searchId)
+        id = productId
+    )
 }
 
-fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductWithSellOffers {
-    return ProductWithSellOffers(
+fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductAggregate {
+    return ProductAggregate(
         productEntity = this.toProductItemEntity(searchId, productId),
-        offers = this.sellOffers.map { it.toSellOfferEntity(productId) }
+        offers = this.sellOffers.map { it.toSellOfferEntity(productId) },
+        names = this.names.map { ProductNameEntity(name = it.value, language = it.languageCode, productId = productId) },
+        set = ProductSetEntity(productId = productId, setName = this.set.name, setId = this.set.link, language = this.primaryName.languageCode)
     )
 }
 
@@ -166,13 +173,14 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
         priceTrend = this.priceTrend)
 }
 
+// Updated method to create ProductModel from DTO with multiple names
 fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
     return ProductModel(
-        name = this.name.toModel(),
-        type = fromString<TypeEnum>(this.type) ,
-        genre = fromString<GenreType>(this.genre) ,
-        set = SetModel(name = this.set.name,link = this.set.link),
-        rarity = fromString<RarityType>(this.rarity) ,
+        names = listOf(this.name.toModel()), // Single name from DTO, but stored in list
+        type = fromString<TypeEnum>(this.type),
+        genre = fromString<GenreType>(this.genre),
+        set = SetModel(name = this.set.name, link = this.set.link),
+        rarity = fromString<RarityType>(this.rarity),
         code = if (this.code.valid) this.code.value else "",
         externalId = this.cmId,
         detailsUrl = this.detailsUrl,
@@ -185,27 +193,27 @@ fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
     )
 }
 
-fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
-    return ProductEntity(
-        displayName = this.name.value,
-        imgLink = this.imageUrl,
-        //??
-        language = this.name.languageCode,
-        genre = this.genre,
-        type = this.type,
-        rarity = this.rarity,
-        price = this.price,
-        externalId = this.cmId,
-        externalLink = this.detailsUrl,
-        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
-        searchId = searchId.toInt(),
-        id = productId,
-        lastUpdated = Instant.now().epochSecond,
-        setName = this.set.name,
-        setId = this.set.link,
-        code = if (this.code.valid) this.code.value else "",
-    )
-}
+//private fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+//    return ProductEntity(
+//       // displayName = this.name.value,
+//        imgLink = this.imageUrl,
+//        //??
+//        language = this.name.languageCode,
+//        genre = this.genre,
+//        type = this.type,
+//        rarity = this.rarity,
+//        price = this.price,
+//        externalId = this.cmId,
+//        externalLink = this.detailsUrl,
+//        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
+//        searchId = searchId.toInt(),
+//        id = productId,
+//        lastUpdated = Instant.now().epochSecond,
+//        setName = this.set.name,
+//        setId = this.set.link,
+//        code = if (this.code.valid) this.code.value else "",
+//    )
+//}
 
 fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): SellOfferEntity {
     return SellOfferEntity(
@@ -220,8 +228,8 @@ fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): 
     )
 }
 
-fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
-    return ProductWithSellOffers(
+fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductAggregate {
+    return ProductAggregate(
         productEntity = this.toProductItemEntity(searchId, productId),
         offers = this.sellOffers.map { it.toSellOfferEntity(productId, language) }
     )
@@ -244,5 +252,3 @@ private fun CardmarketSellOfferDto.toSellOfferModel(language: String): SellOffer
 fun NameDto.toModel(): NameModel {
     return NameModel(this.value, this.languageCode)
 }
-
-

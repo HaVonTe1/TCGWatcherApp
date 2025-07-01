@@ -3,6 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.history.domain
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.time.Instant
@@ -37,7 +38,7 @@ data class ProductEntity(
     val lastUpdated: Long
 )
 
-@Entity(primaryKeys = ["searchId", "productId"])
+@Entity(primaryKeys = ["searchId", "productId"], tableName = "search_product_cross_ref")
 data class SearchProductCrossRef(
     val searchId: Int,
     val productId: Int
@@ -86,44 +87,37 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-
-data class SearchWithProducts(
+data class SearchWithMinimalProducts(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = androidx.room.Junction(SearchProductCrossRef::class)
     )
-    val products: List<ProductEntity>
-
-) {
-    fun isOlderThan(seconds: Long): Boolean {
-
-        return Instant.ofEpochSecond(this.search.lastUpdated).isBefore(Instant.now().minusSeconds(seconds))
-    }
-}
-
-data class SearchWithProductsAndSellOffers(
-    @Embedded val search: SearchEntity,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
-        associateBy = androidx.room.Junction(SearchProductCrossRef::class)
-    )
-    val productWithSellOffers: List<ProductWithSellOffers>
+    val productWithSellOffers: List<ProductAggregate>
 
 )
 
-data class ProductWithSellOffers(
+data class ProductAggregate(
     @Embedded val productEntity: ProductEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "productId"
     )
-    val offers: List<SellOfferEntity>
+    val offers: List<SellOfferEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "productId"
+    )
+    val names: List<ProductNameEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "productId"
+    )
+    val set: ProductSetEntity?
 )
 
-data class ProductWithNamesAndSets(
+data class ProductComposite(
     @Embedded val productEntity: ProductEntity,
     @Relation(
         parentColumn = "id",
@@ -134,6 +128,24 @@ data class ProductWithNamesAndSets(
         parentColumn = "id",
         entityColumn = "productId"
     )
-    val sets: List<ProductSetEntity>
+    val set: ProductSetEntity?
 )
 
+data class SearchWithFullProductInfo(
+    @Embedded val search: SearchEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            value = SearchProductCrossRef::class,
+            parentColumn = "searchId",
+            entityColumn = "productId"
+        )
+    )
+    val products: List<ProductComposite>
+) {
+    fun isOlderThan(seconds: Long): Boolean {
+        return Instant.ofEpochSecond(this.search.lastUpdated)
+            .isBefore(Instant.now().minusSeconds(seconds))
+    }
+}

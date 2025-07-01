@@ -1,6 +1,6 @@
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
@@ -13,7 +13,7 @@ class SearchWithItemsEntityTest {
 
     private lateinit var searchEntity: SearchEntity
     private lateinit var productItemEntities: List<ProductEntity>
-    private lateinit var searchWithProducts: SearchWithProducts
+    private lateinit var searchWithMinimalProducts: SearchWithMinimalProducts
 
     @Before
     fun setUp() {
@@ -22,7 +22,7 @@ class SearchWithItemsEntityTest {
         productItemEntities = listOf(mockk<ProductEntity>())
 
         // Create an instance of SearchWithItemsEntity
-        searchWithProducts = SearchWithProducts(searchEntity, productItemEntities)
+        searchWithMinimalProducts = SearchWithMinimalProducts(searchEntity, productItemEntities)
     }
 
     @Test
@@ -31,7 +31,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().epochSecond
 
         // Test with a small number of seconds (e.g., 1 second)
-        assertFalse(searchWithProducts.isOlderThan(1))
+        assertFalse(searchWithMinimalProducts.isOlderThan(1))
     }
 
     @Test
@@ -40,7 +40,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(10).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithProducts.isOlderThan(5))
+        assertTrue(searchWithMinimalProducts.isOlderThan(5))
     }
 
     @Test
@@ -49,6 +49,6 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(5).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithProducts.isOlderThan(5))
+        assertTrue(searchWithMinimalProducts.isOlderThan(5))
     }
 }

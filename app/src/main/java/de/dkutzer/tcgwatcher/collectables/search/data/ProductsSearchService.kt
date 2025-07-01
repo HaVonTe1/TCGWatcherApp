@@ -2,7 +2,7 @@ package de.dkutzer.tcgwatcher.collectables.search.data
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
 import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
@@ -138,7 +138,7 @@ class CardmarketProductSearchService
         lateinit var result: SearchResultsPage
         logger.debug { "Adapter: Looking in the Cache for: $searchString" }
 
-        var searchWithResults = cache.findSearchWithItemsByQuery(searchString, page)
+        var searchWithResults = cache.findSearchWithProductsNamesAndSetsByQuery(searchString, page)
         logger.debug { "Adapter: Found: ${searchWithResults?.products?.size}" }
         val lastUpdated = searchWithResults?.search?.lastUpdated
         if(lastUpdated!=null)
@@ -187,7 +187,7 @@ class CardmarketProductSearchService
                     logger.trace { "Adapter: Results so far: $mergedResults" }
                 }
 
-                val searchWithProducts = SearchWithProducts(
+                val searchWithMinimalProducts = SearchWithMinimalProducts(
                     search = SearchEntity(
                         searchTerm = searchString,
                         size = mergedResults.results.size,
@@ -197,8 +197,8 @@ class CardmarketProductSearchService
                     ),
                     products = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
-                logger.debug { "Persisting cache: $searchWithProducts" }
-                cache.persistsSearchWithItems(searchWithProducts, config.lang.name)
+                logger.debug { "Persisting cache: $searchWithMinimalProducts" }
+                cache.persistsSearchWithItems(searchWithMinimalProducts, config.lang.name)
 
                 logger.debug { "Now fetching paged results from newly cache" }
                 val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)

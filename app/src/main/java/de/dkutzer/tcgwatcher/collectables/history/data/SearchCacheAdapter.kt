@@ -1,14 +1,15 @@
 package de.dkutzer.tcgwatcher.collectables.history.data
 
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProducts
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 
@@ -19,7 +20,7 @@ private val logger = KotlinLogging.logger {}
 class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     SearchCacheRepository {
 
-    override suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithProducts?  {
+    override suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithMinimalProducts?  {
 
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
         val search = searchCacheDao.findSearch(searchTerm)
@@ -32,21 +33,21 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
-    suspend fun getSearchWithProducts(searchId: Int): SearchWithProducts? {
+    suspend fun getSearchWithProducts(searchId: Int): SearchWithMinimalProducts? {
         return searchCacheDao.getSearchWithProducts(searchId)
     }
 
     //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
-    override suspend fun getProductsByExternalId(externalId: String): ProductWithSellOffers? {
+    override suspend fun getProductsByExternalId(externalId: String): ProductAggregate? {
         return searchCacheDao.findItemWithSellOffersByProductId(externalId)
     }
 
-    override suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers) {
+    override suspend fun updateProduct(productAggregate: ProductAggregate) {
 
-        val productId = searchCacheDao.saveItem(productWithSellOffers.productEntity)
-        val newProductID = if(productId == -1L) productWithSellOffers.productEntity.id else productId.toInt()
-        productWithSellOffers.offers.forEach { it.productId = newProductID }
-        searchCacheDao.saveSellOffers(productWithSellOffers.offers)
+        val productId = searchCacheDao.saveItem(productAggregate.productEntity)
+        val newProductID = if(productId == -1L) productAggregate.productEntity.id else productId.toInt()
+        productAggregate.offers.forEach { it.productId = newProductID }
+        searchCacheDao.saveSellOffers(productAggregate.offers)
     }
 
     override suspend fun findSearchWithItemsAndSellOffersByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithProductsAndSellOffers?  {
@@ -60,7 +61,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             )
             val resultItemsWithSellOffersEntities = resultItemEntities.map {
                 val sellOffers = searchCacheDao.findSellOfferByProductId(it.id)
-                ProductWithSellOffers(it, sellOffers)
+                ProductAggregate(it, sellOffers)
             }
 
             return SearchWithProductsAndSellOffers(search = search, productWithSellOffers =  resultItemsWithSellOffersEntities)
@@ -69,7 +70,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     }
 
-    override suspend fun findProductWithSellOffersByExternalId(externalId: String): ProductWithSellOffers? {
+    override suspend fun findProductWithSellOffersByExternalId(externalId: String): ProductAggregate? {
         logger.debug { "SearchCacheRepositoryImpl::findSearchWithItemsAndSellOffersByCmId" }
         val product = searchCacheDao.findItemWithSellOffersByProductId(externalId)
 
@@ -107,23 +108,23 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
 
     override suspend fun persistsSearchWithItems(
-        searchWithProducts: SearchWithProducts,
+        searchWithMinimalProducts: SearchWithMinimalProducts,
         language: String
-    ): SearchWithProducts {
+    ): SearchWithMinimalProducts {
         val (searchEntity, searchId) = processSearch(
-            searchTerm = searchWithProducts.search.searchTerm,
-            productsSize = searchWithProducts.products.size,
+            searchTerm = searchWithMinimalProducts.search.searchTerm,
+            productsSize = searchWithMinimalProducts.products.size,
             language = language,
-            history = searchWithProducts.search.history
+            history = searchWithMinimalProducts.search.history
         )
         // Produkte speichern (nur einmalig)
-        searchCacheDao.saveItems(searchWithProducts.products)
+        searchCacheDao.saveItems(searchWithMinimalProducts.products)
         // CrossRefs anlegen
-        val crossRefs = searchWithProducts.products.map { product ->
+        val crossRefs = searchWithMinimalProducts.products.map { product ->
             SearchProductCrossRef(searchId = searchId, productId = product.id)
         }
         searchCacheDao.insertSearchProductCrossRefs(crossRefs)
-        return SearchWithProducts(searchEntity, searchWithProducts.products)
+        return SearchWithMinimalProducts(searchEntity, searchWithMinimalProducts.products)
     }
 
     override suspend fun persistSearchWithProductAndSellOffers(
@@ -143,7 +144,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             searchCacheDao.saveSellOffers(product.offers)
             // CrossRef anlegen
             searchCacheDao.insertSearchProductCrossRefs(listOf(SearchProductCrossRef(searchId = searchId, productId = productId.toInt())))
-            ProductWithSellOffers(updatedProductItemEntity, product.offers)
+            ProductAggregate(updatedProductItemEntity, product.offers)
         }.toList()
         return SearchWithProductsAndSellOffers(searchEntity, updatedProductWithSellOffers)
     }
@@ -192,8 +193,8 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     override suspend fun updateItemByLink(
         detailsUrl: String,
         itemEntity: ProductEntity,
-        names: List<ProductNameEntity> = emptyList(),
-        sets: List<ProductSetEntity> = emptyList()
+        names: List<ProductNameEntity>,
+        sets: List<ProductSetEntity>
     ) {
         // Produkt aktualisieren (z.B. Preis, Trend, Rarität, Typ, etc.)
         searchCacheDao.saveItem(itemEntity)
@@ -205,6 +206,16 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         if (sets.isNotEmpty()) {
             searchCacheDao.insertProductSets(sets)
         }
+    }
+
+    override suspend fun findSearchWithProductsNamesAndSetsByQuery(searchTerm: String, page: Int, limit: Int): SearchWithFullProductInfo? {
+        logger.debug { "SearchCacheRepositoryImpl::findSearchWithProductsNamesAndSetsByQuery" }
+        val search = searchCacheDao.findSearch(searchTerm)
+        if (search != null) {
+            val relation = searchCacheDao.getSearchWithProductsNamesAndSets(search.id)
+            return relation
+        }
+        return null
     }
 
 }
