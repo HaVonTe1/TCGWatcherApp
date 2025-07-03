@@ -1,6 +1,11 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketSellOfferDto
@@ -14,6 +19,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.PriceTrendType
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.RarityType
+import de.dkutzer.tcgwatcher.collectables.search.domain.SellOfferModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
@@ -22,7 +28,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
-import kotlin.math.abs
 
 class MapperTest {
 
@@ -83,31 +88,6 @@ class MapperTest {
     }
 
     @Test
-    fun `toProductItemEntity from CardmarketProductGallaryItemDto with default searchId`() {
-        // Arrange
-        val dto = createSampleGalleryItemDto()
-
-        // Act
-        val result = dto.toProductItemEntity()
-
-        // Assert
-        assertEquals(0, result.searchId)
-    }
-
-    @Test
-    fun `toProductItemEntity from CardmarketProductGallaryItemDto with specific searchId`() {
-        // Arrange
-        val dto = createSampleGalleryItemDto()
-        val expectedSearchId = 5
-
-        // Act
-        val result = dto.toProductItemEntity(searchId = expectedSearchId.toLong())
-
-        // Assert
-        assertEquals(expectedSearchId, result.searchId)
-    }
-
-    @Test
     fun `toProductItemEntity from CardmarketProductGallaryItemDto timestamp generation`() {
         // Arrange
         val dto = createSampleGalleryItemDto()
@@ -122,143 +102,173 @@ class MapperTest {
     }
 
     @Test
-    fun `toProductModel from ProductItemEntity with valid cmLink`() {
+    fun `toProductModel from ProductComposite with multiple names`() {
         // Arrange
-        val cmLink = "/de/Pokemon/Products/Singles/set123/card456"
-        val entity = createSampleProductItemEntity(id = 4, cmLink = cmLink, cmId = "/Pokemon/Products/Singles/set123/card456")
+        val composite = createSampleProductComposite()
 
         // Act
-        val result = entity.toProductModel()
+        val result = composite.toProductModel()
 
         // Assert
-        assertEquals("4", result.id)
-        assertCommonProductModelMapping(entity, result)
+        assertEquals(2, result.names.size)
+        assertEquals("Test Product", result.names[0].value)
+        assertEquals("en", result.names[0].languageCode)
+        assertEquals("Test Produkt", result.names[1].value)
+        assertEquals("de", result.names[1].languageCode)
+        assertEquals("123", result.id)
     }
 
     @Test
-    fun `toProductModel from ProductItemEntity with various TypeEnum strings`() {
-        // Valid types
-        val validMappings = listOf(
-            "Singles" to TypeEnum.CARD,
-            "Boosters" to TypeEnum.BOOSTER,
-            "Booster-Boxes" to TypeEnum.DISPLAY,
-            "Theme-Decks" to TypeEnum.THEME_DECK,
-            "Trainer-Kits" to TypeEnum.TRAINER_KIT,
-            "Tins" to TypeEnum.TIN,
-            "Coins" to TypeEnum.COIN,
-            "Lots" to TypeEnum.LOT,
-            "Box-Sets" to TypeEnum.BOX_SET,
-            "Elite-Trainer-Boxes" to TypeEnum.ELITE_TRAINER_BOX,
-            "Blisters" to TypeEnum.BLISTER
-        )
-
-        validMappings.forEach { (typeStr, expectedType) ->
-            val entity = createSampleProductItemEntity(type = typeStr)
-            val result = entity.toProductModel()
-            assertEquals(expectedType, result.type)
-        }
-
-        // Invalid type
-        val invalidEntity = createSampleProductItemEntity(type = "InvalidType")
-        assertEquals(TypeEnum.OTHER, invalidEntity.toProductModel().type)
-    }
-
-    @Test
-    fun `toProductModel from ProductItemEntity with various GenreType strings`() {
-        val validMappings = listOf(
-            "Pokemon" to GenreType.POKEMON,
-            "Magic" to GenreType.MAGIC,
-            "YuGiOh" to GenreType.YUGIOH
-        )
-
-        validMappings.forEach { (genreStr, expectedGenre) ->
-            val entity = createSampleProductItemEntity(genre = genreStr)
-            val result = entity.toProductModel()
-            assertEquals(expectedGenre, result.genre)
-        }
-
-        // Invalid genre
-        val invalidEntity = createSampleProductItemEntity(genre = "UnknownGenre")
-        assertEquals(GenreType.OTHER, invalidEntity.toProductModel().genre)
-    }
-
-    @Test
-    fun `toProductModel from ProductItemEntity with various RarityType strings`() {
-        val validMappings = listOf(
-            "Common" to RarityType.COMMON,
-            "Uncommon" to RarityType.UNCOMMON,
-            "Rare" to RarityType.RARE,
-            "Double Rare" to RarityType.DOUBLE_RARE,
-            "Secret Rare" to RarityType.SECRET_RARE,
-            "Illustration Rare" to RarityType.ILLUSTRATION_RARE,
-            "Special Illustration Rare" to RarityType.SPECIAL_ILLUSTRATION_RARE,
-            "Promo" to RarityType.PROMO,
-            "Fixed" to RarityType.FIXED,
-            "Ultra Rare" to RarityType.ULTRA_RARE
-        )
-
-        validMappings.forEach { (rarityStr, expectedRarity) ->
-            val entity = createSampleProductItemEntity(rarity = rarityStr)
-            val result = entity.toProductModel()
-            assertEquals(expectedRarity, result.rarity)
-        }
-
-        // Invalid rarity
-        val invalidEntity = createSampleProductItemEntity(rarity = "UnknownRarity")
-        assertEquals(RarityType.OTHER, invalidEntity.toProductModel().rarity)
-    }
-
-    @Test
-    fun `toProductItemEntity from ProductModel with default searchId`() {
+    fun `toProductModel from ProductAggregate with sell offers`() {
         // Arrange
-        val model = createSampleProductModel()
+        val aggregate = createSampleProductAggregate()
 
         // Act
-        val result = model.toProductItemEntity()
+        val result = aggregate.toProductModel("en")
 
         // Assert
-        assertEquals(0, result.searchId)
+        assertEquals(1, result.sellOffers.size)
+        assertEquals("Test Seller", result.sellOffers[0].sellerName)
+        assertEquals("Germany", result.sellOffers[0].sellerLocation.country)
+        assertEquals("de", result.sellOffers[0].sellerLocation.code)
     }
 
     @Test
-    fun `toProductItemEntity from ProductModel with specific searchId`() {
+    fun `toProductWithSellofferEntity from ProductModel creates complete aggregate`() {
         // Arrange
-        val model = createSampleProductModel()
-        val expectedSearchId = 10
+        val productModel = createSampleProductModel()
 
         // Act
-        val result = model.toProductItemEntity(searchId = expectedSearchId)
+        val result = productModel.toProductWithSellofferEntity(searchId = 5, productId = 10)
 
         // Assert
-        assertEquals(expectedSearchId, result.searchId)
+        assertEquals(10, result.productEntity.id)
+        assertEquals(1, result.names.size)
+        assertEquals("Test Product", result.names[0].name)
+        assertEquals("en", result.names[0].language)
+        assertEquals(10, result.names[0].productId)
+        assertEquals("Test Set", result.set?.setName)
+        assertEquals("http://example.com/set", result.set?.setId)
     }
 
     @Test
-    fun `toProductItemEntity from ProductModel basic mapping`() {
+    fun `toSellOfferEntity from SellOfferModel maps correctly`() {
         // Arrange
-        val model = createSampleProductModel()
+        val sellOfferModel = createSampleSellOfferModel()
 
         // Act
-        val result = model.toProductItemEntity()
+        val result = sellOfferModel.toSellOfferEntity(productId = 42)
 
         // Assert
-        assertEquals(model.name.value, result.displayName)
-        assertEquals(model.type.cmCode, result.type)
-        assertEquals(model.genre.cmCode, result.genre)
-        assertEquals(model.rarity.cmCode, result.rarity)
-        assertEquals(model.code, result.code)
-        assertEquals(model.detailsUrl, result.externalLink)
-        assertEquals(model.imageUrl, result.imgLink)
-        assertEquals(model.price, result.price)
-        assertEquals(model.priceTrend, result.priceTrend)
-        assertEquals(model.set.name, result.setName)
-        assertEquals(model.set.link, result.setId)
+        assertEquals(42, result.productId)
+        assertEquals("Test Seller", result.sellerName)
+        assertEquals("de", result.sellerLocation)
+        assertEquals("en", result.productLanguage)
+        assertEquals("Near Mint", result.condition)
+        assertEquals(3, result.amount)
+        assertEquals("25.50", result.price)
+    }
+
+    @Test
+    fun `toSellOfferModel from SellOfferEntity maps correctly`() {
+        // Arrange
+        val sellOfferEntity = createSampleSellOfferEntity()
+
+        // Act
+        val result = sellOfferEntity.toSellOfferModel("en")
+
+        // Assert
+        assertEquals("Test Seller", result.sellerName)
+        assertEquals("Germany", result.sellerLocation.country)
+        assertEquals("de", result.sellerLocation.code)
+        assertEquals("English", result.productLanguage.displayName)
+        assertEquals("en", result.productLanguage.code)
+        assertEquals(ConditionType.NEAR_MINT, result.condition)
+        assertEquals(2, result.amount)
+        assertEquals("15.00", result.price)
+    }
+
+    @Test
+    fun `toProductGallaryItemDto from CardmarketProductDetailsDto`() {
+        // Arrange
+        val detailsDto = createSampleProductDetailsDto("en")
+
+        // Act
+        val result = detailsDto.toProductGallaryItemDto()
+
+        // Assert
+        assertEquals(detailsDto.name, result.name)
+        assertEquals(detailsDto.code, result.code)
+        assertEquals(detailsDto.detailsUrl, result.cmLink)
+        assertEquals(detailsDto.cmId, result.cmId)
+        assertEquals(detailsDto.imageUrl, result.imgLink)
+        assertEquals(detailsDto.price, result.price)
+        assertEquals(detailsDto.genre, result.genre)
+        assertEquals(detailsDto.type, result.type)
+        assertEquals(detailsDto.priceTrend, result.priceTrend)
+    }
+
+    @Test
+    fun `toProduct from CardmarketProductDetailsDto creates complete aggregate`() {
+        // Arrange
+        val detailsDto = createSampleProductDetailsDto("de")
+
+        // Act
+        val result = detailsDto.toProduct("de", searchId = 1, productId = 5)
+
+        // Assert
+        assertEquals(5, result.productEntity.id)
+        assertEquals(1, result.offers.size)
+        assertEquals("Seller 1", result.offers[0].sellerName)
+        assertEquals(1, result.names.size)
+        assertEquals("Test Produkt", result.names[0].name)
+        assertEquals("de", result.names[0].language)
+        assertEquals("Test Set", result.set?.setName)
+        assertEquals("/de/Pokemon/Products/Singles/Team-Rocket/", result.set?.setId)
+    }
+
+    @Test
+    fun `toModel from NameDto`() {
+        // Arrange
+        val nameDto = NameDto("Test Name", "fr", "Test Original")
+
+        // Act
+        val result = nameDto.toModel()
+
+        // Assert
+        assertEquals("Test Name", result.value)
+        assertEquals("fr", result.languageCode)
+    }
+
+    @Test
+    fun `fromString with valid enum value`() {
+        // Act
+        val result = fromString<TypeEnum>("Singles")
+
+        // Assert
+        assertEquals(TypeEnum.CARD, result)
+    }
+
+    @Test
+    fun `fromString with invalid enum value returns OTHER`() {
+        // Act
+        val result = fromString<GenreType>("InvalidGenre")
+
+        // Assert
+        assertEquals(GenreType.OTHER, result)
+    }
+
+    @Test
+    fun `fromString with case insensitive matching`() {
+        // Act
+        val result = fromString<RarityType>("RARE")
+
+        // Assert
+        assertEquals(RarityType.RARE, result)
     }
 
     @Test
     fun `test LocationModel fromSellerLocation`() {
-
-
         var locationModel = LocationModel.fromSellerLocation("Deutschland", "de")
         assertEquals("Deutschland", locationModel.country)
         assertEquals("de", locationModel.code)
@@ -283,54 +293,45 @@ class MapperTest {
 
     @Test
     fun `test LanguageModel fromProductLanguage`() {
-
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Deutsch", "de")
             assertEquals("de", fromProductLanguage.code)
             assertEquals("Deutsch", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Englisch", "de")
             assertEquals("en", fromProductLanguage.code)
             assertEquals("Englisch", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Französisch", "de")
             assertEquals("fr", fromProductLanguage.code)
             assertEquals("Französisch", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Koreanisch", "de")
             assertEquals("kr", fromProductLanguage.code)
             assertEquals("Koreanisch", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("German", "en")
             assertEquals("de", fromProductLanguage.code)
             assertEquals("German", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("English", "en")
             assertEquals("en", fromProductLanguage.code)
             assertEquals("English", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("French", "en")
             assertEquals("fr", fromProductLanguage.code)
             assertEquals("French", fromProductLanguage.displayName)
-
         }
-        {
+        run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Korean", "en")
             assertEquals("kr", fromProductLanguage.code)
             assertEquals("Korean", fromProductLanguage.displayName)
-
         }
     }
 
@@ -356,6 +357,7 @@ class MapperTest {
         val languageModel = LanguageModel.fromCode("de", "de")
         assertEquals("de", languageModel.code)
         assertEquals("Deutsch", languageModel.displayName)
+
         val languageModel2 = LanguageModel.fromCode("it", "en")
         assertEquals("it", languageModel2.code)
         assertEquals("Italian", languageModel2.displayName)
@@ -367,11 +369,10 @@ class MapperTest {
 
     @Test
     fun `test ProductDetailsDto ToProductModel de`() {
-
         val productDetailsDto = createSampleProductDetailsDto("de")
         val productModel = productDetailsDto.toProductModel("de")
-        assertEquals("Test Produkt", productModel.name.value)
-        assertEquals("de", productModel.name.languageCode)
+        assertEquals("Test Produkt", productModel.names[0].value)
+        assertEquals("de", productModel.names[0].languageCode)
         assertEquals("TEST123", productModel.code)
         assertEquals("Pokemon", productModel.genre.cmCode)
         assertEquals("Pokemon", productModel.genre.displayName)
@@ -397,14 +398,12 @@ class MapperTest {
         assertEquals("50.00", productModel.sellOffers[0].price)
     }
 
-
     @Test
     fun `test ProductDetailsDto ToProductModel en`() {
-
         val productDetailsDto = createSampleProductDetailsDto("en")
         val productModel = productDetailsDto.toProductModel("en")
-        assertEquals("Test Produkt", productModel.name.value)
-        assertEquals("en", productModel.name.languageCode)
+        assertEquals("Test Produkt", productModel.names[0].value)
+        assertEquals("en", productModel.names[0].languageCode)
         assertEquals("TEST123", productModel.code)
         assertEquals("Pokemon", productModel.genre.cmCode)
         assertEquals("Pokemon", productModel.genre.displayName)
@@ -429,10 +428,35 @@ class MapperTest {
         assertEquals("50.00", productModel.sellOffers[0].price)
     }
 
-    //------------------------------------
+    @Test
+    fun `should create product entity with valid input`() {
+        // Arrange
+        val dto = CardmarketProductGallaryItemDto(
+            name = NameDto("xx", "de", "yy"),
+            code = "TST 1",
+            genre = "xx",
+            type = "xx",
+            cmLink = "https://example.com/item1",
+            cmId = "item1",
+            imgLink = "https://example.com/item1.jpg",
+            price = "$10",
+            priceTrend = "sdf"
+        )
+
+        // Act
+        val entity = dto.toProductItemEntity()
+
+        // Assert
+        assertEquals(dto.cmLink, entity.externalLink)
+        assertEquals(dto.imgLink, entity.imgLink)
+        assertEquals(dto.price, entity.price)
+        assertEquals(dto.cmId, entity.externalId)
+        assertEquals(dto.name.languageCode, entity.language)
+        assertEquals(dto.genre, entity.genre)
+        assertEquals(dto.type, entity.type)
+    }
 
     // Helper functions to create sample data
-
     private fun createSampleProductDetailsDto(lang: String): CardmarketProductDetailsDto {
         return CardmarketProductDetailsDto(
             name = NameDto("Test Produkt", lang,"Test Product"),
@@ -454,7 +478,6 @@ class MapperTest {
                 }
             )
         )
-
     }
 
     private fun createSampleSellOfferDtoDe(): CardmarketSellOfferDto = CardmarketSellOfferDto(
@@ -465,7 +488,6 @@ class MapperTest {
         condition = "Near Mint",
         amount = "10",
         price = "50.00"
-
     )
 
     private fun createSampleSellOfferDtoEn(): CardmarketSellOfferDto = CardmarketSellOfferDto(
@@ -476,8 +498,8 @@ class MapperTest {
         condition = "Near Mint",
         amount = "10",
         price = "50.00"
-
     )
+
     private fun createSampleGalleryItemDto(
         code: CodeType = CodeType("TEST123", true),
         priceTrend: PriceTrendType = PriceTrendType("+5%", true)
@@ -495,50 +517,125 @@ class MapperTest {
         )
     }
 
-    private fun createSampleProductItemEntity(
-        id: Int = 0,
-        cmLink: String = "/de/Pokemon/Products/Singles/set123/card456",
-        cmId: String = "/Pokemon/Products/Singles/set123/card456",
-        type: String = "Singles",
-        genre: String = "Pokemon",
-        rarity: String = "Rare"
-    ): ProductEntity {
-        return ProductEntity(
-            id = id,
-            searchId = 0,
-            displayName = "Test Product",
-            language = "en",
-            genre = genre,
-            type = type,
-            rarity = rarity,
-            code = "TEST123",
-            externalLink = cmLink,
-            externalId = cmId,
-            imgLink = "http://example.com/image.jpg",
-            price = "100.00",
-            priceTrend = "+5%",
-            setName = "Test Set",
-            setId = "http://example.com/set",
-            lastUpdated = Instant.now().epochSecond
+    private fun createSampleProductComposite(): ProductComposite {
+        return ProductComposite(
+            productEntity = ProductEntity(
+                id = 123,
+                language = "en",
+                genre = "Pokemon",
+                type = "Singles",
+                rarity = "Rare",
+                code = "TEST123",
+                externalId = "test-id",
+                externalLink = "/en/Pokemon/Products/Singles/test/123",
+                imgLink = "http://example.com/image.jpg",
+                price = "25.00",
+                priceTrend = "+10%",
+                lastUpdated = Instant.now().epochSecond
+            ),
+            names = listOf(
+                ProductNameEntity(id = 1, productId = 123, name = "Test Product", language = "en"),
+                ProductNameEntity(id = 2, productId = 123, name = "Test Produkt", language = "de")
+            ),
+            set = ProductSetEntity(
+                id = 1,
+                productId = 123,
+                setName = "Test Set",
+                setId = "test-set",
+                language = "en"
+            )
+        )
+    }
+
+    private fun createSampleProductAggregate(): ProductWithSellOffers {
+        return ProductWithSellOffers(
+            productEntity = ProductEntity(
+                id = 456,
+                language = "en",
+                genre = "Pokemon",
+                type = "Singles",
+                rarity = "Rare",
+                code = "AGG123",
+                externalId = "agg-id",
+                externalLink = "/en/Pokemon/Products/Singles/agg/456",
+                imgLink = "http://example.com/agg.jpg",
+                price = "30.00",
+                priceTrend = "+5%",
+                lastUpdated = Instant.now().epochSecond
+            ),
+            offers = listOf(
+                SellOfferEntity(
+                    id = 1,
+                    productId = 456,
+                    sellerName = "Test Seller",
+                    sellerLocation = "de",
+                    productLanguage = "en",
+                    condition = "Near Mint",
+                    amount = 2,
+                    price = "28.00",
+                    special = ""
+                )
+            ),
+            names = listOf(
+                ProductNameEntity(
+                    id = 3,
+                    productId = 456,
+                    name = "Aggregate Product",
+                    language = "en"
+                )
+            ),
+            set = ProductSetEntity(
+                id = 2,
+                productId = 456,
+                setName = "Aggregate Set",
+                setId = "agg-set",
+                language = "en"
+            )
         )
     }
 
     private fun createSampleProductModel(): ProductModel {
         return ProductModel(
-            id = "Lillies-Clefairy-ex-V1-JTG056",
-            name = NameModel("Test Product", "en"),
+            id = "model-123",
+            names = listOf(NameModel("Test Product", "en")),
+            code = "MODEL123",
             type = TypeEnum.CARD,
             genre = GenreType.POKEMON,
-            code = "TEST123",
-            imageUrl = "http://example.com/image.jpg",
-            detailsUrl = "/en/Pokemon/Products/Singles/set123/card456",
             rarity = RarityType.RARE,
             set = SetModel("http://example.com/set", "Test Set"),
-            price = "100.00",
-            priceTrend = "+5%",
+            detailsUrl = "/en/Pokemon/Products/Singles/model/123",
+            externalId = "model-id",
+            imageUrl = "http://example.com/model.jpg",
+            price = "35.00",
+            priceTrend = "+15%",
             sellOffers = emptyList(),
-            externalId = "card456",
             timestamp = Instant.now().epochSecond
+        )
+    }
+
+    private fun createSampleSellOfferModel(): SellOfferModel {
+        return SellOfferModel(
+            sellerName = "Test Seller",
+            sellerLocation = LocationModel("Germany", "de"),
+            productLanguage = LanguageModel("English", "en"),
+            special = SpecialType.OTHER,
+            condition = ConditionType.NEAR_MINT,
+            amount = 3,
+            price = "25.50"
+        )
+    }
+
+    private fun createSampleSellOfferEntity(): SellOfferEntity {
+        return SellOfferEntity(
+            id = 1,
+            productId = 789,
+            sellerName = "Test Seller",
+            sellerLocation = "de",
+            productLanguage = "en",
+            condition = "Near Mint",
+            amount = 2,
+            price = "15.00",
+            special = ""
         )
     }
 
@@ -546,35 +643,11 @@ class MapperTest {
         dto: CardmarketProductGallaryItemDto,
         entity: ProductEntity
     ) {
-        assertEquals(dto.name.value, entity.displayName)
         assertEquals(dto.genre, entity.genre)
         assertEquals(dto.type, entity.type)
         assertEquals(dto.cmLink, entity.externalLink)
         assertEquals(dto.imgLink, entity.imgLink)
         assertEquals(dto.price, entity.price)
-    }
-
-    private fun assertCommonProductModelMapping(
-        entity: ProductEntity,
-        model: ProductModel
-    ) {
-        assertEquals(entity.displayName, model.name.value)
-        assertEquals(entity.genre, model.genre.cmCode)
-        assertEquals(entity.type, model.type.cmCode)
-        assertEquals(entity.rarity, model.rarity.cmCode)
-        assertEquals(entity.code, model.code)
-        assertEquals(entity.externalId, model.externalId)
-        assertEquals(entity.externalLink, model.detailsUrl)
-        assertEquals(entity.imgLink, model.imageUrl)
-        assertEquals(entity.price, model.price)
-        assertEquals(entity.priceTrend, model.priceTrend)
-        assertEquals(entity.setName, model.set.name)
-        assertEquals(entity.setId, model.set.link)
-    }
-
-    // Additional helper assertions for timestamps
-    private fun assertTimestampRecent(timestamp: Long) {
-        val current = Instant.now().epochSecond
-        assertTrue(abs(current - timestamp) <= 2)
+        assertEquals(dto.name.languageCode, entity.language)
     }
 }

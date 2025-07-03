@@ -87,31 +87,35 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-data class SearchWithMinimalProducts(
+data class SearchWithBasicProductsInfo(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "id",
-        associateBy = androidx.room.Junction(SearchProductCrossRef::class)
+        entity = ProductEntity::class,  
+        entityColumn = "id",            // Refers to ProductEntity.id
+        associateBy = Junction(
+            value = SearchProductCrossRef::class,
+            parentColumn = "searchId",
+            entityColumn = "productId"
+        )
     )
-    val productWithSellOffers: List<ProductAggregate>
-
+    val products: List<ProductEntity>
 )
 
-data class ProductAggregate(
+data class ProductWithSellOffers(
     @Embedded val productEntity: ProductEntity,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "id", 
         entityColumn = "productId"
     )
     val offers: List<SellOfferEntity>,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "id", 
         entityColumn = "productId"
     )
     val names: List<ProductNameEntity>,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "id", 
         entityColumn = "productId"
     )
     val set: ProductSetEntity?
@@ -131,18 +135,20 @@ data class ProductComposite(
     val set: ProductSetEntity?
 )
 
+
 data class SearchWithFullProductInfo(
     @Embedded val search: SearchEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "id",
+        entity = ProductEntity::class,  // Explicit entity
+        entityColumn = "id",            // Refers to ProductEntity.id
         associateBy = Junction(
             value = SearchProductCrossRef::class,
             parentColumn = "searchId",
             entityColumn = "productId"
         )
     )
-    val products: List<ProductComposite>
+    val products: List<ProductWithSellOffers>
 ) {
     fun isOlderThan(seconds: Long): Boolean {
         return Instant.ofEpochSecond(this.search.lastUpdated)

@@ -12,11 +12,11 @@ import androidx.room.Upsert
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 
@@ -28,7 +28,7 @@ interface SearchCacheDao {
                 "FROM search_result_item AS p " +
                 "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
                 "INNER JOIN search AS s ON s.id = ref.searchId " +
-                "WHERE s.id = :searchId LIMIT :pageSize OFFSET :offset"
+                "WHERE s.id = :searchId ORDER BY p.id ASC LIMIT :pageSize OFFSET :offset"
     )
     fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
@@ -49,9 +49,10 @@ interface SearchCacheDao {
     )
     fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductEntity>
 
-    //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
+
+    @Transaction
     @Query("SELECT * FROM search_result_item WHERE externalId = :externalId")
-    fun findProductsByExternalId(externalId: String): List<ProductAggregate>
+    fun findProductsByExternalId(externalId: String): ProductWithSellOffers?
 
     @Transaction
     @Query(
@@ -60,10 +61,11 @@ interface SearchCacheDao {
                 "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
                 "INNER JOIN search AS s ON s.id = ref.searchId " +
                 "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)"
-    )    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, ProductAggregate>
+    )    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, ProductWithSellOffers>
 
+    @Transaction
     @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId") //TODO: test
-    fun findItemWithSellOffersByProductId(productId: String) : ProductAggregate?
+    fun findItemWithSellOffersByProductId(productId: String) : ProductWithSellOffers?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>
@@ -129,12 +131,21 @@ interface SearchCacheDao {
     fun deleteCrossRefsByProductId(productId: Int)
 
     @Transaction
-    @Query("SELECT * FROM search WHERE id = :searchId")
-    fun getSearchWithProducts(searchId: Int): SearchWithMinimalProducts?
+    @Query("SELECT * FROM search as s " +
+            "JOIN search_product_cross_ref as spcr ON s.id = spcr.searchId " +
+            "JOIN search_result_item  as p ON spcr.productId = p.id " +
+            "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm) ORDER BY p.id ASC LIMIT :limit OFFSET :offset"
+    )
+    fun getSearchWithProducts(searchTerm: String, limit: Int, offset: Int): SearchWithBasicProductsInfo?
 
     @Transaction
-    @Query("SELECT * FROM search WHERE id = :searchId")
-    fun getSearchWithProductsNamesAndSets(searchId: Int): SearchWithFullProductInfo?
+    @Query("SELECT * FROM search as s " +
+            "JOIN search_product_cross_ref as spcr ON s.id = spcr.searchId " +
+            "JOIN search_result_item  as p ON spcr.productId = p.id " +
+            "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm) " +
+            "ORDER BY p.id ASC LIMIT :limit OFFSET :offset"
+    )
+    fun getSearchWithProductsAndSellOffers(searchTerm: String, limit: Int, offset: Int): SearchWithFullProductInfo?
 }
 
 @Dao
