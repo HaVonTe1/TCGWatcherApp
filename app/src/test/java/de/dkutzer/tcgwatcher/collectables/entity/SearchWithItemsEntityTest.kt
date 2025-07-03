@@ -1,6 +1,6 @@
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
@@ -13,7 +13,7 @@ class SearchWithItemsEntityTest {
 
     private lateinit var searchEntity: SearchEntity
     private lateinit var productItemEntities: List<ProductEntity>
-    private lateinit var searchWithMinimalProducts: SearchWithMinimalProducts
+    private lateinit var searchWithBasicProductsInfo: SearchWithBasicProductsInfo
 
     @Before
     fun setUp() {
@@ -22,7 +22,7 @@ class SearchWithItemsEntityTest {
         productItemEntities = listOf(mockk<ProductEntity>())
 
         // Create an instance of SearchWithItemsEntity
-        searchWithMinimalProducts = SearchWithMinimalProducts(searchEntity, productItemEntities)
+        searchWithBasicProductsInfo = SearchWithBasicProductsInfo(searchEntity, productItemEntities)
     }
 
     @Test
@@ -31,7 +31,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().epochSecond
 
         // Test with a small number of seconds (e.g., 1 second)
-        assertFalse(searchWithMinimalProducts.isOlderThan(1))
+        assertFalse(searchWithBasicProductsInfo.isOlderThan(1))
     }
 
     @Test
@@ -40,7 +40,7 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(10).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithMinimalProducts.isOlderThan(5))
+        assertTrue(searchWithBasicProductsInfo.isOlderThan(5))
     }
 
     @Test
@@ -49,6 +49,6 @@ class SearchWithItemsEntityTest {
         every { searchEntity.lastUpdated } returns Instant.now().minusSeconds(5).epochSecond
 
         // Test with 5 seconds
-        assertTrue(searchWithMinimalProducts.isOlderThan(5))
+        assertTrue(searchWithBasicProductsInfo.isOlderThan(5))
     }
 }

@@ -1,11 +1,11 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductDetailsDto
 import de.dkutzer.tcgwatcher.collectables.search.domain.CardmarketProductGallaryItemDto
@@ -37,9 +37,10 @@ inline fun <reified T> fromString(value: String): T
 }
 
 
-fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+fun CardmarketProductGallaryItemDto.toProductItemEntity(
+    productId: Int = 0
+): ProductEntity {
     return ProductEntity(
-//        displayName = this.name.value,
         code = if (this.code.valid) this.code.value else "",
         imgLink = this.imgLink,
         language = this.name.languageCode,
@@ -49,15 +50,11 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(searchId: Long = 0, prod
         price = this.price,
         externalId = this.cmId,
         externalLink = this.cmLink,
-//        setName = "",
-//        setId = "",
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
-//        searchId = searchId.toInt(),
         id = productId,
         lastUpdated = Instant.now().epochSecond
     )
 }
-
 
 fun ProductComposite.toProductModel(): ProductModel {
     // Convert ProductNameEntity list to NameModel list
@@ -84,7 +81,7 @@ fun ProductComposite.toProductModel(): ProductModel {
     )
 }
 
-fun ProductAggregate.toProductModel(language: String): ProductModel {
+fun ProductWithSellOffers.toProductModel(language: String): ProductModel {
     // Convert ProductNameEntity list to NameModel list
     val nameModels = names.map { NameModel(it.name, it.language) }
 
@@ -123,8 +120,8 @@ private fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int =
     )
 }
 
-fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductAggregate {
-    return ProductAggregate(
+fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductWithSellOffers {
+    return ProductWithSellOffers(
         productEntity = this.toProductItemEntity(searchId, productId),
         offers = this.sellOffers.map { it.toSellOfferEntity(productId) },
         names = this.names.map { ProductNameEntity(name = it.value, language = it.languageCode, productId = productId) },
@@ -173,7 +170,6 @@ fun CardmarketProductDetailsDto.toProductGallaryItemDto(): CardmarketProductGall
         priceTrend = this.priceTrend)
 }
 
-// Updated method to create ProductModel from DTO with multiple names
 fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
     return ProductModel(
         names = listOf(this.name.toModel()), // Single name from DTO, but stored in list
@@ -192,28 +188,22 @@ fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
         timestamp = Instant.now().epochSecond
     )
 }
-
-//private fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
-//    return ProductEntity(
-//       // displayName = this.name.value,
-//        imgLink = this.imageUrl,
-//        //??
-//        language = this.name.languageCode,
-//        genre = this.genre,
-//        type = this.type,
-//        rarity = this.rarity,
-//        price = this.price,
-//        externalId = this.cmId,
-//        externalLink = this.detailsUrl,
-//        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
-//        searchId = searchId.toInt(),
-//        id = productId,
-//        lastUpdated = Instant.now().epochSecond,
-//        setName = this.set.name,
-//        setId = this.set.link,
-//        code = if (this.code.valid) this.code.value else "",
-//    )
-//}
+private fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+    return ProductEntity(
+        imgLink = this.imageUrl,
+        language = this.name.languageCode,
+        genre = this.genre,
+        type = this.type,
+        rarity = this.rarity,
+        price = this.price,
+        externalId = this.cmId,
+        externalLink = this.detailsUrl,
+        priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
+        id = productId,
+        lastUpdated = Instant.now().epochSecond,
+        code = if (this.code.valid) this.code.value else ""
+    )
+}
 
 fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): SellOfferEntity {
     return SellOfferEntity(
@@ -228,10 +218,27 @@ fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): 
     )
 }
 
-fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductAggregate {
-    return ProductAggregate(
-        productEntity = this.toProductItemEntity(searchId, productId),
-        offers = this.sellOffers.map { it.toSellOfferEntity(productId, language) }
+/**
+ * Converts a [CardmarketProductDetailsDto] into a [ProductWithSellOffers], mapping product details
+ * and associated sell offers to domain entities suitable for persistence and display.
+ *
+ * @param language The preferred language for localized data (e.g., location, product language).
+ * @param searchId An identifier linking this product to a specific search request.
+ * @param productId A unique identifier for the product in the domain layer.
+ */
+fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
+    val productEntity = this.toProductItemEntity(searchId, productId)
+    val offers = this.sellOffers.map { it.toSellOfferEntity(productId, language) }
+    return ProductWithSellOffers(
+        productEntity = productEntity,
+        offers = offers,
+        names = listOf(ProductNameEntity(name = this.name.value, language = this.name.languageCode, productId = productId)),
+        set = ProductSetEntity(
+            productId = productId,
+            setName = this.set.name,
+            setId = this.set.link,
+            language = this.name.languageCode // Use the same language as the primary name
+        )
     )
 }
 

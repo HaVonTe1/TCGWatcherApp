@@ -8,9 +8,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductAggregate
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithMinimalProducts
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
@@ -95,10 +95,10 @@ class SearchCacheRepositoryImplTest {
             createSampleProductItemEntity(),
         )
 
-        val searchWithMinimalProducts = SearchWithMinimalProducts(search, products)
+        val searchWithBasicProductsInfo = SearchWithBasicProductsInfo(search, products)
 
         // Persist
-        val persisted = repository.persistsSearchWithItems(searchWithMinimalProducts, "en")
+        val persisted = repository.persistsSearchWithItems(searchWithBasicProductsInfo, "en")
 
         // Verify relationship
         val retrieved = repository.findSearchWithItemsByQuery(searchTerm, 1, 10)
@@ -118,7 +118,7 @@ class SearchCacheRepositoryImplTest {
         }
 
         repository.persistsSearchWithItems(
-            SearchWithMinimalProducts(
+            SearchWithBasicProductsInfo(
                 SearchEntity(searchTerm = searchTerm, size = 20, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
                 products
             ),
@@ -138,7 +138,7 @@ class SearchCacheRepositoryImplTest {
 
     @Test
     fun testProductWithOffers() = runBlocking {
-        val productAggregate = ProductAggregate(
+        val productWithSellOffers = ProductWithSellOffers(
             createSampleProductItemEntity(code = "OFR-1"),
             listOf(
                 createSampleSellOfferEntity(price = "10.99"),
@@ -148,7 +148,7 @@ class SearchCacheRepositoryImplTest {
 
         val searchWithOffers = SearchWithProductsAndSellOffers(
             SearchEntity(searchTerm = "OffersTest", size =  1, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
-            listOf(productAggregate)
+            listOf(productWithSellOffers)
         )
 
         val persisted = repository.persistSearchWithProductAndSellOffers(searchWithOffers, "en")
@@ -279,7 +279,7 @@ class SearchCacheRepositoryImplTest {
         val searchTerm = "OffersTest"
         val productWithSellOffers = (1..20).map {
             val productItemEntity = createSampleProductItemEntity(code = "PGD-$it")
-            ProductAggregate(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
+            ProductWithSellOffers(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
         }
         val persistSearchWithProductAndSellOffers =
             repository.persistSearchWithProductAndSellOffers(
@@ -306,7 +306,7 @@ class SearchCacheRepositoryImplTest {
 
         // Verify the results
         assertTrue(loadResult is PagingSource.LoadResult.Page)
-        val page = loadResult as PagingSource.LoadResult.Page<Int, ProductAggregate>
+        val page = loadResult as PagingSource.LoadResult.Page<Int, ProductWithSellOffers>
 
         assertEquals(10, page.data.size)
         val product = page.data[0]
