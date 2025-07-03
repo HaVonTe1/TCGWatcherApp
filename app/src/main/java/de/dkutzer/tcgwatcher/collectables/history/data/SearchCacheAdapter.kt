@@ -9,6 +9,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
+import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 
@@ -20,21 +21,10 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     SearchCacheRepository {
 
     override suspend fun findSearchWithItemsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithBasicProductsInfo?  {
-
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
-        val search = searchCacheDao.findSearch(searchTerm)
-        if(search!=null) {
-            // Produkte über Relation laden (Paging ggf. anpassen)
-            val relation = getSearchWithProducts(search.id)
-            return relation
-        }
-        return null
-
+        return searchCacheDao.getSearchWithProducts(searchTerm, limit, (page - 1) * limit)
     }
 
-    suspend fun getSearchWithProducts(searchId: Int): SearchWithBasicProductsInfo? {
-        return searchCacheDao.getSearchWithProducts(searchId)
-    }
 
     override suspend fun getProductsByExternalId(externalId: String): ProductWithSellOffers? {
         return searchCacheDao.findItemWithSellOffersByProductId(externalId)
@@ -50,7 +40,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun findSearchWithItemsAndSellOffersByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithFullProductInfo?  {
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
-        searchCacheDao.getSearchWithProductsAndSellOffers(searchTerm)
+        searchCacheDao.getSearchWithProductsAndSellOffers(searchTerm, page, limit)
 
         return null
 
@@ -93,7 +83,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     }
 
 
-    override suspend fun persistsSearchWithItems(
+    override suspend fun persistSearchWithBasicProductsInfo(
         searchWithBasicProductsInfo: SearchWithBasicProductsInfo,
         language: String
     ): SearchWithBasicProductsInfo {
@@ -119,26 +109,78 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     ): SearchWithFullProductInfo {
         val (searchEntity, searchId) = processSearch(
             searchTerm = searchWithProducts.search.searchTerm,
-            productsSize = searchWithProducts.productWithSellOffers.size,
+            productsSize = searchWithProducts.products.size,
             language = language,
             history = searchWithProducts.search.history
         )
-        val updatedProductWithSellOffers = searchWithProducts.productWithSellOffers.map { product ->
-            val productId = searchCacheDao.saveItem(product.productEntity)
-            val updatedProductItemEntity = product.productEntity.copy(id = productId.toInt())
-            product.offers.forEach { it.productId = productId.toInt() }
-            searchCacheDao.saveSellOffers(product.offers)
-            // CrossRef anlegen
-            searchCacheDao.insertSearchProductCrossRefs(listOf(SearchProductCrossRef(searchId = searchId, productId = productId.toInt())))
-            ProductWithSellOffers(updatedProductItemEntity, product.offers)
-        }.toList()
+
+        // Bulk insert products
+        val productIds =
+            searchCacheDao.saveItems(searchWithProducts.products.map { it.productEntity })
+
+        // Prepare bulk data for related entities
+        val allOffers = mutableListOf<SellOfferEntity>()
+        val allNames = mutableListOf<ProductNameEntity>()
+        val allSets = mutableListOf<ProductSetEntity>()
+        val crossRefs = mutableListOf<SearchProductCrossRef>()
+
+        searchWithProducts.products.forEachIndexed { index, product ->
+            val productId = productIds[index].toInt()
+
+            // Collect offers with updated productId
+            allOffers.addAll(product.offers.map { it.copy(productId = productId) })
+
+            // Collect names with updated productId
+            allNames.addAll(product.names.map { it.copy(productId = productId) })
+
+            // Collect sets with updated productId
+            product.set?.let { allSets.add(it.copy(productId = productId)) }
+
+            // Collect cross references
+            crossRefs.add(SearchProductCrossRef(searchId = searchId, productId = productId))
+        }
+
+        // Bulk insert all related entities
+        searchCacheDao.saveSellOffers(allOffers)
+        if (allNames.isNotEmpty()) {
+            searchCacheDao.insertProductNames(allNames)
+        }
+        if (allSets.isNotEmpty()) {
+            searchCacheDao.insertProductSets(allSets)
+        }
+        searchCacheDao.insertSearchProductCrossRefs(crossRefs)
+
+        // Build updated result
+        val updatedProductWithSellOffers =
+            searchWithProducts.products.mapIndexed { index, product ->
+                val productId = productIds[index].toInt()
+            ProductWithSellOffers(
+                productEntity = product.productEntity.copy(id = productId),
+                offers = product.offers.map { it.copy(productId = productId) },
+                names = product.names.map { it.copy(productId = productId) },
+                set = product.set?.copy(productId = productId)
+            )
+        }
+
         return SearchWithFullProductInfo(searchEntity, updatedProductWithSellOffers)
     }
 
 
+    /*
+    This function removes the products from the searchProdcuts CrossReference. 
+    The Product Entities are NOT deleted.
+     */
+    override suspend fun removeProductsFromSearch(
+        search: SearchEntity,
+        products: List<ProductEntity>
+    ) {
+        val crossRefsToDelete = products.map { product ->
+            SearchProductCrossRef(searchId = search.id, productId = product.id)
+        }
+        searchCacheDao.deleteSearchProductCrossRefs(crossRefsToDelete)
+    }
 
-
-    override suspend fun persistSearchItems(results: List<ProductEntity>) {
+    override suspend fun persistProducts(results: List<ProductEntity>) {
         searchCacheDao.saveItems(results)
     }
 
@@ -154,11 +196,11 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         searchCacheDao.saveSearch(search)
     }
 
-    override suspend fun deleteSearchItems(results: List<ProductEntity>) {
+    override suspend fun deleteProducts(results: List<ProductEntity>) {
         searchCacheDao.removeItems(results)
     }
 
-    override suspend fun findItemsByLink(link: String): List<ProductEntity> {
+    override suspend fun findProductsByLink(link: String): List<ProductEntity> {
         return searchCacheDao.findItemsByLink(link)
     }
 
@@ -176,7 +218,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         return searchCacheDao.getProductSets(productId)
     }
 
-    override suspend fun updateItemByLink(
+    override suspend fun updateProductByDetailsUrl(
         detailsUrl: String,
         itemEntity: ProductEntity,
         names: List<ProductNameEntity>,
@@ -196,7 +238,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun findSearchWithProductsNamesAndSetsByQuery(searchTerm: String, page: Int, limit: Int): SearchWithFullProductInfo? {
         logger.debug { "SearchCacheRepositoryImpl::findSearchWithProductsNamesAndSetsByQuery" }
-        return  searchCacheDao.getSearchWithProductsAndSellOffers(searchTerm, page, limit)
+        return  searchCacheDao.getSearchWithProductsAndSellOffers(searchTerm, limit, (page - 1) * limit)
 
     }
 

@@ -3,7 +3,7 @@ package de.dkutzer.tcgwatcher.collectables.search.data
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import de.dkutzer.tcgwatcher.collectables.search.data.cardmarket.BaseCardmarketApiClient
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductSearchService
@@ -38,23 +38,23 @@ class CardmarketProductSearchService
     product is a quicksearchitem - so a previously saved search might exists
      */
     override suspend fun loadQuicksearchProductIntoResultPage(
-        product: ProductModel,
+        quickSearchProduct: ProductModel,
         language: String
     ): SearchResultsPage {
 
-        logger.debug { "CardmarketProductSearchService: loadQuicksearchProductIntoResultPage: $product" }
+        logger.debug { "CardmarketProductSearchService: loadQuicksearchProductIntoResultPage: $quickSearchProduct" }
 
         val searchAndProductsAndSelloffersEntity =
-            cache.findSearchWithItemsAndSellOffersByQuery(product.detailsUrl)
+            cache.findSearchWithItemsAndSellOffersByQuery(quickSearchProduct.detailsUrl)
         if (searchAndProductsAndSelloffersEntity != null) {
             logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
             return SearchResultsPage(
-                searchAndProductsAndSelloffersEntity.productWithSellOffers.map { it.toProductModel(language) },
+                searchAndProductsAndSelloffersEntity.products.map { it.toProductModel(language) },
                 1,
                 1)
         }
-        val searchEntity = createAndPersistSearchEntity(product, true, language)
-        val productModel = searchEntity.productWithSellOffers.first().toProductModel(language)
+        val searchEntity = createAndPersistSearchEntity(quickSearchProduct, true, language)
+        val productModel = searchEntity.products.first().toProductModel(language)
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         logger.debug { "Adapter: Finally returning results: $result" }
@@ -68,26 +68,25 @@ class CardmarketProductSearchService
         --> the item loaded only minimal data but now all details are needed BUT it should be fast so: cacheOnly = true
     - an item is shown in the details view and no details have been available so far but we want to load all details now: cacheOnly = false
      */
-    override suspend fun refreshProduct(product: ProductModel, cacheOnly: Boolean, language: String): ProductModel {
-        logger.debug { "CardmarketProductSearchService: getProductWithDetails: $product" }
+    override suspend fun refreshProduct(productModel: ProductModel, cacheOnly: Boolean, language: String): ProductModel {
+        logger.debug { "CardmarketProductSearchService: getProductWithDetails: $productModel" }
         logger.debug { "CardmarketProductSearchService: useCache $cacheOnly"}
 
         val refreshedProduct: ProductModel?  = if (cacheOnly) {
             val product =
-                cache.findProductWithSellOffersByExternalId(product.externalId)
+                cache.findProductWithSellOffersByExternalId(productModel.externalId)
             product?.toProductModel(language)
 
         } else {
-            val productDetailsDto = client.getProductDetails(product.detailsUrl)
+            val productDetailsDto = client.getProductDetails(productModel.detailsUrl)
 
-            //TODO: refactor result type to single entity after refactoring of N:M relation between search and item is done
-            val cachedProduct = cache.getProductsByExternalId(product.externalId)
+            val cachedProduct = cache.getProductsByExternalId(productModel.externalId)
             if (cachedProduct != null) {
                 logger.debug { "CardmarketProductSearchService: updating product: $cachedProduct" }
                 val updatedProduct = productDetailsDto.toProduct(
-                    language,
-                    /*searchId*/ 0L, // searchId entfällt, da M:N
-                    cachedProduct.productEntity.id
+                    language = language,
+                    searchId = 0L, // searchId entfällt, da M:N
+                    productId = cachedProduct.productEntity.id
                 )
                 cache.updateProduct(updatedProduct)
             }
@@ -96,14 +95,14 @@ class CardmarketProductSearchService
         }
 
         if(refreshedProduct==null){
-            logger.warn { "CardmarketProductSearchService: error while refeshing product: $product" }
+            logger.warn { "CardmarketProductSearchService: error while refeshing product: $productModel" }
         }
-        return refreshedProduct ?: product
+        return refreshedProduct ?: productModel
 
     }
 
 
-    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean, language: String): SearchWithProductsAndSellOffers {
+    private suspend fun createAndPersistSearchEntity(product: ProductModel, loadDetails: Boolean, language: String): SearchWithFullProductInfo {
         val productWithDetails = if(loadDetails) {
             enrichProductWithDetails(product, language)
         } else {
@@ -111,7 +110,7 @@ class CardmarketProductSearchService
         }
         logger.debug { "Adapter: Persisting enriched product in the cache: $productWithDetails" }
 
-        return SearchWithProductsAndSellOffers(
+        return SearchWithFullProductInfo(
             search = SearchEntity(
                 searchTerm = productWithDetails.detailsUrl,
                 size = 1,
@@ -119,7 +118,7 @@ class CardmarketProductSearchService
                 language = config.lang.name,
                 history = false
             ),
-            productWithSellOffers = listOf(productWithDetails.toProductWithSellofferEntity())
+            products = listOf(productWithDetails.toProductWithSellofferEntity())
         ).also {
             cache.persistSearchWithProductAndSellOffers(it, config.lang.name)
         }
@@ -147,7 +146,7 @@ class CardmarketProductSearchService
         if(searchWithResults!=null && searchWithResults.isOlderThan(config.ttlInSeconds)) {
             logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(lastUpdated!!)}" }
 
-            cache.deleteSearchItems(searchWithResults.products)
+            cache.deleteProducts(searchWithResults.products)
             cache.deleteSearch(searchWithResults.search)
             searchWithResults = null
         }
@@ -198,7 +197,7 @@ class CardmarketProductSearchService
                     products = mergedResults.results.map { it.toProductItemEntity() }.toList()
                 )
                 logger.debug { "Persisting cache: $searchWithBasicProductsInfo" }
-                cache.persistsSearchWithItems(searchWithBasicProductsInfo, config.lang.name)
+                cache.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, config.lang.name)
 
                 logger.debug { "Now fetching paged results from newly cache" }
                 val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)
