@@ -157,7 +157,7 @@ class ProductDetailsViewModelTest {
                     lastUpdated = System.currentTimeMillis()
                 )
             )
-            searchCacheRepository.persistSearchItems(searchItems)
+            searchCacheRepository.persistProducts(searchItems)
         }
 
         val viewModel = ProductDetailsViewModel(

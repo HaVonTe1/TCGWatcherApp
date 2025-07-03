@@ -98,7 +98,7 @@ class SearchCacheRepositoryImplTest {
         val searchWithBasicProductsInfo = SearchWithBasicProductsInfo(search, products)
 
         // Persist
-        val persisted = repository.persistsSearchWithItems(searchWithBasicProductsInfo, "en")
+        val persisted = repository.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, "en")
 
         // Verify relationship
         val retrieved = repository.findSearchWithItemsByQuery(searchTerm, 1, 10)
@@ -117,7 +117,7 @@ class SearchCacheRepositoryImplTest {
             createSampleProductItemEntity(code = "PGD-$it")
         }
 
-        repository.persistsSearchWithItems(
+        repository.persistSearchWithBasicProductsInfo(
             SearchWithBasicProductsInfo(
                 SearchEntity(searchTerm = searchTerm, size = 20, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
                 products
@@ -176,7 +176,7 @@ class SearchCacheRepositoryImplTest {
             priceTrend = "sdfg",
             externalId = "sdf"
         )
-        repository.persistSearchItems(listOf(initialItem))
+        repository.persistProducts(listOf(initialItem))
         // Name und Set anlegen
         val nameEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity(
             productId = initialItem.id,
@@ -194,9 +194,9 @@ class SearchCacheRepositoryImplTest {
             price = "15.00",
             lastUpdated = System.currentTimeMillis()
         )
-        repository.updateItemByLink(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
+        repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
         // Verify Product
-        val items = repository.findItemsByLink(link)
+        val items = repository.findProductsByLink(link)
         assertEquals("15.00", items[0].price)
         assertTrue(items[0].lastUpdated > 0)
         // Verify Name
@@ -240,7 +240,7 @@ class SearchCacheRepositoryImplTest {
 
 
         dao.saveSearch(search)
-        repository.persistSearchItems(listOf(product))
+        repository.persistProducts(listOf(product))
 
         repository.deleteSearch(search)
 
