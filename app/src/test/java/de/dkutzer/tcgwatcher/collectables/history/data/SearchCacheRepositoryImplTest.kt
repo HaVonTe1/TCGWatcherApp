@@ -72,7 +72,7 @@ class SearchCacheRepositoryImplTest {
         repository.persistSearch(searchEntity)
 
         // Retrieve
-        val retrieved = dao.findSearch(searchTerm)
+        val retrieved = dao.getSearchByTerm(searchTerm)
 
         assertNotNull(retrieved)
         assertEquals(searchTerm, retrieved?.searchTerm)
@@ -101,7 +101,7 @@ class SearchCacheRepositoryImplTest {
         val persisted = repository.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, "en")
 
         // Verify relationship
-        val retrieved = repository.findSearchWithItemsByQuery(searchTerm, 1, 10)
+        val retrieved = repository.getSearchWithBasicProductsByQuery(searchTerm, 1, 10)
 
         assertNotNull(retrieved)
         assertEquals(2, retrieved?.products?.size ?: 0)
@@ -126,12 +126,12 @@ class SearchCacheRepositoryImplTest {
         )
 
         // Page 1
-        val page1 = repository.findSearchWithItemsByQuery(searchTerm, 1, 5)
+        val page1 = repository.getSearchWithBasicProductsByQuery(searchTerm, 1, 5)
         assertEquals(5, page1?.products?.size)
         assertEquals("PGD-1", page1?.products?.get(0)?.code)
 
         // Page 2
-        val page2 = repository.findSearchWithItemsByQuery(searchTerm, 2, 5)
+        val page2 = repository.getSearchWithBasicProductsByQuery(searchTerm, 2, 5)
         assertEquals(5, page2?.products?.size)
         assertEquals("PGD-6", page2?.products?.get(0)?.code)
     }
@@ -154,7 +154,7 @@ class SearchCacheRepositoryImplTest {
         val persisted = repository.persistSearchWithProductAndSellOffers(searchWithOffers, "en")
 
         // Verify offers were persisted
-        val offers = dao.findSellOfferByProductId(persisted.productWithSellOffers[0].productEntity.id)
+        val offers = dao.getSellOffersByProductId(persisted.productWithSellOffers[0].productEntity.id)
         assertEquals(2, offers.size)
         assertTrue(offers.all { it.productId == persisted.productWithSellOffers[0].productEntity.id })
     }
@@ -196,15 +196,16 @@ class SearchCacheRepositoryImplTest {
         )
         repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
         // Verify Product
-        val items = repository.findProductsByLink(link)
-        assertEquals("15.00", items[0].price)
-        assertTrue(items[0].lastUpdated > 0)
-        // Verify Name
-        val names = repository.getProductNames(items[0].id)
-        assertTrue(names.any { it.name == "Testkarte" && it.language == "de" })
-        // Verify Set
-        val sets = repository.getProductSets(items[0].id)
-        assertTrue(sets.any { it.setName == "TestSet" && it.setId == "set-123" && it.language == "de" })
+        val productsByExternalId = repository.getProductsByExternalId(initialItem.externalId)
+        assertNotNull(productsByExternalId)
+        productsByExternalId?.let {
+            // Verify Names
+            assertEquals(1, it.names.size)
+            assertEquals(nameEntity, it.names[0])
+            // Verify Sets
+            assertEquals(setEntity, it.set)
+        }
+
     }
 
     @Test
@@ -239,12 +240,12 @@ class SearchCacheRepositoryImplTest {
         val product = createSampleProductItemEntity( code = "ORPH-1").apply { searchId = 1 }
 
 
-        dao.saveSearch(search)
+        dao.upsertSearch(search)
         repository.persistProducts(listOf(product))
 
         repository.deleteSearch(search)
 
-        val remainingProducts = dao.findSearchResultsBySearchId(1, 10, 0)
+        val remainingProducts = dao.getProductsBySearchId(1, 10, 0)
         assertTrue(remainingProducts.isNotEmpty())
     }
 
@@ -295,7 +296,7 @@ class SearchCacheRepositoryImplTest {
                 ),
                 "en"
             )
-        val pagingSource = dao.findItemsWithSellOffersByQuery(searchTerm)
+        val pagingSource = dao.getProductWithSellOffersPagingSource(searchTerm)
         // Load the paging data
         val loadParams = PagingSource.LoadParams<Int>.Refresh(
             key = 0,

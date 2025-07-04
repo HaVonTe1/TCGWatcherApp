@@ -220,7 +220,7 @@ class ProductDetailsViewModelTest {
         assertEquals("4,58 €", viewModel.reloadedSingleItem.item.priceTrend)
         assertNotNull(viewModel.reloadedSingleItem.item.timestamp)
 
-        val fromDB = searchCacheRepository.findProductWithSellOffersByExternalId(productModel.externalId)
+        val fromDB = searchCacheRepository.getFullProductInfoByExternalId(productModel.externalId)
         println(fromDB)
         assertNotNull(fromDB)
         assertEquals(50, fromDB.offers.size)

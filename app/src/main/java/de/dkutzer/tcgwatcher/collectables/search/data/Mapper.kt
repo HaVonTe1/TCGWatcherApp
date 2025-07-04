@@ -57,12 +57,10 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(
 }
 
 fun ProductComposite.toProductModel(): ProductModel {
-    // Convert ProductNameEntity list to NameModel list
-    val nameModels = names.map { NameModel(it.name, it.language) }
 
     return ProductModel(
         id = productEntity.id.toString(),
-        names = nameModels, // Now using the list of names
+        names = names.map { NameModel(it.name, it.language) },
         code = productEntity.code,
         type = fromString<TypeEnum>(productEntity.type),
         genre = fromString<GenreType>(productEntity.genre),
@@ -82,12 +80,10 @@ fun ProductComposite.toProductModel(): ProductModel {
 }
 
 fun ProductWithSellOffers.toProductModel(language: String): ProductModel {
-    // Convert ProductNameEntity list to NameModel list
-    val nameModels = names.map { NameModel(it.name, it.language) }
 
     return ProductModel(
         id = URI(productEntity.externalLink).path.split("/").last(),
-        names = nameModels,
+        names = names.map { NameModel(it.name, it.language) },
         code = productEntity.code,
         type = fromString<TypeEnum>(productEntity.type),
         genre = fromString<GenreType>(productEntity.genre),

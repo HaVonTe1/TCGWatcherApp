@@ -57,15 +57,15 @@ abstract class PokemonPager {
                         if (refreshModel.state == RefreshState.REFRESH_ITEM || refreshModel.state == RefreshState.REFRESH_ITEM_FROM_CACHE) {
                             logger.debug { "calling refresh item as paging source (state: ${refreshModel.state}): $refreshModel" }
 
-                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(refreshModel.query)
+                            pokemonDatabase.searchCacheDao.getProductWithSellOffersPagingSource(refreshModel.query)
                         }
                         else if(quicksearchItem != null) {
                             logger.debug { "calling quicksearch  as paging source: $quicksearchItem" }
-                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(quicksearchItem.detailsUrl)
+                            pokemonDatabase.searchCacheDao.getProductWithSellOffersPagingSource(quicksearchItem.detailsUrl)
                         }
                         else {
                             logger.debug { "calling search term as paging source: $searchTerm" }
-                            pokemonDatabase.searchCacheDao.findItemsWithSellOffersByQuery(searchTerm)
+                            pokemonDatabase.searchCacheDao.getProductWithSellOffersPagingSource(searchTerm)
                         }
                     },
                 )
