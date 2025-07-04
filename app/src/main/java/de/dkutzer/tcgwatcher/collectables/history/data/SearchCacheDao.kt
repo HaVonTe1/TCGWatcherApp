@@ -30,14 +30,14 @@ interface SearchCacheDao {
                 "INNER JOIN search AS s ON s.id = ref.searchId " +
                 "WHERE s.id = :searchId ORDER BY p.id ASC LIMIT :pageSize OFFSET :offset"
     )
-    fun findSearchResultsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
+    fun getProductsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
 
     @Query("SELECT id FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
-    fun findSearchIdBySearchTerm(searchTerm: String) : Int?
+    fun getSearchIdBySearchTerm(searchTerm: String) : Int?
 
     @Query("SELECT * FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
-    fun findSearch(searchTerm: String) : SearchEntity?
+    fun getSearchByTerm(searchTerm: String) : SearchEntity?
 
     @Transaction
     @Query(
@@ -47,12 +47,12 @@ interface SearchCacheDao {
                 "INNER JOIN search AS s ON s.id = ref.searchId " +
                 "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)"
     )
-    fun findItemsByQuery(searchTerm: String): PagingSource<Int, ProductEntity>
+    fun getProductsBySearchTerm(searchTerm: String): PagingSource<Int, ProductEntity>
 
 
     @Transaction
     @Query("SELECT * FROM search_result_item WHERE externalId = :externalId")
-    fun findProductsByExternalId(externalId: String): ProductWithSellOffers?
+    fun getProductWithSellOffersByExternalId(externalId: String): ProductWithSellOffers?
 
     @Transaction
     @Query(
@@ -61,29 +61,30 @@ interface SearchCacheDao {
                 "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
                 "INNER JOIN search AS s ON s.id = ref.searchId " +
                 "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm)"
-    )    fun findItemsWithSellOffersByQuery(searchTerm: String): PagingSource<Int, ProductWithSellOffers>
+    )
+    fun getProductWithSellOffersPagingSource(searchTerm: String): PagingSource<Int, ProductWithSellOffers>
 
     @Transaction
     @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId") //TODO: test
-    fun findItemWithSellOffersByProductId(productId: String) : ProductWithSellOffers?
+    fun getProductWithSellOffersByProductId(productId: String) : ProductWithSellOffers?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
     fun getSearchHistory() : List<String>
 
     @Upsert
-    fun saveItems(results: List<ProductEntity>): List<Long>
+    fun upsertProducts(results: List<ProductEntity>): List<Long>
 
     @Upsert
-    fun saveItem(item: ProductEntity): Long
+    fun upsertProduct(item: ProductEntity): Long
 
     @Upsert
-    fun saveSellOffers(offers: List<SellOfferEntity>): List<Long>
+    fun upsertSellOffers(offers: List<SellOfferEntity>): List<Long>
 
     @Query("SELECT * FROM product_offer WHERE productId = :productId")
-    fun findSellOfferByProductId(productId: Int): List<SellOfferEntity>
+    fun getSellOffersByProductId(productId: Int): List<SellOfferEntity>
 
-    @Upsert
-    fun saveSearch(search: SearchEntity) : Long
+    @Upsert()
+    fun upsertSearch(search: SearchEntity) : Long
 
     @Query("UPDATE search SET lastUpdated = :lastUpdated WHERE id = :searchId")
     fun updateLastUpdated(searchId: Int, lastUpdated: Long)
@@ -92,13 +93,13 @@ interface SearchCacheDao {
     fun updateSearch(search: SearchEntity)
 
     @Delete
-    fun removeSearch(search: SearchEntity)
+    fun deleteSearch(search: SearchEntity)
 
     @Delete
-    fun removeItems(results: List<ProductEntity>)
+    fun deleteProducts(results: List<ProductEntity>)
 
     @Query("SELECT * FROM search_result_item WHERE externalLink = :link")
-    fun findItemsByLink(link: String) : List<ProductEntity>
+    fun getProductsByLink(link: String) : List<ProductEntity>
 
     // --- ProductNameEntity ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -110,9 +111,8 @@ interface SearchCacheDao {
     @Delete
     fun deleteProductNames(names: List<ProductNameEntity>)
 
-    // --- ProductSetEntity ---
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertProductSets(sets: List<ProductSetEntity>): List<Long>
+    @Upsert()
+    fun upsertProductSets(sets: List<ProductSetEntity>): List<Long>
 
     @Query("SELECT * FROM product_set WHERE productId = :productId")
     fun getProductSets(productId: Int): List<ProductSetEntity>

@@ -45,7 +45,7 @@ class CardmarketProductSearchService
         logger.debug { "CardmarketProductSearchService: loadQuicksearchProductIntoResultPage: $quickSearchProduct" }
 
         val searchAndProductsAndSelloffersEntity =
-            cache.findSearchWithItemsAndSellOffersByQuery(quickSearchProduct.detailsUrl)
+            cache.getSearchWithFullProductsByQuery(quickSearchProduct.detailsUrl)
         if (searchAndProductsAndSelloffersEntity != null) {
             logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
             return SearchResultsPage(
@@ -74,7 +74,7 @@ class CardmarketProductSearchService
 
         val refreshedProduct: ProductModel?  = if (cacheOnly) {
             val product =
-                cache.findProductWithSellOffersByExternalId(productModel.externalId)
+                cache.getFullProductInfoByExternalId(productModel.externalId)
             product?.toProductModel(language)
 
         } else {
@@ -137,25 +137,20 @@ class CardmarketProductSearchService
         lateinit var result: SearchResultsPage
         logger.debug { "Adapter: Looking in the Cache for: $searchString" }
 
-        var searchWithResults = cache.findSearchWithProductsNamesAndSetsByQuery(searchString, page, limit)
-        logger.debug { "Adapter: Found: ${searchWithResults?.products?.size}" }
-        val lastUpdated = searchWithResults?.search?.lastUpdated
-        if(lastUpdated!=null)
-            logger.debug { "TTL: ${Instant.ofEpochSecond(lastUpdated)}" }
+        var searchWithBasicProdcuts = cache.getSearchWithBasicProductsByQuery(searchString, page, limit)
+        logger.debug { "Adapter: Found: ${searchWithBasicProdcuts?.products?.size}" }
 
-        if(searchWithResults!=null && searchWithResults.isOlderThan(config.ttlInSeconds)) {
-            logger.debug { "Adapter: Cache is older than 3 days: ${Instant.ofEpochMilli(lastUpdated!!)}" }
-
-            cache.deleteProducts(searchWithResults.products)
-            cache.deleteSearch(searchWithResults.search)
-            searchWithResults = null
+        if(searchWithBasicProdcuts!=null && searchWithBasicProdcuts.isOlderThan(config.ttlInSeconds)) {
+            logger.debug { "Adapter: Cache is older than 3 days" }
+            cache.removeProductsFromSearch(searchWithBasicProdcuts.search)
+            searchWithBasicProdcuts = null
         }
-        if(searchWithResults!=null && !searchWithResults.isOlderThan(config.ttlInSeconds)) {
-            val searchItems = searchWithResults.products.map { it.toProductModel() }
+        if(searchWithBasicProdcuts!=null && !searchWithBasicProdcuts.isOlderThan(config.ttlInSeconds)) {
+            val searchItems = searchWithBasicProdcuts.products.map { it.toProductModel() }
             result = SearchResultsPage(
                 searchItems,
                 page,
-                searchWithResults.search.size.floorDiv(limit).plus(1)
+                searchWithBasicProdcuts.search.size.floorDiv(limit).plus(1)
             )
             logger.debug { "Adapter: Returning cached results: $result" }
         }
@@ -194,13 +189,13 @@ class CardmarketProductSearchService
                         language = config.lang.name,
                         history = true
                     ),
-                    products = mergedResults.results.map { it.toProductItemEntity() }.toList()
+                    products = mergedResults.results.map { it.toProductComposite() }.toList()
                 )
                 logger.debug { "Persisting cache: $searchWithBasicProductsInfo" }
                 cache.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, config.lang.name)
 
                 logger.debug { "Now fetching paged results from newly cache" }
-                val updatedSearchResult = cache.findSearchWithItemsByQuery(searchString, page)
+                val updatedSearchResult = cache.getSearchWithBasicProductsByQuery(searchString, page)
 
 
                 val searchItems = updatedSearchResult?.products?.map { it.toProductModel() }

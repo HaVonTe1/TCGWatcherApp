@@ -87,23 +87,14 @@ data class RemoteKeyEntity(
     val nextOffset: Int,
 )
 
-data class SearchWithBasicProductsInfo(
-    @Embedded val search: SearchEntity,
-    @Relation(
-        parentColumn = "id",
-        entity = ProductEntity::class,  
-        entityColumn = "id",            // Refers to ProductEntity.id
-        associateBy = Junction(
-            value = SearchProductCrossRef::class,
-            parentColumn = "searchId",
-            entityColumn = "productId"
-        )
-    )
-    val products: List<ProductEntity>
-)
+interface BasicProduct {
+    val productEntity: ProductEntity
+    val names: List<ProductNameEntity>
+    val set: ProductSetEntity?
+}
 
 data class ProductWithSellOffers(
-    @Embedded val productEntity: ProductEntity,
+    @Embedded override val productEntity: ProductEntity,
     @Relation(
         parentColumn = "id", 
         entityColumn = "productId"
@@ -113,31 +104,41 @@ data class ProductWithSellOffers(
         parentColumn = "id", 
         entityColumn = "productId"
     )
-    val names: List<ProductNameEntity>,
+    override val names: List<ProductNameEntity>,
     @Relation(
         parentColumn = "id", 
         entityColumn = "productId"
     )
-    val set: ProductSetEntity?
-)
+    override val set: ProductSetEntity?
+): BasicProduct
 
 data class ProductComposite(
-    @Embedded val productEntity: ProductEntity,
+    @Embedded override val productEntity: ProductEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "productId"
     )
-    val names: List<ProductNameEntity>,
+    override val  names: List<ProductNameEntity>,
     @Relation(
         parentColumn = "id",
         entityColumn = "productId"
     )
-    val set: ProductSetEntity?
-)
+    override val set: ProductSetEntity?
+): BasicProduct
 
+
+interface SearchWithProducts {
+    val search: SearchEntity
+    val products: List<BasicProduct>  // Use BasicProduct here
+
+    fun isOlderThan(seconds: Long): Boolean {
+        return Instant.ofEpochSecond(search.lastUpdated)
+            .isBefore(Instant.now().minusSeconds(seconds))
+    }
+}
 
 data class SearchWithFullProductInfo(
-    @Embedded val search: SearchEntity,
+    @Embedded override val search: SearchEntity,
     @Relation(
         parentColumn = "id",
         entity = ProductEntity::class,  // Explicit entity
@@ -148,10 +149,26 @@ data class SearchWithFullProductInfo(
             entityColumn = "productId"
         )
     )
-    val products: List<ProductWithSellOffers>
-) {
-    fun isOlderThan(seconds: Long): Boolean {
-        return Instant.ofEpochSecond(this.search.lastUpdated)
-            .isBefore(Instant.now().minusSeconds(seconds))
-    }
+    val fullProducts: List<ProductWithSellOffers>  // Renamed for clarity
+) : SearchWithProducts {
+    override val products: List<BasicProduct>
+        get() = fullProducts  // Implicit cast to BasicProduct
+}
+
+data class SearchWithBasicProductsInfo(
+    @Embedded override val search: SearchEntity,
+    @Relation(
+        parentColumn = "id",
+        entity = ProductEntity::class,
+        entityColumn = "id",
+        associateBy = Junction(
+            value = SearchProductCrossRef::class,
+            parentColumn = "searchId",
+            entityColumn = "productId"
+        )
+    )
+    val basicProducts: List<ProductComposite>  // Renamed for clarity
+) : SearchWithProducts {
+    override val products: List<BasicProduct>
+        get() = basicProducts  // Implicit cast to BasicProduct
 }
