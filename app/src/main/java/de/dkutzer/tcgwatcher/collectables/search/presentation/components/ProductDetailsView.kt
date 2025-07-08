@@ -118,6 +118,7 @@ fun ProductDetailsView(
         }
     )
 
+
     val currentProductModelState = detailsViewModel.reloadedSingleItem
 
     logger.debug { "ProductDetailsView::currentProductModelState: $currentProductModelState" }
@@ -132,7 +133,7 @@ fun ProductDetailsView(
         remember {
             Intent(
                 Intent.ACTION_VIEW,
-                (referrer + currentProductModelState.item.detailsUrl).toUri()
+                (referrer + currentProductModelState.productModel.detailsUrl).toUri()
             )
         }
     if (currentProductModelState.state == RefreshState.REFRESH_ITEM) {
@@ -173,7 +174,7 @@ fun ProductDetailsView(
                     )
 
                     Text(
-                        text = "${currentProductModelState.item.name.value} (${currentProductModelState.item.code})",
+                        text = "${currentProductModelState.productModel.getDisplayName(detailsViewModel.settings.language.localeCode)} (${currentProductModelState.productModel.code})",
                         style = MaterialTheme.typography.headlineLarge,
                         color = Color.Blue,
                         textDecoration = TextDecoration.Underline,
@@ -193,7 +194,7 @@ fun ProductDetailsView(
                             .clickable {
                                 logger.debug { "ProductDetailsView::Refresh" }
                                 detailsViewModel.onLoadSingleItem(
-                                    currentProductModelState.item,
+                                    currentProductModelState.productModel,
                                     false
                                 )
                             }
@@ -263,14 +264,14 @@ fun ProductDetailsView(
 
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(currentProductModelState.item.imageUrl)
+                            .data(currentProductModelState.productModel.imageUrl)
                             .setHeader(USER_AGENT, userAgent)
                             .setHeader(
                                 REFERER,
                                 referrer
                             )
                             .build(),
-                        contentDescription = currentProductModelState.item.id,
+                        contentDescription = currentProductModelState.productModel.id,
                         modifier = modifier
                             .padding(1.dp)
                             .weight(1f)
@@ -329,13 +330,13 @@ fun ProductDetailsView(
                         horizontalArrangement = Arrangement.SpaceBetween // Push Next to top, Filter to bottom
                     ) {
                         Text(
-                            text = "€ ${currentProductModelState.item.price}",
+                            text = "€ ${currentProductModelState.productModel.price}",
                             style = MaterialTheme.typography.headlineLarge,
                             modifier = Modifier
                                 .padding(4.dp)
                         )
                         Text(
-                            text = "( ~ ${currentProductModelState.item.priceTrend})",
+                            text = "( ~ ${currentProductModelState.productModel.priceTrend})",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .padding(4.dp)
@@ -358,8 +359,8 @@ fun ProductDetailsView(
                         if (showFilterDialog) {
                             FilterDialog(
                                 initialFilters = currentFilters,
-                                availableCountries = currentProductModelState.item.getAvailableCountries(),
-                                availableLanguages = currentProductModelState.item.getAvailableLanguages(),
+                                availableCountries = currentProductModelState.productModel.getAvailableCountries(),
+                                availableLanguages = currentProductModelState.productModel.getAvailableLanguages(),
                                 onFiltersApplied = { newFilters ->
                                     currentFilters = newFilters
                                     // Trigger your filtering/sorting here
@@ -372,8 +373,8 @@ fun ProductDetailsView(
 
                 }
                 //add selling table
-                if (currentProductModelState.item.sellOffers.isNotEmpty()) {
-                    OffersTable(currentProductModelState.item.sellOffers, currentFilters)
+                if (currentProductModelState.productModel.sellOffers.isNotEmpty()) {
+                    OffersTable(currentProductModelState.productModel.sellOffers, currentFilters)
                 }
                 //TODO: add a row for inventory management
             }
@@ -389,7 +390,7 @@ fun ProductDetailsViewPreview() {
     val previewProducts = listOf(
         ProductModel(
             id = "prev2",
-            name = NameModel("Preview Product 1", languageCode = "de"),
+            names = listOf(NameModel("Preview Product 1", languageCode = "en")),
             code = "PRV002",
             price = "29.99",
             imageUrl = "http://example.com/image2.png",
@@ -419,7 +420,7 @@ fun ProductDetailsViewPreview() {
             set = SetModel(link = "df", name = "dfsdf"),
             priceTrend = "34",
             externalId = "details2",
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
         )
     )
 

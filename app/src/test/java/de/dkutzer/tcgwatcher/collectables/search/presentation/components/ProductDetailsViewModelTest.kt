@@ -186,12 +186,12 @@ class ProductDetailsViewModelTest {
 
         viewModel.onLoadSingleItem(productModel, false)
         advanceUntilIdle()
-        assertEquals("PJU", viewModel.reloadedSingleItem.item.code)
-        assertEquals(RarityType.COMMON, viewModel.reloadedSingleItem.item.rarity)
-        assertEquals("4,58 €", viewModel.reloadedSingleItem.item.priceTrend)
-        assertEquals(50, viewModel.reloadedSingleItem.item.sellOffers.size)
+        assertEquals("PJU", viewModel.reloadedSingleItem.productModel.code)
+        assertEquals(RarityType.COMMON, viewModel.reloadedSingleItem.productModel.rarity)
+        assertEquals("4,58 €", viewModel.reloadedSingleItem.productModel.priceTrend)
+        assertEquals(50, viewModel.reloadedSingleItem.productModel.sellOffers.size)
 
-        val seller1 = viewModel.reloadedSingleItem.item.sellOffers[0]
+        val seller1 = viewModel.reloadedSingleItem.productModel.sellOffers[0]
         assertEquals("GeCaFeProject", seller1.sellerName)
         assertEquals("Italien", seller1.sellerLocation.country)
         assertEquals("it", seller1.sellerLocation.code)
@@ -200,7 +200,7 @@ class ProductDetailsViewModelTest {
         assertEquals("Poor", seller1.condition.cmCode)
         assertEquals(1, seller1.amount)
 
-        val seller2 = viewModel.reloadedSingleItem.item.sellOffers[1]
+        val seller2 = viewModel.reloadedSingleItem.productModel.sellOffers[1]
         assertEquals("FrlMeow", seller2.sellerName)
         assertEquals("Deutschland", seller2.sellerLocation.country)
         assertEquals("de", seller2.sellerLocation.code)
@@ -209,16 +209,16 @@ class ProductDetailsViewModelTest {
         assertEquals("Poor", seller2.condition.cmCode)
         assertEquals(1, seller2.amount)
 
-        assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", viewModel.reloadedSingleItem.item.detailsUrl)
-        assertEquals("Evoli", viewModel.reloadedSingleItem.item.name.value)
-        assertEquals("de", viewModel.reloadedSingleItem.item.name.languageCode)
-        assertEquals(TypeEnum.CARD, viewModel.reloadedSingleItem.item.type)
-        assertEquals("Pokemon", viewModel.reloadedSingleItem.item.genre.cmCode)
-        assertEquals(GenreType.POKEMON, viewModel.reloadedSingleItem.item.genre)
-        assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", viewModel.reloadedSingleItem.item.imageUrl)
-        assertEquals("0,10 €", viewModel.reloadedSingleItem.item.price)
-        assertEquals("4,58 €", viewModel.reloadedSingleItem.item.priceTrend)
-        assertNotNull(viewModel.reloadedSingleItem.item.timestamp)
+        assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", viewModel.reloadedSingleItem.productModel.detailsUrl)
+        assertEquals("Evoli", viewModel.reloadedSingleItem.productModel.name.value)
+        assertEquals("de", viewModel.reloadedSingleItem.productModel.name.languageCode)
+        assertEquals(TypeEnum.CARD, viewModel.reloadedSingleItem.productModel.type)
+        assertEquals("Pokemon", viewModel.reloadedSingleItem.productModel.genre.cmCode)
+        assertEquals(GenreType.POKEMON, viewModel.reloadedSingleItem.productModel.genre)
+        assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", viewModel.reloadedSingleItem.productModel.imageUrl)
+        assertEquals("0,10 €", viewModel.reloadedSingleItem.productModel.price)
+        assertEquals("4,58 €", viewModel.reloadedSingleItem.productModel.priceTrend)
+        assertNotNull(viewModel.reloadedSingleItem.productModel.timestamp)
 
         val fromDB = searchCacheRepository.getFullProductInfoByExternalId(productModel.externalId)
         println(fromDB)

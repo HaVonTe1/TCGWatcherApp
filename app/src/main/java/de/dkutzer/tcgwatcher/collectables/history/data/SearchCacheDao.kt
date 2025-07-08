@@ -146,6 +146,9 @@ interface SearchCacheDao {
             "ORDER BY p.id ASC LIMIT :limit OFFSET :offset"
     )
     fun getSearchWithProductsAndSellOffers(searchTerm: String, limit: Int, offset: Int): SearchWithFullProductInfo?
+
+    @Upsert
+    fun upsertProductSet(set: ProductSetEntity)
 }
 
 @Dao

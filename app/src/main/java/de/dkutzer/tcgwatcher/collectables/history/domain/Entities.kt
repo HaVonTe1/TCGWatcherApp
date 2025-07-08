@@ -91,6 +91,7 @@ interface BasicProduct {
     val productEntity: ProductEntity
     val names: List<ProductNameEntity>
     val set: ProductSetEntity?
+
 }
 
 data class ProductWithSellOffers(
@@ -129,7 +130,7 @@ data class ProductComposite(
 
 interface SearchWithProducts {
     val search: SearchEntity
-    val products: List<BasicProduct>  // Use BasicProduct here
+    val products: List<BasicProduct>
 
     fun isOlderThan(seconds: Long): Boolean {
         return Instant.ofEpochSecond(search.lastUpdated)
@@ -141,7 +142,7 @@ data class SearchWithFullProductInfo(
     @Embedded override val search: SearchEntity,
     @Relation(
         parentColumn = "id",
-        entity = ProductEntity::class,  // Explicit entity
+        entity = ProductEntity::class,
         entityColumn = "id",            // Refers to ProductEntity.id
         associateBy = Junction(
             value = SearchProductCrossRef::class,
@@ -149,10 +150,10 @@ data class SearchWithFullProductInfo(
             entityColumn = "productId"
         )
     )
-    val fullProducts: List<ProductWithSellOffers>  // Renamed for clarity
+    val fullProducts: List<ProductWithSellOffers>
 ) : SearchWithProducts {
     override val products: List<BasicProduct>
-        get() = fullProducts  // Implicit cast to BasicProduct
+        get() = fullProducts
 }
 
 data class SearchWithBasicProductsInfo(
@@ -167,8 +168,8 @@ data class SearchWithBasicProductsInfo(
             entityColumn = "productId"
         )
     )
-    val basicProducts: List<ProductComposite>  // Renamed for clarity
+    val basicProducts: List<ProductComposite>
 ) : SearchWithProducts {
     override val products: List<BasicProduct>
-        get() = basicProducts  // Implicit cast to BasicProduct
+        get() = basicProducts
 }

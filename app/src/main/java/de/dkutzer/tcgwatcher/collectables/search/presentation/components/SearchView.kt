@@ -52,7 +52,7 @@ fun SearchView(
     historyList: StateFlow<List<HistorySearchItem>>,
     quickSearchList: StateFlow<List<QuickSearchItem>>,
     isSearching: StateFlow<Boolean>,
-    settings: StateFlow<SettingsModel>,
+    settings: SettingsModel,
 
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
@@ -65,7 +65,6 @@ fun SearchView(
 
     val historyListState = historyList.collectAsState()
     val quickSearchListState = quickSearchList.collectAsState()
-    val settings = settings.collectAsState()
 
     var query by remember { mutableStateOf("") }
     val active by isSearching.collectAsState(initial = false)
@@ -137,9 +136,10 @@ fun SearchView(
             content = {
                 SearchPreviewContent(
                     active,
-                    searchResultPagingItems,
-                    historyItems,
-                    quickSearchItems,
+                    products = searchResultPagingItems,
+                    searchHistory = historyItems,
+                    quickSearches = quickSearchItems,
+                    settings = settings,
                     onSearchHistoryItemClicked = {
                         logger.debug { "SearchBar:content:historyItemClick: $it" }
                         query = it
@@ -147,8 +147,8 @@ fun SearchView(
                     },
                     onQuickSearchItemClicked = {
                         logger.debug { "SearchBar:content:quicksearchItemClick: $it" }
-                        query = it.displayName
-                        onQuicksearchItemClick(it.toProductModel(settings.value.language.name.lowercase()))
+                        query = it.getDisplayName(settings.language.localeCode)
+                        onQuicksearchItemClick(it.toProductModel())
                     }
                 )
             }
@@ -176,6 +176,7 @@ fun SearchView(
 
                     else -> {
                         SearchResultItemListView(
+                            settingsModel = settings,
                             modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
                             productPagingItems = searchResultPagingItems,
                             onRefreshList = { onRefreshSearch() },
@@ -215,6 +216,7 @@ fun SearchPreviewContent(
     products: LazyPagingItems<ProductModel>,
     searchHistory: List<HistorySearchItem>,
     quickSearches: List<QuickSearchItem>,
+    settings: SettingsModel,
     onSearchHistoryItemClicked: (String) -> Unit,
     onQuickSearchItemClicked: (QuickSearchItem) -> Unit,
 ) {
@@ -242,7 +244,7 @@ fun SearchPreviewContent(
                 val item = quickSearches[index]
                 SearchItem(
                     icon = Icons.Default.Star,
-                    text = item.displayName,
+                    text = item.getDisplayName(settings.language.localeCode),
                     secondaryText = "${item.nameDe} | ${item.nameEn} | ${item.nameFr}",
                     onClick = { onQuickSearchItemClicked(item) }
                 )

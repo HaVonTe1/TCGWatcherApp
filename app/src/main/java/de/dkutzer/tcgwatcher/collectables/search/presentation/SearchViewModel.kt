@@ -1,5 +1,8 @@
 package de.dkutzer.tcgwatcher.collectables.search.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -57,8 +60,8 @@ class SearchViewModel(
         QuickSearchRepositoryImpl(quickSearchDatabase.quicksearchDao)
     private val searchCacheRepository = SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao)
 
-    private val _settings: MutableStateFlow<SettingsModel> = MutableStateFlow(SettingsModel())
-    val settings: StateFlow<SettingsModel> = _settings.asStateFlow()
+    var settings by mutableStateOf(SettingsModel())
+        private set
 
     private val _showHistoryContent = MutableStateFlow(false)
     val showHistoryContent = _showHistoryContent.asStateFlow()
@@ -78,7 +81,7 @@ class SearchViewModel(
 
 
     private val apiConfig : BaseConfig by lazy {
-        ConfigFactory(settingsModel = settings.value).create()
+        ConfigFactory(settingsModel = settings).create()
     }
     private val productsApiClient: ProductsApiClient  by lazy {
         ApiClientFactory(apiConfig).create()
@@ -135,7 +138,7 @@ class SearchViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val settingsEntity = SettingsRepositoryImpl(settingsDatabase.settingsDao).load()
             logger.debug { "SettingsEntity: $settingsEntity" }
-            _settings.value = settingsEntity.toModel()
+            settings = settingsEntity.toModel()
 
             val searchHistory =
                 SearchCacheRepositoryImpl(searchCacheDatabase.searchCacheDao).getSearchHistory()
@@ -205,7 +208,6 @@ class SearchViewModel(
                             code = it.code,
                             cmSetId = it.cmSetId,
                             cmCardId = it.cmCardId,
-                            displayName = it.nameDe //make this configurable based on the language setting
                         )
                     }
                     logger.debug { "$result" }
@@ -290,9 +292,9 @@ class SearchViewModel(
         return true
     }
 
-    fun onQuickSearch(item: ProductModel) {
-        logger.debug { "SearchViewModel::onQuickSearch: $item" }
-        _quicksearchItem.value = item
+    fun onQuickSearch(productModel: ProductModel) {
+        logger.debug { "SearchViewModel::onQuickSearch: $productModel" }
+        _quicksearchItem.value = productModel
         _showHistoryContent.value = false
 
     }
@@ -300,4 +302,4 @@ class SearchViewModel(
 
 }
 
-data class SingleItemReloadState(val state: RefreshState, val item: ProductModel)
+data class SingleItemReloadState(val state: RefreshState, val productModel: ProductModel)
