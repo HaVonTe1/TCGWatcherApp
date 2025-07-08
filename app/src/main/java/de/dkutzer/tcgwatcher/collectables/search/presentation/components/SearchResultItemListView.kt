@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 
@@ -25,6 +26,7 @@ private val logger = KotlinLogging.logger {}
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SearchResultItemListView(
+    settingsModel: SettingsModel,
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<ProductModel>,
     onRefreshList: () -> Unit,
@@ -58,6 +60,7 @@ fun SearchResultItemListView(
                             val productModel = productPagingItems[index]
                             ProductListViewItemView(
                                 productModel = productModel!!,
+                                settingsModel = settingsModel,
                                 showLastUpdated = false,
                                 iconRowContent = { },
                                 modifier = Modifier

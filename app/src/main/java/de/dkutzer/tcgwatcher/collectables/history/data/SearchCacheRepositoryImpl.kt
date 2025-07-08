@@ -79,10 +79,10 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
     }
 
 
-    override suspend fun persistSearchWithBasicProductsInfo(
+    override suspend fun persistSearchWithProducts(
         searchWithProducts: SearchWithProducts,
         language: String
-    ): SearchWithBasicProductsInfo {
+    ) {
         val (searchEntity, searchId) = processSearch(
             searchTerm = searchWithProducts.search.searchTerm,
             productsSize = searchWithProducts.products.size,
@@ -103,8 +103,10 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         searchWithProducts.products.forEachIndexed { index, product ->
             val productId = productIds[index].toInt()
 
-            // Collect offers with updated productId
-            allOffers.addAll(product.offers.map { it.copy(productId = productId) })
+            if(product is ProductWithSellOffers) {
+                // Collect offers with updated productId
+                allOffers.addAll(product.offers.map { it.copy(productId = productId) })
+            }
 
             // Collect names with updated productId
             allNames.addAll(product.names.map { it.copy(productId = productId) })
@@ -114,10 +116,14 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
             // Collect cross references
             crossRefs.add(SearchProductCrossRef(searchId = searchId, productId = productId))
+
+
         }
 
         // Bulk insert all related entities
-        searchCacheDao.upsertSellOffers(allOffers)
+        if(allOffers.isNotEmpty()) {
+            searchCacheDao.upsertSellOffers(allOffers)
+        }
         if (allNames.isNotEmpty()) {
             searchCacheDao.insertProductNames(allNames)
         }
@@ -127,69 +133,6 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         searchCacheDao.insertSearchProductCrossRefs(crossRefs)
 
     }
-
-    override suspend fun persistSearchWithProductAndSellOffers(
-        searchWithProducts: SearchWithFullProductInfo,
-        language: String
-    ): SearchWithFullProductInfo {
-        val (searchEntity, searchId) = processSearch(
-            searchTerm = searchWithProducts.search.searchTerm,
-            productsSize = searchWithProducts.products.size,
-            language = language,
-            history = searchWithProducts.search.history
-        )
-
-        // Bulk insert products
-        val productIds =
-            searchCacheDao.upsertProducts(searchWithProducts.products.map { it.productEntity })
-
-        // Prepare bulk data for related entities
-        val allOffers = mutableListOf<SellOfferEntity>()
-        val allNames = mutableListOf<ProductNameEntity>()
-        val allSets = mutableListOf<ProductSetEntity>()
-        val crossRefs = mutableListOf<SearchProductCrossRef>()
-
-        searchWithProducts.products.forEachIndexed { index, product ->
-            val productId = productIds[index].toInt()
-
-            // Collect offers with updated productId
-            allOffers.addAll(product.offers.map { it.copy(productId = productId) })
-
-            // Collect names with updated productId
-            allNames.addAll(product.names.map { it.copy(productId = productId) })
-
-            // Collect sets with updated productId
-            product.set?.let { allSets.add(it.copy(productId = productId)) }
-
-            // Collect cross references
-            crossRefs.add(SearchProductCrossRef(searchId = searchId, productId = productId))
-        }
-
-        // Bulk insert all related entities
-        searchCacheDao.upsertSellOffers(allOffers)
-        if (allNames.isNotEmpty()) {
-            searchCacheDao.insertProductNames(allNames)
-        }
-        if (allSets.isNotEmpty()) {
-            searchCacheDao.upsertProductSets(allSets)
-        }
-        searchCacheDao.insertSearchProductCrossRefs(crossRefs)
-
-        // Build updated result
-        val updatedProductWithSellOffers =
-            searchWithProducts.products.mapIndexed { index, product ->
-                val productId = productIds[index].toInt()
-            ProductWithSellOffers(
-                productEntity = product.productEntity.copy(id = productId),
-                offers = product.offers.map { it.copy(productId = productId) },
-                names = product.names.map { it.copy(productId = productId) },
-                set = product.set?.copy(productId = productId)
-            )
-        }
-
-        return SearchWithFullProductInfo(searchEntity, updatedProductWithSellOffers)
-    }
-
 
     override suspend fun removeProductsFromSearch(
         search: SearchEntity) {
@@ -220,7 +163,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         detailsUrl: String,
         productEntity: ProductEntity,
         names: List<ProductNameEntity>,
-        sets: List<ProductSetEntity>
+        set: ProductSetEntity?
     ) {
         // Produkt aktualisieren (z.B. Preis, Trend, Rarität, Typ, etc.)
         searchCacheDao.upsertProduct(productEntity)
@@ -229,8 +172,8 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             searchCacheDao.insertProductNames(names)
         }
         // Sets aktualisieren, falls übergeben
-        if (sets.isNotEmpty()) {
-            searchCacheDao.insertProductSets(sets)
+        if (set!=null) {
+            searchCacheDao.upsertProductSet(set)
         }
     }
 

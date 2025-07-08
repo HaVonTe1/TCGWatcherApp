@@ -22,12 +22,14 @@ import coil.util.DebugLogger
 import de.dkutzer.tcgwatcher.collectables.search.data.referrer
 import de.dkutzer.tcgwatcher.collectables.search.data.userAgent
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
+import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
 
 
 @Composable
 fun ProductListViewItemView(
     productModel: ProductModel,
     showLastUpdated: Boolean,
+    settingsModel: SettingsModel,
     iconRowContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -66,7 +68,8 @@ fun ProductListViewItemView(
                 verticalArrangement = Arrangement.Bottom
             ) {
                 ProductDetailsTable(
-                    productModel,
+                    productModel = productModel,
+                    settingsModel = settingsModel,
                     modifier = Modifier
                     .padding(4.dp)
                     .fillMaxHeight(.9f))
@@ -82,12 +85,14 @@ fun ProductListViewItemView(
 @Composable
 fun ProductDetailsTable(
     productModel: ProductModel,
+    settingsModel: SettingsModel,
     modifier: Modifier = Modifier
 ) {
 
     Column(modifier = modifier.padding(1.dp))
     {
-        Text(text = productModel.name.value, style = MaterialTheme.typography.headlineLarge)
+        Text(text = productModel.getDisplayName(settingsModel.language.localeCode),
+            style = MaterialTheme.typography.headlineLarge)
         if(productModel.code.isNotBlank()) {
             Text(text = " (${productModel.code})", style = MaterialTheme.typography.bodySmall)
         }

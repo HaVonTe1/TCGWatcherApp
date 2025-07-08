@@ -1,4 +1,5 @@
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
 import io.mockk.every
@@ -12,17 +13,17 @@ import java.time.Instant
 class SearchWithItemsEntityTest {
 
     private lateinit var searchEntity: SearchEntity
-    private lateinit var productItemEntities: List<ProductEntity>
+    private lateinit var productEntities: List<ProductComposite>
     private lateinit var searchWithBasicProductsInfo: SearchWithBasicProductsInfo
 
     @Before
     fun setUp() {
-        // Mock the SearchEntity and ProductItemEntity
+        // Mock the SearchEntity and ProductEntity
         searchEntity = mockk<SearchEntity>()
-        productItemEntities = listOf(mockk<ProductEntity>())
+        productEntities = listOf(mockk<ProductComposite>())
 
-        // Create an instance of SearchWithItemsEntity
-        searchWithBasicProductsInfo = SearchWithBasicProductsInfo(searchEntity, productItemEntities)
+        // Create an instance of SearchWithBasicProductsInfo
+        searchWithBasicProductsInfo = SearchWithBasicProductsInfo(searchEntity, productEntities)
     }
 
     @Test

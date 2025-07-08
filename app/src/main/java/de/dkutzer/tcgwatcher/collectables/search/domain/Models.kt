@@ -1,15 +1,12 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
-import java.util.concurrent.ConcurrentHashMap
-
 import android.os.Parcelable
-import io.github.oshai.kotlinlogging.KotlinLogging
+import de.dkutzer.tcgwatcher.settings.domain.Languages
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
-
-private val logger = KotlinLogging.logger {}
+import java.util.concurrent.ConcurrentHashMap
 
 
 @Parcelize
@@ -39,12 +36,10 @@ data class ProductModel(
             ?: NameModel("Unknown", languageCode)
     }
 
-    // Helper function to get the display name string for a specific language
     fun getDisplayName(languageCode: String): String {
         return getNameForLanguage(languageCode).value
     }
 
-    // Primary name (first available name)
     val primaryName: NameModel
         get() = names.firstOrNull() ?: NameModel("Unknown", "en")
 
@@ -61,7 +56,7 @@ data class ProductModel(
     companion object {
         fun empty(): ProductModel = ProductModel(
             id = 1.toString(),
-            name = NameModel(value = "", languageCode = ""),
+            names = listOf(NameModel("Unknown", "en")),
             genre = GenreType.POKEMON,
             code = "",
             imageUrl = "",
@@ -120,7 +115,6 @@ data class LocationModel(
             }
 
             if (targetDisplayLocale == null) {
-                logger.debug{"Warning: Unsupported language '$language'"}
                 val unknown = LocationModel(country = "unknown", code = "")
                 locationCacheBySellerLocation[cacheKey] = unknown
                 return unknown
@@ -135,7 +129,6 @@ data class LocationModel(
                     code = foundLocale.country.lowercase()
                 )
             } else {
-                logger.debug{"Warning: Could not find locale for country '$sellerLocationString' in language '[${targetDisplayLocale.language}'"}
                 LocationModel(country = "unknown", code = "")
             }
             locationCacheBySellerLocation[cacheKey] = result
@@ -153,7 +146,6 @@ data class LocationModel(
                 else -> null // Handle unsupported languages
             }
             if (targetDisplayLocale == null) {
-                logger.debug{"Warning: Unsupported language '$language'"}
                 val unknown = LocationModel(country = "unknown", code = "")
                 locationCacheByCode[cacheKey] = unknown
                 return unknown
@@ -165,7 +157,6 @@ data class LocationModel(
                     code = foundLocale.country.lowercase()
                 )
             } else {
-                logger.debug { "Warning: Could not find locale for country '$code' in language '[${targetDisplayLocale.language}'" }
                 LocationModel(country = "unknown", code = "")
             }
             locationCacheByCode[cacheKey] = result
@@ -317,7 +308,6 @@ data class SearchResultsPage(
 
 data class QuickSearchItem(
     override val id: String,
-    override val displayName: String,
     val nameDe: String,
     val nameEn: String,
     val nameFr: String,
@@ -325,11 +315,11 @@ data class QuickSearchItem(
     val cmSetId: String,
     val cmCardId: String,
     //TODO: add genre as soon as more than one genre is supported
-): SearchSuggestionItem(id, displayName) {
-    fun toProductModel( currentLanguageCode : String = "de"): ProductModel {
+): SearchSuggestionItem(id) {
+    fun toProductModel(): ProductModel {
         return ProductModel(
             id = id,
-            name = NameModel(displayName, currentLanguageCode),
+            names  = listOf(NameModel(nameDe, Languages.DE.localeCode), NameModel(nameEn, Languages.EN.localeCode  ), NameModel(nameFr, Languages.FR.localeCode) ,)  ,
             code = code,
             externalId = cmCardId,
             type = TypeEnum.CARD,
@@ -337,21 +327,30 @@ data class QuickSearchItem(
             set = SetModel(cmSetId, ""),
             genre = GenreType.POKEMON, //TODO: fix this as soon as more than one genre is supported
             imageUrl = "",
-            detailsUrl = "${currentLanguageCode}/${GenreType.POKEMON.cmCode}/Products/${TypeEnum.CARD.cmCode}/${cmSetId}/${cmCardId}",
+            detailsUrl = "/${GenreType.POKEMON.cmCode}/Products/${TypeEnum.CARD.cmCode}/${cmSetId}/${cmCardId}",
             price = "",
             priceTrend = "",
             sellOffers = emptyList(),
             timestamp = Instant.now().epochSecond
         )
     }
+    fun getDisplayName(languageCode: String): String {
+        return when(languageCode) {
+            Languages.DE.localeCode -> nameDe
+            Languages.EN.localeCode -> nameEn
+            Languages.FR.localeCode -> nameFr
+            else -> nameEn
+        }
+    }
+
 }
 
 data class HistorySearchItem(
     override val id: String = UUID.randomUUID().toString(),
-    override val displayName: String,
-): SearchSuggestionItem(id, displayName)
+    val displayName: String,
+): SearchSuggestionItem(id)
 
-open class SearchSuggestionItem(open val  id: String, open val displayName: String)
+open class SearchSuggestionItem(open val  id: String)
 
 
 data class RefreshWrapper(

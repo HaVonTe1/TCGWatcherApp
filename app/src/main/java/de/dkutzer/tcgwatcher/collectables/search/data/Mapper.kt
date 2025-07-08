@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
 
+import de.dkutzer.tcgwatcher.collectables.history.domain.BasicProduct
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
@@ -37,7 +38,7 @@ inline fun <reified T> fromString(value: String): T
 }
 
 
-fun CardmarketProductGallaryItemDto.toProductItemEntity(
+private fun CardmarketProductGallaryItemDto.toProductItemEntity(
     productId: Int = 0
 ): ProductEntity {
     return ProductEntity(
@@ -53,6 +54,22 @@ fun CardmarketProductGallaryItemDto.toProductItemEntity(
         priceTrend = if (this.priceTrend.valid) this.priceTrend.value else "",
         id = productId,
         lastUpdated = Instant.now().epochSecond
+    )
+}
+
+private fun NameDto.toProductNameEntity(productId: Int): ProductNameEntity {
+    return ProductNameEntity(
+        name = this.value,
+        language = this.languageCode,
+        productId = productId
+    )
+}
+
+fun CardmarketProductGallaryItemDto.toProductComposite(productId: Int = 0): ProductComposite {
+    return ProductComposite(
+        productEntity = this.toProductItemEntity(productId),
+        names = listOf(this.name.toProductNameEntity(productId)),
+        set = null
     )
 }
 
@@ -254,4 +271,14 @@ private fun CardmarketSellOfferDto.toSellOfferModel(language: String): SellOffer
 
 fun NameDto.toModel(): NameModel {
     return NameModel(this.value, this.languageCode)
+}
+
+fun BasicProduct.toProductModel(language: String) : ProductModel {
+
+    return  when(this) {
+        is ProductComposite -> this.toProductModel()
+        is ProductWithSellOffers -> this.toProductModel(language)
+        else -> { throw IllegalArgumentException("Unknown type of BasicProduct")}
+    }
+
 }

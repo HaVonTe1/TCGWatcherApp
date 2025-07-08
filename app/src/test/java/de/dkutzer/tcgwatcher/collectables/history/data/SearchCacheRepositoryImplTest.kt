@@ -98,7 +98,7 @@ class SearchCacheRepositoryImplTest {
         val searchWithBasicProductsInfo = SearchWithBasicProductsInfo(search, products)
 
         // Persist
-        val persisted = repository.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, "en")
+        val persisted = repository.persistSearchWithProducts(searchWithBasicProductsInfo, "en")
 
         // Verify relationship
         val retrieved = repository.getSearchWithBasicProductsByQuery(searchTerm, 1, 10)
@@ -117,7 +117,7 @@ class SearchCacheRepositoryImplTest {
             createSampleProductItemEntity(code = "PGD-$it")
         }
 
-        repository.persistSearchWithBasicProductsInfo(
+        repository.persistSearchWithProducts(
             SearchWithBasicProductsInfo(
                 SearchEntity(searchTerm = searchTerm, size = 20, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
                 products
@@ -194,7 +194,7 @@ class SearchCacheRepositoryImplTest {
             price = "15.00",
             lastUpdated = System.currentTimeMillis()
         )
-        repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), sets = listOf(setEntity))
+        repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), set = setEntity)
         // Verify Product
         val productsByExternalId = repository.getProductsByExternalId(initialItem.externalId)
         assertNotNull(productsByExternalId)

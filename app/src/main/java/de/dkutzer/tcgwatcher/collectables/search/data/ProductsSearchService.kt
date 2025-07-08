@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchCacheRepository
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
@@ -49,12 +50,12 @@ class CardmarketProductSearchService
         if (searchAndProductsAndSelloffersEntity != null) {
             logger.debug { "Adapter: Returning cached results: $searchAndProductsAndSelloffersEntity" }
             return SearchResultsPage(
-                searchAndProductsAndSelloffersEntity.products.map { it.toProductModel(language) },
+                searchAndProductsAndSelloffersEntity.products.map { (it as ProductWithSellOffers).toProductModel(language) },
                 1,
                 1)
         }
         val searchEntity = createAndPersistSearchEntity(quickSearchProduct, true, language)
-        val productModel = searchEntity.products.first().toProductModel(language)
+        val productModel = (searchEntity.products.first() as ProductWithSellOffers).toProductModel(language)
         val result = SearchResultsPage(listOf(productModel), 1, 1)
 
         logger.debug { "Adapter: Finally returning results: $result" }
@@ -118,9 +119,9 @@ class CardmarketProductSearchService
                 language = config.lang.name,
                 history = false
             ),
-            products = listOf(productWithDetails.toProductWithSellofferEntity())
+            fullProducts = listOf(productWithDetails.toProductWithSellofferEntity())
         ).also {
-            cache.persistSearchWithProductAndSellOffers(it, config.lang.name)
+            cache.persistSearchWithProducts(it, config.lang.name)
         }
     }
 
@@ -146,7 +147,7 @@ class CardmarketProductSearchService
             searchWithBasicProdcuts = null
         }
         if(searchWithBasicProdcuts!=null && !searchWithBasicProdcuts.isOlderThan(config.ttlInSeconds)) {
-            val searchItems = searchWithBasicProdcuts.products.map { it.toProductModel() }
+            val searchItems = searchWithBasicProdcuts.products.map { it.toProductModel(config.lang.localeCode) }.toList()
             result = SearchResultsPage(
                 searchItems,
                 page,
@@ -189,16 +190,16 @@ class CardmarketProductSearchService
                         language = config.lang.name,
                         history = true
                     ),
-                    products = mergedResults.results.map { it.toProductComposite() }.toList()
+                    basicProducts = mergedResults.results.map { it.toProductComposite() }
                 )
                 logger.debug { "Persisting cache: $searchWithBasicProductsInfo" }
-                cache.persistSearchWithBasicProductsInfo(searchWithBasicProductsInfo, config.lang.name)
+                cache.persistSearchWithProducts(searchWithBasicProductsInfo, config.lang.name)
 
                 logger.debug { "Now fetching paged results from newly cache" }
                 val updatedSearchResult = cache.getSearchWithBasicProductsByQuery(searchString, page)
 
 
-                val searchItems = updatedSearchResult?.products?.map { it.toProductModel() }
+                val searchItems = updatedSearchResult?.products?.map { it.toProductModel(config.lang.localeCode) }
                 result = SearchResultsPage(
                     searchItems ?: listOf(),
                     page,

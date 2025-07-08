@@ -7,8 +7,7 @@ interface SearchCacheRepository {
     suspend fun getSearchWithFullProductsByQuery(searchTerm: String, page: Int = 1, limit : Int = 5) : SearchWithFullProductInfo?
     suspend fun getFullProductInfoByExternalId(externalId: String) : ProductWithSellOffers?
 
-    suspend fun persistSearchWithBasicProductsInfo(searchWithProducts: SearchWithProducts, language: String): SearchWithBasicProductsInfo
-    suspend fun persistSearchWithProductAndSellOffers(searchWithProducts: SearchWithFullProductInfo, language: String) : SearchWithFullProductInfo
+    suspend fun persistSearchWithProducts(searchWithProducts: SearchWithProducts, language: String)
     suspend fun persistSearch(search: SearchEntity)
     suspend fun deleteSearch(search: SearchEntity)
     suspend fun getSearchHistory(): List<String>
@@ -22,7 +21,7 @@ interface SearchCacheRepository {
         detailsUrl: String,
         productEntity: ProductEntity,
         names: List<ProductNameEntity> = emptyList(),
-        sets: List<ProductSetEntity> = emptyList()
+        set: ProductSetEntity?
     )
     suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers)
     suspend fun deleteProducts(results: List<ProductEntity>)
