@@ -140,8 +140,6 @@ class ProductDetailsViewModelTest {
             val searchItems = listOf(
                 ProductEntity(
                     id = 1,
-                    searchId = 1,
-                    displayName = "Evoli",
                     language = "de",
                     genre = "Pokemon",
                     type = "Card",
@@ -152,8 +150,6 @@ class ProductDetailsViewModelTest {
                     imgLink = "https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg",
                     price = "0.02",
                     priceTrend = "",
-                    setName = "Pokemon-Jungle",
-                    setId = "Pokemon-Jungle",
                     lastUpdated = System.currentTimeMillis()
                 )
             )
@@ -169,7 +165,7 @@ class ProductDetailsViewModelTest {
 
         val productModel = ProductModel(
             id = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
-            name = NameModel("Eevee", "de"),
+            names = listOf(NameModel("Eevee", "de")),
             type = TypeEnum.CARD,
             genre = GenreType.POKEMON,
             code = "",
@@ -210,8 +206,8 @@ class ProductDetailsViewModelTest {
         assertEquals(1, seller2.amount)
 
         assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", viewModel.reloadedSingleItem.productModel.detailsUrl)
-        assertEquals("Evoli", viewModel.reloadedSingleItem.productModel.name.value)
-        assertEquals("de", viewModel.reloadedSingleItem.productModel.name.languageCode)
+        assertEquals("Evoli", viewModel.reloadedSingleItem.productModel.getDisplayName("de"))
+        assertEquals("de", viewModel.reloadedSingleItem.productModel.getNameForLanguage("de").languageCode)
         assertEquals(TypeEnum.CARD, viewModel.reloadedSingleItem.productModel.type)
         assertEquals("Pokemon", viewModel.reloadedSingleItem.productModel.genre.cmCode)
         assertEquals(GenreType.POKEMON, viewModel.reloadedSingleItem.productModel.genre)
@@ -227,13 +223,11 @@ class ProductDetailsViewModelTest {
         assertEquals("4,58 €", fromDB.productEntity.priceTrend)
         assertEquals(RarityType.COMMON.cmCode, fromDB.productEntity.rarity)
         assertEquals("PJU", fromDB.productEntity.code)
-        assertEquals("Evoli", fromDB.productEntity.displayName)
         assertEquals("de", fromDB.productEntity.language)
         assertEquals("/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee", fromDB.productEntity.externalLink)
         assertEquals("https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg", fromDB.productEntity.imgLink)
         assertEquals("Pokemon", fromDB.productEntity.genre)
-        assertEquals("Pokémon Jungle", fromDB.productEntity.setName)
-        assertEquals("/de/Pokemon/Expansions/Pokemon-Jungle", fromDB.productEntity.setId)
+
         assertEquals("Singles", fromDB.productEntity.type)
         assertNotNull(fromDB.productEntity.lastUpdated)
 

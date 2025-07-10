@@ -7,11 +7,14 @@ import androidx.paging.PagingSource
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithProductsAndSellOffers
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 import de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
@@ -52,6 +55,38 @@ class SearchCacheRepositoryImplTest {
     }
 
 
+    private fun createSampleProductComposite(
+        code: String = "TEST123"
+    ): ProductComposite {
+        return ProductComposite(
+            productEntity = ProductEntity(
+                id = 0,
+                language = "en",
+                genre = "Pokemon",
+                type = "Singles",
+                rarity = "Rare",
+                code = code,
+                externalId = "test-id",
+                externalLink = "/en/Pokemon/Products/Singles/test/123",
+                imgLink = "http://example.com/image.jpg",
+                price = "25.00",
+                priceTrend = "+10%",
+                lastUpdated = System.currentTimeMillis()
+            ),
+            names = listOf(
+                ProductNameEntity(id = 0, productId = 0, name = "Test Product", language = "en"),
+                ProductNameEntity(id = 0, productId = 0, name = "Test Produkt", language = "de")
+            ),
+            set = ProductSetEntity(
+                id = 0,
+                productId = 0,
+                setName = "Test Set",
+                setId = "set-123",
+                language = "en"
+            )
+        )
+    }
+
     @After
     fun teardown() {
         database.close()
@@ -91,8 +126,8 @@ class SearchCacheRepositoryImplTest {
         )
 
         val products = listOf(
-            createSampleProductItemEntity(),
-            createSampleProductItemEntity(),
+            createSampleProductComposite(),
+            createSampleProductComposite(),
         )
 
         val searchWithBasicProductsInfo = SearchWithBasicProductsInfo(search, products)
@@ -106,7 +141,6 @@ class SearchCacheRepositoryImplTest {
         assertNotNull(retrieved)
         assertEquals(2, retrieved?.products?.size ?: 0)
         assertEquals(searchTerm, retrieved?.search?.searchTerm)
-        assertTrue(retrieved?.products?.all { it.searchId == persisted.search.id } == true)
     }
 
 
@@ -114,7 +148,7 @@ class SearchCacheRepositoryImplTest {
     fun testPagination() = runBlocking {
         val searchTerm = "PagedSearch"
         val products = (1..20).map {
-            createSampleProductItemEntity(code = "PGD-$it")
+            createSampleProductComposite(code = "PGD-$it")
         }
 
         repository.persistSearchWithProducts(
@@ -128,39 +162,48 @@ class SearchCacheRepositoryImplTest {
         // Page 1
         val page1 = repository.getSearchWithBasicProductsByQuery(searchTerm, 1, 5)
         assertEquals(5, page1?.products?.size)
-        assertEquals("PGD-1", page1?.products?.get(0)?.code)
+        assertEquals("PGD-1", page1?.products?.get(0)?.productEntity?.code)
 
         // Page 2
         val page2 = repository.getSearchWithBasicProductsByQuery(searchTerm, 2, 5)
         assertEquals(5, page2?.products?.size)
-        assertEquals("PGD-6", page2?.products?.get(0)?.code)
+        assertEquals("PGD-6", page2?.products?.get(0)?.productEntity?.code)
     }
 
     @Test
     fun testProductWithOffers() = runBlocking {
         val productWithSellOffers = ProductWithSellOffers(
-            createSampleProductItemEntity(code = "OFR-1"),
-            listOf(
+            productEntity = createSampleProductComposite().productEntity,
+            offers = listOf(
                 createSampleSellOfferEntity(price = "10.99"),
                 createSampleSellOfferEntity(price = "9.50")
-            )
+            ),
+            names = createSampleProductComposite().names,
+            set = createSampleProductComposite().set
         )
 
-        val searchWithOffers = SearchWithProductsAndSellOffers(
-            SearchEntity(searchTerm = "OffersTest", size =  1, language =  "en", lastUpdated =  System.currentTimeMillis(), history = true),
-            listOf(productWithSellOffers)
+        val searchWithOffers = SearchWithFullProductInfo(
+            search = SearchEntity(
+                searchTerm = "OffersTest",
+                size = 1,
+                language = "en",
+                lastUpdated = System.currentTimeMillis(),
+                history = true
+            ),
+            fullProducts = listOf(productWithSellOffers)
         )
 
-        val persisted = repository.persistSearchWithProductAndSellOffers(searchWithOffers, "en")
+        val persisted = repository.persistSearchWithProducts(searchWithOffers, "en")
 
         // Verify offers were persisted
-        val offers = dao.getSellOffersByProductId(persisted.productWithSellOffers[0].productEntity.id)
+        val productId = productWithSellOffers.productEntity.id
+        val offers = dao.getSellOffersByProductId(productId)
         assertEquals(2, offers.size)
-        assertTrue(offers.all { it.productId == persisted.productWithSellOffers[0].productEntity.id })
+        assertTrue(offers.all { it.productId == productId })
     }
 
     @Test
-    fun testUpdateByLink() = runBlocking {
+    fun testUpdateByLink(): Unit = runBlocking {
         val link = "special-card-link"
         val initialItem = ProductEntity(
             externalLink = link,
@@ -176,15 +219,15 @@ class SearchCacheRepositoryImplTest {
             priceTrend = "sdfg",
             externalId = "sdf"
         )
-        repository.persistProducts(listOf(initialItem))
+        repository.persistProducts(listOf(initialItem.copy(id = 1)))
         // Name und Set anlegen
-        val nameEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity(
-            productId = initialItem.id,
+        val nameEntity = ProductNameEntity(
+            productId = 1,
             language = "de",
             name = "Testkarte"
         )
-        val setEntity = de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity(
-            productId = initialItem.id,
+        val setEntity = ProductSetEntity(
+            productId = 1,
             setName = "TestSet",
             setId = "set-123",
             language = "de"
@@ -192,7 +235,8 @@ class SearchCacheRepositoryImplTest {
         // Update
         val updatedItem = initialItem.copy(
             price = "15.00",
-            lastUpdated = System.currentTimeMillis()
+            lastUpdated = System.currentTimeMillis(),
+            id = 1
         )
         repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), set = setEntity)
         // Verify Product
@@ -201,11 +245,16 @@ class SearchCacheRepositoryImplTest {
         productsByExternalId?.let {
             // Verify Names
             assertEquals(1, it.names.size)
-            assertEquals(nameEntity, it.names[0])
+            val actualName = it.names[0]
+            assertEquals(nameEntity.name, actualName.name)
+            assertEquals(nameEntity.language, actualName.language)
+            assertEquals(nameEntity.productId, actualName.productId)
             // Verify Sets
-            assertEquals(setEntity, it.set)
+            assertEquals(setEntity.setName, it.set?.setName)
+            assertEquals(setEntity.setId, it.set?.setId)
+            assertEquals(setEntity.language, it.set?.language)
+            assertEquals(setEntity.productId, it.set?.productId)
         }
-
     }
 
     @Test
@@ -237,8 +286,8 @@ class SearchCacheRepositoryImplTest {
     @Test
     fun testDeleteSearchKeepsProducts() = runBlocking {
         val search = SearchEntity(searchTerm = "Delete OrphanTest", id = 1, size = 1, language = "de", lastUpdated = System.currentTimeMillis(), history = true )
-        val product = createSampleProductItemEntity( code = "ORPH-1").apply { searchId = 1 }
-
+        val product =
+            createSampleProductComposite(code = "ORPH-1").productEntity.copy(id = 1)
 
         dao.upsertSearch(search)
         repository.persistProducts(listOf(product))
@@ -279,21 +328,28 @@ class SearchCacheRepositoryImplTest {
     fun testFindProductsWithSellOffers() = runBlocking {
         val searchTerm = "OffersTest"
         val productWithSellOffers = (1..20).map {
-            val productItemEntity = createSampleProductItemEntity(code = "PGD-$it")
-            ProductWithSellOffers(productItemEntity, listOf(createSampleSellOfferEntity(),createSampleSellOfferEntity()))
+            val composite = createSampleProductComposite(code = "PGD-$it")
+            ProductWithSellOffers(
+                productEntity = composite.productEntity,
+                offers = listOf(createSampleSellOfferEntity(), createSampleSellOfferEntity()),
+                names = composite.names,
+                set = composite.set
+            )
         }
-        val persistSearchWithProductAndSellOffers =
-            repository.persistSearchWithProductAndSellOffers(
-                SearchWithProductsAndSellOffers(
-                    SearchEntity(
-                        searchTerm = searchTerm,
-                        size = 20,
-                        language = "en",
-                        lastUpdated = System.currentTimeMillis(),
-                        history = true
-                    ),
-                    productWithSellOffers
+        val searchWithFullProducts =
+            SearchWithFullProductInfo(
+                search = SearchEntity(
+                    searchTerm = searchTerm,
+                    size = 20,
+                    language = "en",
+                    lastUpdated = System.currentTimeMillis(),
+                    history = true
                 ),
+                fullProducts = productWithSellOffers
+            )
+        val persisted =
+            repository.persistSearchWithProducts(
+                searchWithFullProducts,
                 "en"
             )
         val pagingSource = dao.getProductWithSellOffersPagingSource(searchTerm)
@@ -313,10 +369,9 @@ class SearchCacheRepositoryImplTest {
         val product = page.data[0]
 
         // Verify product item
-        val productItemEntity = persistSearchWithProductAndSellOffers.productWithSellOffers[0].productEntity
+        val productItemEntity = productWithSellOffers[0].productEntity
         val productId = productItemEntity.id
         assertEquals(productId, product.productEntity.id)
-        assertEquals(productItemEntity.displayName, product.productEntity.displayName)
 
         // Verify offers
         assertEquals(2, product.offers.size)
@@ -324,31 +379,69 @@ class SearchCacheRepositoryImplTest {
         assertEquals("10.99", product.offers[0].price)
     }
 
-    private fun createSampleProductItemEntity(code : String = "DRG-1"): ProductEntity =
-        ProductEntity(
+    companion object TestHelpers {
+        fun createSampleProductItemEntity(code : String = "DRG-1"): ProductEntity =
+            ProductEntity(
+                id = 0,
+                language = "de",
+                genre = GenreType.POKEMON.cmCode,
+                type = TypeEnum.CARD.cmCode,
+                rarity = RarityType.UNCOMMON.cmCode,
+                code = code,
+                externalId = "blub",
+                externalLink = "/de/pokemon/Products/Singles/bla/blub",
+                imgLink = "https://fddgf.dsdfdfg.jpg",
+                price = "10.00",
+                priceTrend = "11.00",
+                lastUpdated = 2111111111111111111
+            )
+
+        fun createSampleSellOfferEntity(price : String = "10.99", productId : Int = 0): SellOfferEntity = SellOfferEntity(
             id = 0,
-            language = "de",
-            genre = GenreType.POKEMON.cmCode,
-            type = TypeEnum.CARD.cmCode,
-            rarity = RarityType.UNCOMMON.cmCode,
-            code = code,
-            externalId = "blub",
-            externalLink = "/de/pokemon/Products/Singles/bla/blub",
-            imgLink = "https://fddgf.dsdfdfg.jpg",
-            price = "10.00",
-            priceTrend = "11.00",
-            lastUpdated = 2111111111111111111
+            productId = productId,
+            sellerName = "sdfsdfsdf",
+            sellerLocation = "Deutschlang",
+            productLanguage = "Deutsch",
+            condition = ConditionType.NEAR_MINT.cmCode,
+            amount = 1,
+            price = price,
+            special = SpecialType.REVERSED.cmCode
         )
 
-    private fun createSampleSellOfferEntity(price : String = "10.99", productId : Int = 0): SellOfferEntity = SellOfferEntity(
-        id = 0,
-        productId = 0,
-        sellerName = "sdfsdfsdf",
-        sellerLocation = "Deutschlang",
-        productLanguage = "Deutsch",
-        condition = ConditionType.NEAR_MINT.cmCode,
-        amount = 1,
-        price = price,
-        special = SpecialType.REVERSED.cmCode
-    )
+        fun createSampleProductComposite(
+            code: String = "DRG-1",
+        ): ProductComposite =
+            ProductComposite(
+                productEntity = ProductEntity(
+                    id = 0,
+                    language = "de",
+                    genre = GenreType.POKEMON.cmCode,
+                    type = TypeEnum.CARD.cmCode,
+                    rarity = RarityType.UNCOMMON.cmCode,
+                    code = code,
+                    externalId = "blub",
+                    externalLink = "/de/pokemon/Products/Singles/bla/blub",
+                    imgLink = "https://fddgf.dsdfdfg.jpg",
+                    price = "10.00",
+                    priceTrend = "11.00",
+                    lastUpdated = 2111111111111111111
+                ),
+                names = listOf(
+                    ProductNameEntity(
+                        id = 0,
+                        productId = 0,
+                        name = "Test Product",
+                        language = "de"
+                    ),
+                    ProductNameEntity(id = 0, productId = 0, name = "Test Produkt", language = "en")
+                ),
+                set = ProductSetEntity(
+                    id = 0,
+                    productId = 0,
+                    setName = "Test Set",
+                    setId = "set-123",
+                    language = "de"
+                )
+            )
+    }
 }
