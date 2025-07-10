@@ -38,7 +38,7 @@ inline fun <reified T> fromString(value: String): T
 }
 
 
-private fun CardmarketProductGallaryItemDto.toProductItemEntity(
+fun CardmarketProductGallaryItemDto.toProductItemEntity(
     productId: Int = 0
 ): ProductEntity {
     return ProductEntity(

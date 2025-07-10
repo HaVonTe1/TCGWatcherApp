@@ -1,5 +1,6 @@
 package de.dkutzer.tcgwatcher.collectables.search.data
 
+import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImplTest
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
@@ -144,7 +145,7 @@ class MapperTest {
         // Assert
         assertEquals(10, result.productEntity.id)
         assertEquals(1, result.names.size)
-        assertEquals("Test Product", result.names[0].name)
+        assertEquals("Test Product", result.names.first().name)
         assertEquals("en", result.names[0].language)
         assertEquals(10, result.names[0].productId)
         assertEquals("Test Set", result.set?.setName)
@@ -214,7 +215,7 @@ class MapperTest {
         val detailsDto = createSampleProductDetailsDto("de")
 
         // Act
-        val result = detailsDto.toProduct("de", searchId = 1, productId = 5)
+        val result = detailsDto.toProduct("de", searchId = 1L, productId = 5)
 
         // Assert
         assertEquals(5, result.productEntity.id)
@@ -626,17 +627,7 @@ class MapperTest {
     }
 
     private fun createSampleSellOfferEntity(): SellOfferEntity {
-        return SellOfferEntity(
-            id = 1,
-            productId = 789,
-            sellerName = "Test Seller",
-            sellerLocation = "de",
-            productLanguage = "en",
-            condition = "Near Mint",
-            amount = 2,
-            price = "15.00",
-            special = ""
-        )
+        return SearchCacheRepositoryImplTest.TestHelpers.createSampleSellOfferEntity(price = "15.00", productId = 789)
     }
 
     private fun assertCommonGalleryDtoMapping(
