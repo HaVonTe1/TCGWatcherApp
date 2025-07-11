@@ -24,6 +24,6 @@ interface SearchCacheRepository {
         set: ProductSetEntity?
     )
     suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers)
-    suspend fun deleteProducts(results: List<ProductEntity>)
+    suspend fun deleteProducts(products: List<ProductEntity>)
 
 }

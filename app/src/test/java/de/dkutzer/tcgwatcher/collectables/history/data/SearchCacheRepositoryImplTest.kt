@@ -31,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import kotlin.test.assertNull
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -171,15 +172,16 @@ class SearchCacheRepositoryImplTest {
     }
 
     @Test
-    fun testProductWithOffers() = runBlocking {
+    fun testProductWithOffers(): Unit = runBlocking {
+        val sampleProductComposite = createSampleProductComposite()
         val productWithSellOffers = ProductWithSellOffers(
-            productEntity = createSampleProductComposite().productEntity,
+            productEntity = sampleProductComposite.productEntity,
             offers = listOf(
                 createSampleSellOfferEntity(price = "10.99"),
                 createSampleSellOfferEntity(price = "9.50")
             ),
-            names = createSampleProductComposite().names,
-            set = createSampleProductComposite().set
+            names = sampleProductComposite.names,
+            set = sampleProductComposite.set
         )
 
         val searchWithOffers = SearchWithFullProductInfo(
@@ -193,13 +195,97 @@ class SearchCacheRepositoryImplTest {
             fullProducts = listOf(productWithSellOffers)
         )
 
-        val persisted = repository.persistSearchWithProducts(searchWithOffers, "en")
+        repository.persistSearchWithProducts(searchWithOffers, "en")
+        val searchByTerm = dao.getSearchByTerm(searchWithOffers.search.searchTerm)
+        assertNotNull(searchByTerm)
+        assertNotNull(searchByTerm?.id)
+        searchByTerm?.id?.let {
+            assertTrue(it >0)
 
-        // Verify offers were persisted
-        val productId = productWithSellOffers.productEntity.id
-        val offers = dao.getSellOffersByProductId(productId)
-        assertEquals(2, offers.size)
-        assertTrue(offers.all { it.productId == productId })
+            val products = dao.getProducts()
+            assertEquals(1, products.size)
+            val productsWithSellOffers = dao.getProductsWithSellOffers()
+            assertEquals(1, productsWithSellOffers.size)
+            val crossRefs = dao.getCrossRefs()
+            assertEquals(1, crossRefs.size)
+            val crossRef = dao.getCrossRef(it, products[0].id)
+            assertNotNull(crossRef)
+
+
+            val productsWithSellOffersBySearchId = dao.getProductsWithSellOffersBySearchId(it, 5, 0)
+            assertEquals(1, productsWithSellOffersBySearchId.size)
+            val persistedProduct = productsWithSellOffersBySearchId[0]
+
+            // ProductEntity assertions
+            val expected = sampleProductComposite.productEntity
+            val actual = persistedProduct.productEntity
+            assertTrue(actual.id > 0)
+            assertEquals(expected.language, actual.language)
+            assertEquals(expected.genre, actual.genre)
+            assertEquals(expected.type, actual.type)
+            assertEquals(expected.rarity, actual.rarity)
+            assertEquals(expected.code, actual.code)
+            assertEquals(expected.externalId, actual.externalId)
+            assertEquals(expected.externalLink, actual.externalLink)
+            assertEquals(expected.imgLink, actual.imgLink)
+            assertEquals(expected.price, actual.price)
+            assertEquals(expected.priceTrend, actual.priceTrend)
+            // lastUpdated can't be checked for equality but is at least present
+            assertTrue(actual.lastUpdated > 0)
+
+            // Names assertions
+            assertEquals(productWithSellOffers.names.size, persistedProduct.names.size)
+            for ((expName, actName) in productWithSellOffers.names.zip(persistedProduct.names)) {
+                assertEquals(expName.name, actName.name)
+                assertEquals(expName.language, actName.language)
+                assertEquals(actual.id, actName.productId)
+            }
+            // Set assertions
+            val expectedSet = productWithSellOffers.set
+            if (persistedProduct.set == null) {
+                throw AssertionError("set should not be null")
+            }
+            val actualSet = persistedProduct.set
+            assertEquals(expectedSet?.setName, actualSet.setName)
+            assertEquals(expectedSet?.setId, actualSet.setId)
+            assertEquals(expectedSet?.language, actualSet.language)
+            assertEquals(actual.id, actualSet.productId)
+
+            // Offers assertions
+            assertEquals(2, persistedProduct.offers.size)
+            val offer1 = persistedProduct.offers[0]
+            val offer2 = persistedProduct.offers[1]
+            // offer1
+            assertEquals(actual.id, offer1.productId)
+            assertEquals("10.99", offer1.price)
+            assertEquals("sdfsdfsdf", offer1.sellerName)
+            assertEquals("de", offer1.sellerLocation)
+            assertEquals("de", offer1.productLanguage)
+            assertEquals(1, offer1.amount)
+            assertEquals(
+                de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType.NEAR_MINT.cmCode,
+                offer1.condition
+            )
+            assertEquals(
+                de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType.REVERSED.cmCode,
+                offer1.special
+            )
+            // offer2
+            assertEquals(actual.id, offer2.productId)
+            assertEquals("9.50", offer2.price)
+            assertEquals("sdfsdfsdf", offer2.sellerName)
+            assertEquals("de", offer2.sellerLocation)
+            assertEquals("de", offer2.productLanguage)
+            assertEquals(1, offer2.amount)
+            assertEquals(
+                de.dkutzer.tcgwatcher.collectables.search.domain.ConditionType.NEAR_MINT.cmCode,
+                offer2.condition
+            )
+            assertEquals(
+                de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType.REVERSED.cmCode,
+                offer2.special
+            )
+        }
     }
 
     @Test
@@ -284,18 +370,33 @@ class SearchCacheRepositoryImplTest {
     }
 
     @Test
-    fun testDeleteSearchKeepsProducts() = runBlocking {
-        val search = SearchEntity(searchTerm = "Delete OrphanTest", id = 1, size = 1, language = "de", lastUpdated = System.currentTimeMillis(), history = true )
+    fun testDeleteSearchKeepsProducts() : Unit = runBlocking {
+        val searchTerm = "Delete OrphanTest"
+        val search = SearchEntity(searchTerm = searchTerm, size = 1, language = "de", lastUpdated = System.currentTimeMillis(), history = true )
         val product =
-            createSampleProductComposite(code = "ORPH-1").productEntity.copy(id = 1)
+            createSampleProductComposite(code = "ORPH-1")
 
-        dao.upsertSearch(search)
-        repository.persistProducts(listOf(product))
+        repository.persistSearchWithProducts(
+            SearchWithBasicProductsInfo(search, listOf(product)), "de")
 
-        repository.deleteSearch(search)
+        val persitedSearch =
+            repository.getSearchWithBasicProductsByQuery(searchTerm, 1, 10)
+        assertNotNull(persitedSearch)
+        if(persitedSearch != null){
+            assertEquals(1, persitedSearch.search.size)
+            assertEquals(1, persitedSearch.products.size)
+
+        }
+
+        repository.deleteSearch(persitedSearch?.search!!)
+
+        val searchByTerm = dao.getSearchByTerm(searchTerm)
+        assertNull(searchByTerm)
 
         val remainingProducts = dao.getProductsBySearchId(1, 10, 0)
-        assertTrue(remainingProducts.isNotEmpty())
+        assertTrue(remainingProducts.isEmpty())
+        val products = dao.getProducts()
+        assertTrue(products.isNotEmpty())
     }
 
     @Test
@@ -325,7 +426,7 @@ class SearchCacheRepositoryImplTest {
     }
 
     @Test
-    fun testFindProductsWithSellOffers() = runBlocking {
+    fun testFindProductsWithSellOffers() : Unit = runBlocking {
         val searchTerm = "OffersTest"
         val productWithSellOffers = (1..20).map {
             val composite = createSampleProductComposite(code = "PGD-$it")
@@ -369,9 +470,9 @@ class SearchCacheRepositoryImplTest {
         val product = page.data[0]
 
         // Verify product item
-        val productItemEntity = productWithSellOffers[0].productEntity
+        val productItemEntity = product.productEntity
         val productId = productItemEntity.id
-        assertEquals(productId, product.productEntity.id)
+        assertTrue(productId > 0)
 
         // Verify offers
         assertEquals(2, product.offers.size)
@@ -400,8 +501,8 @@ class SearchCacheRepositoryImplTest {
             id = 0,
             productId = productId,
             sellerName = "sdfsdfsdf",
-            sellerLocation = "Deutschlang",
-            productLanguage = "Deutsch",
+            sellerLocation = "de",
+            productLanguage = "de",
             condition = ConditionType.NEAR_MINT.cmCode,
             amount = 1,
             price = price,

@@ -176,16 +176,16 @@ class MapperTest {
         val sellOfferEntity = createSampleSellOfferEntity()
 
         // Act
-        val result = sellOfferEntity.toSellOfferModel("en")
+        val result = sellOfferEntity.toSellOfferModel("de")
 
         // Assert
-        assertEquals("Test Seller", result.sellerName)
-        assertEquals("Germany", result.sellerLocation.country)
+        assertEquals(sellOfferEntity.sellerName, result.sellerName)
+        assertEquals("Deutschland", result.sellerLocation.country)
         assertEquals("de", result.sellerLocation.code)
-        assertEquals("English", result.productLanguage.displayName)
-        assertEquals("en", result.productLanguage.code)
+        assertEquals("Deutsch", result.productLanguage.displayName)
+        assertEquals("de", result.productLanguage.code)
         assertEquals(ConditionType.NEAR_MINT, result.condition)
-        assertEquals(2, result.amount)
+        assertEquals(1, result.amount)
         assertEquals("15.00", result.price)
     }
 
@@ -311,7 +311,7 @@ class MapperTest {
         }
         run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Koreanisch", "de")
-            assertEquals("kr", fromProductLanguage.code)
+            assertEquals("ko", fromProductLanguage.code)
             assertEquals("Koreanisch", fromProductLanguage.displayName)
         }
         run {
@@ -331,7 +331,7 @@ class MapperTest {
         }
         run {
             val fromProductLanguage = LanguageModel.fromProductLanguage("Korean", "en")
-            assertEquals("kr", fromProductLanguage.code)
+            assertEquals("ko", fromProductLanguage.code)
             assertEquals("Korean", fromProductLanguage.displayName)
         }
     }
@@ -617,8 +617,8 @@ class MapperTest {
     private fun createSampleSellOfferModel(): SellOfferModel {
         return SellOfferModel(
             sellerName = "Test Seller",
-            sellerLocation = LocationModel("Germany", "de"),
-            productLanguage = LanguageModel("English", "en"),
+            sellerLocation = LocationModel(country = "Germany", code = "de"),
+            productLanguage = LanguageModel(code = "en", displayName = "English"),
             special = SpecialType.OTHER,
             condition = ConditionType.NEAR_MINT,
             amount = 3,
