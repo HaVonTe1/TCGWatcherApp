@@ -9,6 +9,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductComposite
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
@@ -16,8 +17,6 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.RemoteKeyEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchProductCrossRef
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithBasicProductsInfo
-import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 
 @Dao
@@ -31,6 +30,36 @@ interface SearchCacheDao {
                 "WHERE s.id = :searchId ORDER BY p.id ASC LIMIT :pageSize OFFSET :offset"
     )
     fun getProductsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
+
+    @Query(
+        "SELECT DISTINCT p.* " +
+                "FROM search_result_item AS p " +
+                "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
+                "INNER JOIN search AS s ON s.id = ref.searchId " +
+                "WHERE s.id = :searchId ORDER BY p.id ASC LIMIT :pageSize OFFSET :offset"
+    )
+    fun getProductsWithSellOffersBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductWithSellOffers>
+
+    @Query("SELECT * FROM search_result_item")
+    fun getProducts() : List<ProductEntity>
+
+    @Query("SELECT * FROM search_result_item")
+    fun getProductsWithSellOffers() : List<ProductWithSellOffers>
+
+    @Query("SELECT * FROM search_product_cross_ref WHERE searchId = :searchId AND productId = :productId")
+    fun getCrossRef(searchId: Int, productId: Int): SearchProductCrossRef?
+
+    @Query("SELECT * FROM search_product_cross_ref")
+    fun getCrossRefs():List<SearchProductCrossRef>
+
+    @Query(
+        "SELECT DISTINCT p.* " +
+                "FROM search_result_item AS p " +
+                "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
+                "INNER JOIN search AS s ON s.id = ref.searchId " +
+                "WHERE s.id = :searchId ORDER BY p.id ASC LIMIT :pageSize OFFSET :offset"
+    )
+    fun getProductsCompositeBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductComposite>
 
 
     @Query("SELECT id FROM search WHERE LOWER(searchTerm) = LOWER(:searchTerm)")
@@ -65,7 +94,7 @@ interface SearchCacheDao {
     fun getProductWithSellOffersPagingSource(searchTerm: String): PagingSource<Int, ProductWithSellOffers>
 
     @Transaction
-    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId") //TODO: test
+    @Query("SELECT sri.* FROM search_result_item sri WHERE sri.externalId = :productId")
     fun getProductWithSellOffersByProductId(productId: String) : ProductWithSellOffers?
 
     @Query("SELECT searchTerm FROM search WHERE history = 1 ORDER BY lastUpdated DESC")
@@ -130,22 +159,6 @@ interface SearchCacheDao {
     @Query("DELETE FROM search_product_cross_ref WHERE productId = :productId")
     fun deleteCrossRefsByProductId(productId: Int)
 
-    @Transaction
-    @Query("SELECT * FROM search as s " +
-            "JOIN search_product_cross_ref as spcr ON s.id = spcr.searchId " +
-            "JOIN search_result_item  as p ON spcr.productId = p.id " +
-            "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm) ORDER BY p.id ASC LIMIT :limit OFFSET :offset"
-    )
-    fun getSearchWithProducts(searchTerm: String, limit: Int, offset: Int): SearchWithBasicProductsInfo?
-
-    @Transaction
-    @Query("SELECT * FROM search as s " +
-            "JOIN search_product_cross_ref as spcr ON s.id = spcr.searchId " +
-            "JOIN search_result_item  as p ON spcr.productId = p.id " +
-            "WHERE LOWER(s.searchTerm) = LOWER(:searchTerm) " +
-            "ORDER BY p.id ASC LIMIT :limit OFFSET :offset"
-    )
-    fun getSearchWithProductsAndSellOffers(searchTerm: String, limit: Int, offset: Int): SearchWithFullProductInfo?
 
     @Upsert
     fun upsertProductSet(set: ProductSetEntity)

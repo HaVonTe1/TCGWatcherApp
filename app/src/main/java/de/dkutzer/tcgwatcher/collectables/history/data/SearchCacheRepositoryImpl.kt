@@ -23,7 +23,16 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun getSearchWithBasicProductsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithBasicProductsInfo?  {
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
-        return searchCacheDao.getSearchWithProducts(searchTerm, limit, (page - 1) * limit)
+        searchCacheDao.getSearchByTerm(searchTerm)?.let {
+             val productComposites =
+                 searchCacheDao.getProductsCompositeBySearchId(it.id, limit, (page - 1) * limit)
+
+            return SearchWithBasicProductsInfo(
+                search = it,
+                basicProducts = productComposites
+            )
+        }
+        return null
     }
 
 
@@ -41,7 +50,16 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun getSearchWithFullProductsByQuery(searchTerm: String, page: Int, limit: Int ): SearchWithFullProductInfo?  {
         logger.debug { "SearchCacheRepositoryImpl::findBySearchTerm" }
-        return searchCacheDao.getSearchWithProductsAndSellOffers(searchTerm, page, limit)
+        searchCacheDao.getSearchByTerm(searchTerm)?.let {
+            val productComposites =
+                searchCacheDao.getProductsWithSellOffersBySearchId(it.id, limit, (page - 1) * limit)
+
+            return SearchWithFullProductInfo(
+                search = it,
+                fullProducts = productComposites
+            )
+        }
+        return null
     }
 
     override suspend fun getFullProductInfoByExternalId(externalId: String): ProductWithSellOffers? {
@@ -139,6 +157,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         searchCacheDao.deleteCrossRefsBySearchId(search.id)
     }
 
+    
     override suspend fun persistProducts(results: List<ProductEntity>) {
         searchCacheDao.upsertProducts(results)
     }
@@ -149,14 +168,18 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
 
     override suspend fun deleteSearch(search: SearchEntity) {
         searchCacheDao.deleteSearch(search)
+        searchCacheDao.deleteCrossRefsBySearchId(search.id)
     }
 
     override suspend fun persistSearch(search: SearchEntity) {
         searchCacheDao.upsertSearch(search)
     }
 
-    override suspend fun deleteProducts(results: List<ProductEntity>) {
-        searchCacheDao.deleteProducts(results)
+    override suspend fun deleteProducts(products: List<ProductEntity>) {
+        searchCacheDao.deleteProducts(products)
+        products.forEach {
+            searchCacheDao.deleteCrossRefsByProductId(it.id)
+        }
     }
 
     override suspend fun updateProductByDetailsUrl(
