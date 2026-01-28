@@ -31,7 +31,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import kotlin.test.assertNull
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -288,60 +287,61 @@ class SearchCacheRepositoryImplTest {
         }
     }
 
-    @Test
-    fun testUpdateByLink(): Unit = runBlocking {
-        val link = "special-card-link"
-        val initialItem = ProductEntity(
-            externalLink = link,
-            price = "10.00",
-            lastUpdated = 0,
-            id = 0,
-            language = "de",
-            genre = GenreType.POKEMON.cmCode,
-            type = TypeEnum.CARD.cmCode,
-            rarity = RarityType.UNCOMMON.cmCode,
-            code = "sdf",
-            imgLink = "sdf",
-            priceTrend = "sdfg",
-            externalId = "sdf"
-        )
-        repository.persistProducts(listOf(initialItem.copy(id = 1)))
-        // Name und Set anlegen
-        val nameEntity = ProductNameEntity(
-            productId = 1,
-            language = "de",
-            name = "Testkarte"
-        )
-        val setEntity = ProductSetEntity(
-            productId = 1,
-            setName = "TestSet",
-            setId = "set-123",
-            language = "de"
-        )
-        // Update
-        val updatedItem = initialItem.copy(
-            price = "15.00",
-            lastUpdated = System.currentTimeMillis(),
-            id = 1
-        )
-        repository.updateProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), set = setEntity)
-        // Verify Product
-        val productsByExternalId = repository.getProductsByExternalId(initialItem.externalId)
-        assertNotNull(productsByExternalId)
-        productsByExternalId?.let {
-            // Verify Names
-            assertEquals(1, it.names.size)
-            val actualName = it.names[0]
-            assertEquals(nameEntity.name, actualName.name)
-            assertEquals(nameEntity.language, actualName.language)
-            assertEquals(nameEntity.productId, actualName.productId)
-            // Verify Sets
-            assertEquals(setEntity.setName, it.set?.setName)
-            assertEquals(setEntity.setId, it.set?.setId)
-            assertEquals(setEntity.language, it.set?.language)
-            assertEquals(setEntity.productId, it.set?.productId)
-        }
-    }
+
+    //TODO: is this still needed?
+//    @Test
+//    fun testUpdateByLink(): Unit = runBlocking {
+//        val link = "special-card-link"
+//        val initialItem = ProductEntity(
+//            externalLink = link,
+//            price = "10.00",
+//            lastUpdated = 0,
+//            id = 0,
+//            language = "de",
+//            genre = GenreType.POKEMON.cmCode,
+//            type = TypeEnum.CARD.cmCode,
+//            rarity = RarityType.UNCOMMON.cmCode,
+//            code = "sdf",
+//            imgLink = "sdf",
+//            priceTrend = "sdfg",
+//            externalId = "sdf"
+//        )
+//        // Name und Set anlegen
+//        val nameEntity = ProductNameEntity(
+//            productId = 1,
+//            language = "de",
+//            name = "Testkarte"
+//        )
+//        val setEntity = ProductSetEntity(
+//            productId = 1,
+//            setName = "TestSet",
+//            setId = "set-123",
+//            language = "de"
+//        )
+//        // Update
+//        val updatedItem = initialItem.copy(
+//            price = "15.00",
+//            lastUpdated = System.currentTimeMillis(),
+//            id = 1
+//        )
+//        repository.persistProductByDetailsUrl(link, updatedItem, names = listOf(nameEntity), set = setEntity)
+//        // Verify Product
+//        val productsByExternalId = repository.getProductsByExternalId(initialItem.externalId)
+//        assertNotNull(productsByExternalId)
+//        productsByExternalId?.let {
+//            // Verify Names
+//            assertEquals(1, it.names.size)
+//            val actualName = it.names[0]
+//            assertEquals(nameEntity.name, actualName.name)
+//            assertEquals(nameEntity.language, actualName.language)
+//            assertEquals(nameEntity.productId, actualName.productId)
+//            // Verify Sets
+//            assertEquals(setEntity.setName, it.set?.setName)
+//            assertEquals(setEntity.setId, it.set?.setId)
+//            assertEquals(setEntity.language, it.set?.language)
+//            assertEquals(setEntity.productId, it.set?.productId)
+//        }
+//    }
 
     @Test
     fun testSearchHistoryOrder() = runBlocking {
@@ -369,8 +369,12 @@ class SearchCacheRepositoryImplTest {
         assertEquals(listOf("B", "A"), history) // Ordered by lastUpdated DESC
     }
 
+    /*
+    UseCase: updateing a search should first remove the products from it withour deleting them.
+    In a later step the new found products will be added.
+     */
     @Test
-    fun testDeleteSearchKeepsProducts() : Unit = runBlocking {
+    fun testRemovingProductsFromSearchKeepsProducts() : Unit = runBlocking {
         val searchTerm = "Delete OrphanTest"
         val search = SearchEntity(searchTerm = searchTerm, size = 1, language = "de", lastUpdated = System.currentTimeMillis(), history = true )
         val product =
@@ -388,12 +392,9 @@ class SearchCacheRepositoryImplTest {
 
         }
 
-        repository.deleteSearch(persitedSearch?.search!!)
+        repository.removeProductsFromSearch(persitedSearch?.search!!)
 
-        val searchByTerm = dao.getSearchByTerm(searchTerm)
-        assertNull(searchByTerm)
-
-        val remainingProducts = dao.getProductsBySearchId(1, 10, 0)
+        val remainingProducts = dao.getProductsBySearchId(persitedSearch.search.id, 10, 0)
         assertTrue(remainingProducts.isEmpty())
         val products = dao.getProducts()
         assertTrue(products.isNotEmpty())

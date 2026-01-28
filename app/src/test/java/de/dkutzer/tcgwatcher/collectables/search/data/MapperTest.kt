@@ -215,7 +215,7 @@ class MapperTest {
         val detailsDto = createSampleProductDetailsDto("de")
 
         // Act
-        val result = detailsDto.toProduct("de", searchId = 1L, productId = 5)
+        val result = detailsDto.toProductWithSellOffersEntity("de", productId = 5)
 
         // Assert
         assertEquals(5, result.productEntity.id)

@@ -162,6 +162,10 @@ interface SearchCacheDao {
 
     @Upsert
     fun upsertProductSet(set: ProductSetEntity)
+
+
+    @Upsert
+    fun persistNamesForProduct(names: List<ProductNameEntity>)
 }
 
 @Dao

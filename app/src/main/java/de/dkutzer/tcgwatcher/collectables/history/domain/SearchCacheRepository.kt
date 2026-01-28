@@ -9,21 +9,18 @@ interface SearchCacheRepository {
 
     suspend fun persistSearchWithProducts(searchWithProducts: SearchWithProducts, language: String)
     suspend fun persistSearch(search: SearchEntity)
-    suspend fun deleteSearch(search: SearchEntity)
     suspend fun getSearchHistory(): List<String>
 
     suspend fun removeProductsFromSearch(search: SearchEntity)
 
     // Product related operations
     suspend fun getProductsByExternalId(externalId: String) : ProductWithSellOffers?
-    suspend fun persistProducts(results: List<ProductEntity>)
-    suspend fun updateProductByDetailsUrl(
-        detailsUrl: String,
-        productEntity: ProductEntity,
-        names: List<ProductNameEntity> = emptyList(),
-        set: ProductSetEntity?
-    )
-    suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers)
-    suspend fun deleteProducts(products: List<ProductEntity>)
+//    suspend fun persistProductByDetailsUrl(
+//        detailsUrl: String,
+//        productEntity: ProductEntity,
+//        names: List<ProductNameEntity> = emptyList(),
+//        set: ProductSetEntity?
+//    )
+    suspend fun persistProductWithSellOffers(productWithSellOffers: ProductWithSellOffers)
 
 }

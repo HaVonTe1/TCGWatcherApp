@@ -64,7 +64,7 @@ class SearchRemoteMediator (
             productSearchService.searchByOffset(searchTerm, limit = state.config.pageSize, offset = offset)
         }
         logger.debug { "SearchResult from Adapter: $searchResultsPage" }
-        logger.info {"SearchResult size: ${searchResultsPage.items.size}"}
+        logger.info {"SearchResult size: ${searchResultsPage.products.size}"}
         // MAKE API CALL
 
         val nextOffset = offset + state.config.pageSize
@@ -83,7 +83,7 @@ class SearchRemoteMediator (
         }
         // CHECK IF END OF PAGINATION REACHED
         // i dunno if this always works. what if the total number of resuls is equal to the pageSize?
-        return MediatorResult.Success(endOfPaginationReached = searchResultsPage.items.size < state.config.pageSize)
+        return MediatorResult.Success(endOfPaginationReached = searchResultsPage.products.size < state.config.pageSize)
     }
 
 }

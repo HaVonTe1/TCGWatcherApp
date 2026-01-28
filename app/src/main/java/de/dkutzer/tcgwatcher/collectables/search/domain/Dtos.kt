@@ -1,10 +1,12 @@
 package de.dkutzer.tcgwatcher.collectables.search.domain
 
 data class SearchResultsPageDto(
-    val results: List<CardmarketProductGallaryItemDto>,
+    val results: List<CardmarketProductGallaryItemDto>, //TODO: use a generic type
     val page: Int,
     val totalPages: Int
 )
+
+// --- Cardmarket -----
 
 data class CardmarketProductGallaryItemDto(
     val name: NameDto,
