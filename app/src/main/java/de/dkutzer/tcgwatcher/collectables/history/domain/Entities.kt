@@ -89,6 +89,9 @@ data class  ProductSetEntity(
     @ColumnInfo(index = true)
     val productId: Int,
     val setId: String,
+    @ColumnInfo(name = "set_name")
+    val setName: String = "",
+    val language: String = ""
 )
 
 @Entity(tableName = "set_name")
