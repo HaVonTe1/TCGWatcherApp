@@ -12,7 +12,7 @@ import de.dkutzer.tcgwatcher.collectables.quicksearch.domain.PokemonCardQuickNor
 
 @Database(
     entities = [PokemonCardQuickEntity::class, PokemonCardQuickEntityFTS::class, PokemonCardQuickNormalizedEntity::class],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class QuickSearchDatabase : RoomDatabase() {

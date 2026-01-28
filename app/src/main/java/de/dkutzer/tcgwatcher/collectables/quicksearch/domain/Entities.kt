@@ -21,10 +21,15 @@ data class PokemonCardQuickNormalizedEntity (
 
     val code: String,
 
-    @ColumnInfo(name = "cm_set_id")
+    @ColumnInfo(name = "set_id")
     val cmSetId: String,
-    @ColumnInfo(name = "cm_card_id")
+    @ColumnInfo(name = "cm_product_id")
     val cmCardId: String,
+
+    @ColumnInfo(name = "cm_page_id")
+    val cmPageId: String,
+    @ColumnInfo(name = "tcgp_id")
+    val tcgpId: String
 )
 
 

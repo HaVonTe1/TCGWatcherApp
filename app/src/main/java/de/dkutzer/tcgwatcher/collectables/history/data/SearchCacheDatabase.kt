@@ -22,7 +22,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
         SellOfferEntity::class,
         RemoteKeyEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class SearchCacheDatabase : RoomDatabase() {

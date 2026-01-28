@@ -45,7 +45,7 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         val newProductID = if(productId == -1L) productWithSellOffers.productEntity.id else productId.toInt()
         productWithSellOffers.names.forEach { it.productId = newProductID}
         searchCacheDao.persistNamesForProduct(productWithSellOffers.names)
-        searchCacheDao.persistSetForProduct(productWithSellOffers.set)
+        productWithSellOffers.set?.let { searchCacheDao.upsertProductSet(it) }
         productWithSellOffers.offers.forEach { it.productId = newProductID }
         searchCacheDao.upsertSellOffers(productWithSellOffers.offers)
     }
