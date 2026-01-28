@@ -20,7 +20,7 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
         ProductNameEntity::class,
         ProductSetEntity::class,
         SellOfferEntity::class,
-        RemoteKeyEntity::class  // Include if used
+        RemoteKeyEntity::class
     ],
     version = 1,
     exportSchema = false

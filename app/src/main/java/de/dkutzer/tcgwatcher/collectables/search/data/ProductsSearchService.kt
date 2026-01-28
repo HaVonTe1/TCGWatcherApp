@@ -84,12 +84,11 @@ class CardmarketProductSearchService
             val cachedProduct = cache.getProductsByExternalId(productModel.externalId)
             if (cachedProduct != null) {
                 logger.debug { "CardmarketProductSearchService: updating product: $cachedProduct" }
-                val updatedProduct = productDetailsDto.toProduct(
+                val updatedProduct = productDetailsDto.toProductWithSellOffersEntity(
                     language = language,
-                    searchId = 0L, // searchId entfällt, da M:N
                     productId = cachedProduct.productEntity.id
                 )
-                cache.updateProduct(updatedProduct)
+                cache.persistProductWithSellOffers(updatedProduct)
             }
 
             productDetailsDto.toProductModel(language)
@@ -147,9 +146,9 @@ class CardmarketProductSearchService
             searchWithBasicProdcuts = null
         }
         if(searchWithBasicProdcuts!=null && !searchWithBasicProdcuts.isOlderThan(config.ttlInSeconds)) {
-            val searchItems = searchWithBasicProdcuts.products.map { it.toProductModel(config.lang.localeCode) }.toList()
+            val productModels = searchWithBasicProdcuts.products.map { it.toProductModel(config.lang.localeCode) }.toList()
             result = SearchResultsPage(
-                searchItems,
+                productModels,
                 page,
                 searchWithBasicProdcuts.search.size.floorDiv(limit).plus(1)
             )
@@ -209,7 +208,7 @@ class CardmarketProductSearchService
             logger.debug { "Duration: $duration" }
         }
         logger.debug { "Final result: $result" }
-        logger.info { "Adapter: Returning results: ${result.items.size}" }
+        logger.info { "Adapter: Returning results: ${result.products.size}" }
         return result
     }
 }

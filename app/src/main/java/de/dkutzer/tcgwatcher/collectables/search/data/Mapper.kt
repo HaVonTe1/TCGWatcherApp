@@ -201,7 +201,7 @@ fun CardmarketProductDetailsDto.toProductModel(language: String): ProductModel {
         timestamp = Instant.now().epochSecond
     )
 }
-private fun CardmarketProductDetailsDto.toProductItemEntity(searchId: Long = 0, productId: Int = 0) : ProductEntity {
+private fun CardmarketProductDetailsDto.toProductItemEntity(productId: Int = 0) : ProductEntity {
     return ProductEntity(
         imgLink = this.imageUrl,
         language = this.name.languageCode,
@@ -231,16 +231,9 @@ fun CardmarketSellOfferDto.toSellOfferEntity(productId: Int, language: String): 
     )
 }
 
-/**
- * Converts a [CardmarketProductDetailsDto] into a [ProductWithSellOffers], mapping product details
- * and associated sell offers to domain entities suitable for persistence and display.
- *
- * @param language The preferred language for localized data (e.g., location, product language).
- * @param searchId An identifier linking this product to a specific search request.
- * @param productId A unique identifier for the product in the domain layer.
- */
-fun CardmarketProductDetailsDto.toProduct(language: String, searchId: Long = 0, productId: Int = 0) : ProductWithSellOffers {
-    val productEntity = this.toProductItemEntity(searchId, productId)
+
+fun CardmarketProductDetailsDto.toProductWithSellOffersEntity(language: String, productId: Int = 0) : ProductWithSellOffers {
+    val productEntity = this.toProductItemEntity(productId)
     val offers = this.sellOffers.map { it.toSellOfferEntity(productId, language) }
     return ProductWithSellOffers(
         productEntity = productEntity,

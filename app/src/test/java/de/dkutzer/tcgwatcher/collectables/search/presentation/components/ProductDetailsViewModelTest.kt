@@ -10,7 +10,11 @@ import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDao
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheDatabase
 import de.dkutzer.tcgwatcher.collectables.history.data.SearchCacheRepositoryImpl
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
 import de.dkutzer.tcgwatcher.collectables.history.domain.SearchEntity
+import de.dkutzer.tcgwatcher.collectables.history.domain.SearchWithFullProductInfo
 import de.dkutzer.tcgwatcher.collectables.search.domain.GenreType
 import de.dkutzer.tcgwatcher.collectables.search.domain.NameModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.ProductModel
@@ -129,31 +133,50 @@ class ProductDetailsViewModelTest {
                 SettingsEntity(1, Languages.DE, Engines.TESTING)
             )
             val searchEntity = SearchEntity(
-                id = 1,
                 searchTerm = "evoli",
                 size = 1,
                 language = "de",
                 lastUpdated = System.currentTimeMillis(),
                 history = true
             )
-            searchCacheRepository.persistSearch(searchEntity)
-            val searchItems = listOf(
-                ProductEntity(
-                    id = 1,
-                    language = "de",
-                    genre = "Pokemon",
-                    type = "Card",
-                    rarity = "Other",
-                    code = "",
-                    externalId = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
-                    externalLink = "/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
-                    imgLink = "https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg",
-                    price = "0.02",
-                    priceTrend = "",
-                    lastUpdated = System.currentTimeMillis()
-                )
+
+            val productEntity = ProductEntity(
+                language = "de",
+                genre = "Pokemon",
+                type = "Card",
+                rarity = "Other",
+                code = "",
+                externalId = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",   ///// the only importent thing
+                externalLink = "/de/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",
+                imgLink = "https://product-images.s3.cardmarket.com/51/PJU/584686/584686.jpg",
+                price = "0.02",
+                priceTrend = "",
+                lastUpdated = System.currentTimeMillis()
             )
-            searchCacheRepository.persistProducts(searchItems)
+            val productSetEntity = ProductSetEntity(
+                setId = "PJU",
+                setName = "Pokémon Jungle",
+                productId = -1,
+                language = "de"
+            )
+            val productNameEntity =
+                ProductNameEntity(name = "Eevee", productId = -1, language = "de")
+
+
+
+            searchCacheRepository.persistSearchWithProducts(
+                SearchWithFullProductInfo(
+                    search = searchEntity,
+                    fullProducts = listOf(
+                        ProductWithSellOffers(
+                            productEntity = productEntity,
+                            set = productSetEntity,
+                            names = listOf(productNameEntity),
+                            offers = listOf()
+                        )
+                    )
+                ),
+                language = "de")
         }
 
         val viewModel = ProductDetailsViewModel(

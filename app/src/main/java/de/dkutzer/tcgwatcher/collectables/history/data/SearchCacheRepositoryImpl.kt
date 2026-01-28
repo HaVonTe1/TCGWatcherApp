@@ -1,6 +1,5 @@
 package de.dkutzer.tcgwatcher.collectables.history.data
 
-import de.dkutzer.tcgwatcher.collectables.history.domain.ProductEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductNameEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductSetEntity
 import de.dkutzer.tcgwatcher.collectables.history.domain.ProductWithSellOffers
@@ -40,10 +39,13 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         return searchCacheDao.getProductWithSellOffersByProductId(externalId)
     }
 
-    override suspend fun updateProduct(productWithSellOffers: ProductWithSellOffers) {
+    override suspend fun persistProductWithSellOffers(productWithSellOffers: ProductWithSellOffers) {
 
         val productId = searchCacheDao.upsertProduct(productWithSellOffers.productEntity)
         val newProductID = if(productId == -1L) productWithSellOffers.productEntity.id else productId.toInt()
+        productWithSellOffers.names.forEach { it.productId = newProductID}
+        searchCacheDao.persistNamesForProduct(productWithSellOffers.names)
+        searchCacheDao.persistSetForProduct(productWithSellOffers.set)
         productWithSellOffers.offers.forEach { it.productId = newProductID }
         searchCacheDao.upsertSellOffers(productWithSellOffers.offers)
     }
@@ -135,7 +137,6 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
             // Collect cross references
             crossRefs.add(SearchProductCrossRef(searchId = searchId, productId = productId))
 
-
         }
 
         // Bulk insert all related entities
@@ -157,47 +158,14 @@ class SearchCacheRepositoryImpl(private val searchCacheDao: SearchCacheDao) :
         searchCacheDao.deleteCrossRefsBySearchId(search.id)
     }
 
-    
-    override suspend fun persistProducts(results: List<ProductEntity>) {
-        searchCacheDao.upsertProducts(results)
-    }
 
     override suspend fun getSearchHistory(): List<String> {
         return searchCacheDao.getSearchHistory()
     }
 
-    override suspend fun deleteSearch(search: SearchEntity) {
-        searchCacheDao.deleteSearch(search)
-        searchCacheDao.deleteCrossRefsBySearchId(search.id)
-    }
 
     override suspend fun persistSearch(search: SearchEntity) {
         searchCacheDao.upsertSearch(search)
-    }
-
-    override suspend fun deleteProducts(products: List<ProductEntity>) {
-        searchCacheDao.deleteProducts(products)
-        products.forEach {
-            searchCacheDao.deleteCrossRefsByProductId(it.id)
-        }
-    }
-
-    override suspend fun updateProductByDetailsUrl(
-        detailsUrl: String,
-        productEntity: ProductEntity,
-        names: List<ProductNameEntity>,
-        set: ProductSetEntity?
-    ) {
-        // Produkt aktualisieren (z.B. Preis, Trend, Rarität, Typ, etc.)
-        searchCacheDao.upsertProduct(productEntity)
-        // Namen aktualisieren, falls übergeben
-        if (names.isNotEmpty()) {
-            searchCacheDao.insertProductNames(names)
-        }
-        // Sets aktualisieren, falls übergeben
-        if (set!=null) {
-            searchCacheDao.upsertProductSet(set)
-        }
     }
 
 

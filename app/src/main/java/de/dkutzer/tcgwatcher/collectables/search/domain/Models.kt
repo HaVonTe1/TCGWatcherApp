@@ -300,7 +300,7 @@ data class NameModel(val value: String, val languageCode: String): Parcelable
 
 
 data class SearchResultsPage(
-    val items: List<ProductModel>,
+    val products: List<ProductModel>,
     val currentPage: Int,
     val pages: Int
 )
@@ -442,3 +442,4 @@ data class OfferFilters(
     }
 }
 
+//TODO: add a SearchModel
