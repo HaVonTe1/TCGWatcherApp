@@ -10,14 +10,15 @@
 | **Assemble Debug APK** | `./gradlew assembleDebug` | Produces `app/build/outputs/apk/debug/app-debug.apk`. |
 | **Assemble Release APK** | `./gradlew assembleRelease` | Requires signing config. |
 | **Run all unit tests** | `./gradlew testDebugUnitTest` | Executes JVM‑based unit tests. |
-| **Run a single unit test** | `./gradlew testDebugUnitTest --tests "com.example.package.ClassNameTest.methodName"` | Replace the fully‑qualified test name. |
+| **Run a single unit test** | `./gradlew testDebugUnitTest --tests "de.dkutzer.tcgwatcher.package.ClassNameTest.methodName"` | Fully‑qualified test name. |
 | **Run all instrumented Android tests** | `./gradlew connectedDebugAndroidTest` | Runs on a connected device or emulator. |
-| **Run a single Android test** | `./gradlew connectedDebugAndroidTest --tests "com.example.package.ClassNameTest#methodName"` |
+| **Run a single Android test** | `./gradlew connectedDebugAndroidTest --tests "de.dkutzer.tcgwatcher.package.ClassNameTest#methodName"` |
 | **Run lint (debug variant)** | `./gradlew lintDebug` | Generates `lint-results-debug.xml`. |
 | **Auto‑fix lint where safe** | `./gradlew lintFixDebug` |
 | **Run static analysis & checks** | `./gradlew check` | Executes lint, unit tests, and any custom checks. |
 | **Run the full verification suite** | `./gradlew verify` *(alias for `check` on this project)* |
 | **Generate dependency report** | `./gradlew dependencies` | Helpful for troubleshooting version conflicts. |
+| **Run tests with verbose output** | `./gradlew testDebugUnitTest --info` | Shows detailed test execution logs. |
 
 **Tip for CI pipelines** – combine the steps:
 ```bash
@@ -34,12 +35,13 @@
 - **Trailing whitespace:** Never commit.  
 - **File name:** Must match the primary class / object name (`FooBar.kt`).  
 - **Package declaration:** First line, all lower‑case, mirroring folder hierarchy.
+- **Kotlin version:** 2.3.0 (use `kotlin.code.style=official` in `gradle.properties`).
 
 ### 📚 Imports
 1. **Order** (each group separated by a blank line):
    1. `android.*`
    2. `androidx.*`
-   3. Third‑party libraries (e.g., `coil.*`, `kotlinx.*`, `io.ktor.*`).
+   3. Third‑party libraries (e.g., `coil.*`, `kotlinx.*`, `io.ktor.*`, `io.github.oshai.*`).
    4. Project‑internal packages (e.g., `de.dkutzer.tcgwatcher.*`).
 2. **No wildcard imports** – use explicit class names.
 3. **Alphabetical within each group**.
@@ -49,6 +51,7 @@
 - The project is configured for **Android Studio formatter**; run `./gradlew lintFixDebug` or use *Reformat Code* (⌥⌘L).
 - **Ktlint** is *not* currently wired, but agents should still adhere to the official Kotlin style guide.
 - Use `@Suppress("MagicNumber")` sparingly – prefer a `const val`.
+- **Logging library:** `kotlin-logging-jvm` (version 7.0.14) – use `mu.KotlinLogging` (`logger.info { … }`).
 
 ### 🔤 Naming Conventions
 | Element | Style |
@@ -80,12 +83,14 @@
 - **Use‑cases / interactors** – simple business‑logic functions placed in `domain/` or a dedicated `usecase/` package.
 - **ViewModel** – `androidx.lifecycle.ViewModel` extending classes, expose UI state via `StateFlow` or `LiveData`.
 - **Compose UI** – stateless composables receive all state via parameters; side‑effects are confined to `ViewModel`.
+- **Dependency Injection** – project uses **KSP** for generated code (e.g., Hilt). Annotate with `@Inject` where appropriate.
 
 ### 📱 Android Specific Rules
 - **Resources** – strings, colors, dimensions must be defined in XML; avoid hard‑coded literals.
 - **Permissions** – request at runtime only when needed; encapsulate logic in a `PermissionHandler`.
 - **Coroutines** – UI‑related work on `Dispatchers.Main`; heavy IO on `Dispatchers.IO`. Scope: `viewModelScope`.
 - **Dependency Injection** – project uses **KSP** for generated code (e.g., Hilt). Annotate with `@Inject` where appropriate.
+- **Compose** – use `androidx.compose.ui.tooling.preview` for UI previews in debug builds.
 
 ### 🧪 Testing Guidelines
 - **Unit tests** – pure Kotlin, no Android framework. Use **MockK** for mocking, **kotlinx.coroutines.test** for coroutine control.
@@ -93,6 +98,7 @@
 - **Arrange‑Act‑Assert** style; each test method should be short and focused.
 - **Naming** – see the table above; include the scenario in the method name.
 - **Run a single test** – agents should invoke the command listed in section 1.
+- **Test dependencies:** `junit` (4.13.2), `mockk` (1.14.9), `kotlinx-coroutines-test` (1.10.2), `robolectric` (4.16.1).
 
 ---
 
