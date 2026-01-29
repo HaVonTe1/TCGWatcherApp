@@ -22,7 +22,8 @@ import de.dkutzer.tcgwatcher.collectables.history.domain.SellOfferEntity
 @Dao
 interface SearchCacheDao {
 
-    @Query(
+    @Transaction
+@Query(
         "SELECT DISTINCT p.* " +
                 "FROM search_result_item AS p " +
                 "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
@@ -31,7 +32,8 @@ interface SearchCacheDao {
     )
     fun getProductsBySearchId(searchId: Int, pageSize: Int, offset: Int): List<ProductEntity>
 
-    @Query(
+    @Transaction
+@Query(
         "SELECT DISTINCT p.* " +
                 "FROM search_result_item AS p " +
                 "INNER JOIN search_product_cross_ref AS ref ON p.id = ref.productId " +
@@ -52,6 +54,7 @@ interface SearchCacheDao {
     @Query("SELECT * FROM search_product_cross_ref")
     fun getCrossRefs():List<SearchProductCrossRef>
 
+    @Transaction
     @Query(
         "SELECT DISTINCT p.* " +
                 "FROM search_result_item AS p " +

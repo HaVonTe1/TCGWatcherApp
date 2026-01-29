@@ -140,7 +140,7 @@ class MapperTest {
         val productModel = createSampleProductModel()
 
         // Act
-        val result = productModel.toProductWithSellofferEntity(searchId = 5, productId = 10)
+        val result = productModel.toProductWithSellofferEntity( productId = 10)
 
         // Assert
         assertEquals(10, result.productEntity.id)

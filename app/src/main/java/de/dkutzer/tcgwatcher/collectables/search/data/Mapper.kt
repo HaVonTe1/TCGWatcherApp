@@ -116,7 +116,7 @@ fun ProductWithSellOffers.toProductModel(language: String): ProductModel {
     )
 }
 
-private fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int = 0) : ProductEntity {
+private fun ProductModel.toProductItemEntity( productId: Int = 0) : ProductEntity {
     return ProductEntity(
         code = this.code,
         language = this.primaryName.languageCode,
@@ -133,9 +133,9 @@ private fun ProductModel.toProductItemEntity(searchId: Int = 0, productId: Int =
     )
 }
 
-fun ProductModel.toProductWithSellofferEntity(searchId: Int = 0, productId: Int = 0) : ProductWithSellOffers {
+fun ProductModel.toProductWithSellofferEntity( productId: Int = 0) : ProductWithSellOffers {
     return ProductWithSellOffers(
-        productEntity = this.toProductItemEntity(searchId, productId),
+        productEntity = this.toProductItemEntity( productId),
         offers = this.sellOffers.map { it.toSellOfferEntity(productId) },
         names = this.names.map { ProductNameEntity(name = it.value, language = it.languageCode, productId = productId) },
         set = ProductSetEntity(productId = productId, setName = this.set.name, setId = this.set.link, language = this.primaryName.languageCode)

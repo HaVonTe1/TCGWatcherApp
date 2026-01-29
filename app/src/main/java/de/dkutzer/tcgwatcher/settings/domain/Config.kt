@@ -18,9 +18,6 @@ class ConfigFactory(private val settingsModel: SettingsModel) {
     fun create(): BaseConfig {
         when (settingsModel.datasource) {
             Datasources.CARDMARKET -> return CardmarketConfig(settingsModel)
-            else -> {
-                throw IllegalArgumentException("Unknown datasource: ${settingsModel.datasource}")
-            }
         }
     }
 }

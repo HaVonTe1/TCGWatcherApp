@@ -26,7 +26,11 @@ abstract class QuickSearchDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): QuickSearchDatabase {
             return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, QuickSearchDatabase::class.java, "quicksearch_database")
+                Room.databaseBuilder(
+                    context,
+                    QuickSearchDatabase::class.java,
+                    "quicksearch_database"
+                )
                     .createFromAsset("quicksearch.db")
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -35,7 +39,7 @@ abstract class QuickSearchDatabase : RoomDatabase() {
                             db.execSQL("INSERT INTO qs_fts_pokemon_cards_fts(qs_fts_pokemon_cards_fts) VALUES ('rebuild')")
                         }
                     })
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .build()
                     .also { Instance = it }
             }

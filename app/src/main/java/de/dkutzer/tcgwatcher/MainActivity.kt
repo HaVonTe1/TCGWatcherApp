@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screen(
     val route: String,
-    @StringRes val resourceId: Int,
+    @param:StringRes val resourceId: Int,
     val icon: ImageVector
 ) {
     data object HomeScreen : Screen("home", R.string.home, icon = Icons.TwoTone.Star)

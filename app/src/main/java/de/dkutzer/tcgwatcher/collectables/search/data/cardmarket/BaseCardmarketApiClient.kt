@@ -141,12 +141,12 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
                 }
             }
 
-            val sellerAttributDiv = sellOfferRow?.getElementsByClass("product-attributes")
+            val sellerAttributDiv = sellOfferRow.getElementsByClass("product-attributes")
 
-            val productCondition = sellerAttributDiv?.first()?.getElementsByClass("article-condition")?.first()
+            val productCondition = sellerAttributDiv.first()?.getElementsByClass("article-condition")?.first()
                 ?.attr("title")
 
-            val productAttributIcons = sellerAttributDiv?.first()?.getElementsByClass("icon")
+            val productAttributIcons = sellerAttributDiv.first()?.getElementsByClass("icon")
             val productLanguage = productAttributIcons?.first()
                 ?.attr("title")
             var productSpeciality = ""
@@ -160,7 +160,7 @@ abstract class BaseCardmarketApiClient : ProductsApiClient {
             val priceContainer = sellOfferRow.getElementsByClass("price-container").first()
             val price = priceContainer?.getElementsByTag("span")?.text()
 
-            val productAmount = sellOfferRow?.getElementsByClass("amount-container")?.first()?.getElementsByTag("span")?.first()?.text()
+            val productAmount = sellOfferRow.getElementsByClass("amount-container")?.first()?.getElementsByTag("span")?.first()?.text()
 
             if(sellerName!=null && sellerLocation!=null && productLanguage!=null && price!=null && productAmount!=null && productCondition!=null) {
                 val cardmarketSellOfferDto = CardmarketSellOfferDto(
