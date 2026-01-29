@@ -456,7 +456,7 @@ class SearchCacheRepositoryImplTest {
             )
         val pagingSource = dao.getProductWithSellOffersPagingSource(searchTerm)
         // Load the paging data
-        val loadParams = PagingSource.LoadParams<Int>.Refresh(
+        val loadParams = PagingSource.LoadParams.Refresh(
             key = 0,
             loadSize = 10,
             placeholdersEnabled = false
