@@ -15,9 +15,11 @@ open class BaseConfig(
 
 class ConfigFactory(private val settingsModel: SettingsModel) {
 
+    @Suppress("REDUNDANT_ELSE_IN_WHEN")
     fun create(): BaseConfig {
-        when (settingsModel.datasource) {
-            Datasources.CARDMARKET -> return CardmarketConfig(settingsModel)
+        return when (settingsModel.datasource) {
+            Datasources.CARDMARKET -> CardmarketConfig(settingsModel)
+            else -> throw IllegalArgumentException("Unknown datasource: ${settingsModel.datasource}")
         }
     }
 }
