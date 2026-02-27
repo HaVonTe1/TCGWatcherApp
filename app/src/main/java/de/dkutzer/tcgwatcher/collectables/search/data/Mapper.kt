@@ -34,7 +34,7 @@ inline fun <reified T> fromString(value: String): T
     val enumValues = enumValues<T>()
     return enumValues
         .firstOrNull { it.cmCode.equals(value, ignoreCase = true) }
-        ?: enumValues.first { it.cmCode == "" } // Fallback to "other"
+        ?: throw IllegalArgumentException("Unknown ${T::class.simpleName} value: '$value'. Expected one of: ${enumValues.joinToString { it.cmCode }}")
 }
 
 

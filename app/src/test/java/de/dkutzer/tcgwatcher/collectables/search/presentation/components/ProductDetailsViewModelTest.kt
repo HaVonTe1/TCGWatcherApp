@@ -143,7 +143,7 @@ class ProductDetailsViewModelTest {
             val productEntity = ProductEntity(
                 language = "de",
                 genre = "Pokemon",
-                type = "Card",
+                type = "Singles",
                 rarity = "Other",
                 code = "",
                 externalId = "/Pokemon/Products/Singles/Pokemon-Jungle/Eevee",   ///// the only importent thing

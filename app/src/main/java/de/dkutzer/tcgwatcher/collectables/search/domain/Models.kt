@@ -249,7 +249,7 @@ interface KeyedEnum {
 }
 
 enum class SpecialType(override val cmCode: String) : KeyedEnum {
-    REVERSED("Reverse Holo"),OTHER("")
+    REVERSED("Reverse Holo"), FIRST_EDITION("First Edition"), OTHER("")
 }
 
 
@@ -292,7 +292,7 @@ enum class TypeEnum(override val cmCode: String, val displayName: String) : Keye
 
 }
 enum class ConditionType(override val cmCode: String): KeyedEnum {
-    MINT("Mint"),NEAR_MINT("Near Mint"), EXCELLENT("Excellent"), GOOD("Goog"), LIGHT_PLAYED("Light Played"), PLAYED("Played"), POOR("Poor"), OTHER("")
+    MINT("Mint"),NEAR_MINT("Near Mint"), EXCELLENT("Excellent"), GOOD("Good"), LIGHT_PLAYED("Light Played"), PLAYED("Played"), POOR("Poor"), OTHER("")
 }
 
 @Parcelize

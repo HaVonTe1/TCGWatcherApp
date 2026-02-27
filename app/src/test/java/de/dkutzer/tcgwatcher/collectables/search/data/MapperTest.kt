@@ -26,6 +26,7 @@ import de.dkutzer.tcgwatcher.collectables.search.domain.SetModel
 import de.dkutzer.tcgwatcher.collectables.search.domain.SpecialType
 import de.dkutzer.tcgwatcher.collectables.search.domain.TypeEnum
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
@@ -251,12 +252,11 @@ class MapperTest {
     }
 
     @Test
-    fun `fromString with invalid enum value returns OTHER`() {
-        // Act
-        val result = fromString<GenreType>("InvalidGenre")
-
-        // Assert
-        assertEquals(GenreType.OTHER, result)
+    fun `fromString with invalid enum value throws exception`() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException::class.java) {
+            fromString<GenreType>("InvalidGenre")
+        }
     }
 
     @Test
