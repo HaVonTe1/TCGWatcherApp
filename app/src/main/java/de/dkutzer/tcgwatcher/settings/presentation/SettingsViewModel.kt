@@ -85,7 +85,8 @@ class SettingsViewModel(
                 val languages = extras[SettingModelCreationKeys.LanguagesIdKey]
                 val settingsRepo = extras[SettingModelCreationKeys.SettingsRepoIdKey]
                 return SettingsViewModel(
-                    languages!!, settingsRepo!!
+                    requireNotNull(languages) { "Languages not provided in ViewModel creation extras" },
+                    requireNotNull(settingsRepo) { "SettingsRepo not provided in ViewModel creation extras" }
                 ) as T
             }
         }

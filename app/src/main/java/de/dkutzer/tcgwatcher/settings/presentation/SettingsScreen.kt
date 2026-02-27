@@ -46,15 +46,14 @@ fun SettingsScreen() {
         settingsState = settingsState.value,
         availableLanguages = availableLanguages,
         availableEngines = availableEngines,
-        onLanguageChanged = {
-                val key =
-                    availableLanguages.entries.find { entry -> entry.value.compareTo(it) == 0 }?.key
-                settingsViewModel.onLanguageChanged(key!!)
+        onLanguageChanged = { displayName ->
+                val key = availableLanguages.entries.find { entry -> entry.value.compareTo(displayName) == 0 }?.key
+                key?.let { settingsViewModel.onLanguageChanged(it) }
 
         },
-        onEngineChanged = {
-                val key = Engines.fromDisplayName(it)
-                settingsViewModel.onEngineChanged(key!!)
+        onEngineChanged = { engineDisplayName ->
+                val key = Engines.fromDisplayName(engineDisplayName)
+                key?.let { settingsViewModel.onEngineChanged(it) }
 
         }
     )

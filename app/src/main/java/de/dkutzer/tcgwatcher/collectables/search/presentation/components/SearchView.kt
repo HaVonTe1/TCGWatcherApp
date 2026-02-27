@@ -169,10 +169,15 @@ fun SearchView(
             } else {
                 when (itemCount) {
                     0 -> NoSearchResults()
-                    1 -> ProductDetailsView(
-                        modifier = Modifier.fillMaxSize().padding(0.dp), // Remove internal padding
-                        initialProduct = searchResultPagingItems[0]!!
-                    )
+                    1 -> {
+                        val product = searchResultPagingItems[0]
+                        if (product != null) {
+                            ProductDetailsView(
+                                modifier = Modifier.fillMaxSize().padding(0.dp),
+                                initialProduct = product
+                            )
+                        }
+                    }
 
                     else -> {
                         SearchResultItemListView(

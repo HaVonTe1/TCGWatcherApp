@@ -58,22 +58,24 @@ fun SearchResultItemListView(
 
                             logger.debug { "ProductListViewItemView: $index" }
                             val productModel = productPagingItems[index]
-                            ProductListViewItemView(
-                                productModel = productModel!!,
-                                settingsModel = settingsModel,
-                                showLastUpdated = false,
-                                iconRowContent = { },
-                                modifier = Modifier
-                                    .fillParentMaxWidth()
-                                    .clickable {
-                                        coroutineScope.launch {
-                                            navigator.navigateTo(
-                                                ListDetailPaneScaffoldRole.Detail,
-                                                index
-                                            )
+                            if (productModel != null) {
+                                ProductListViewItemView(
+                                    productModel = productModel,
+                                    settingsModel = settingsModel,
+                                    showLastUpdated = false,
+                                    iconRowContent = { },
+                                    modifier = Modifier
+                                        .fillParentMaxWidth()
+                                        .clickable {
+                                            coroutineScope.launch {
+                                                navigator.navigateTo(
+                                                    ListDetailPaneScaffoldRole.Detail,
+                                                    index
+                                                )
+                                            }
                                         }
-                                    }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -81,51 +83,57 @@ fun SearchResultItemListView(
 
         },
         detailPane = {
-            navigator.currentDestination?.contentKey?.let { index ->
-                logger.debug { "DetailPane: $index" }
-
-                AnimatedPane {
-                    ProductDetailsView(
-                        initialProduct = productPagingItems[index as Int]!!,
-                        currentIndex = index,
-                        nextIndex = if ((index + 1) < productPagingItems.itemCount) index + 1 else null,
-                        previousIndex = if ((index - 1) >= 0) index - 1 else null,
-                        onImageClick = { clickedIndex ->
-                            logger.debug { "DetailPane:onImageClick: $clickedIndex" }
-                            coroutineScope.launch {
-                                navigator.navigateTo(
-                                    ListDetailPaneScaffoldRole.Extra,
-                                    clickedIndex
-                                )
+            navigator.currentDestination?.contentKey?.let { key ->
+                logger.debug { "DetailPane: $key" }
+                val index = key as Int
+                val product = productPagingItems[index]
+                if (product != null) {
+                    AnimatedPane {
+                        ProductDetailsView(
+                            initialProduct = product,
+                            currentIndex = index,
+                            nextIndex = if ((index + 1) < productPagingItems.itemCount) index + 1 else null,
+                            previousIndex = if ((index - 1) >= 0) index - 1 else null,
+                            onImageClick = { clickedIndex ->
+                                logger.debug { "DetailPane:onImageClick: $clickedIndex" }
+                                coroutineScope.launch {
+                                    navigator.navigateTo(
+                                        ListDetailPaneScaffoldRole.Extra,
+                                        clickedIndex
+                                    )
+                                }
+                            },
+                            onBackClick = {
+                                logger.debug { "DetailPane:onBackClick:" }
+                                coroutineScope.launch {
+                                    navigator.navigateBack()
+                                }
+                            },
+                            onChangedIndex = { clickedIndex ->
+                                logger.debug { "DetailPane:onPreviousClick: $clickedIndex" }
+                                coroutineScope.launch {
+                                    navigator.navigateTo(
+                                        ListDetailPaneScaffoldRole.Detail,
+                                        clickedIndex
+                                    )
+                                }
                             }
-                        },
-                        onBackClick = {
-                            logger.debug { "DetailPane:onBackClick:" }
-                            coroutineScope.launch {
-                                navigator.navigateBack()
-                            }
-                        },
-                        onChangedIndex = { clickedIndex ->
-                            logger.debug { "DetailPane:onPreviousClick: $clickedIndex" }
-                            coroutineScope.launch {
-                                navigator.navigateTo(
-                                    ListDetailPaneScaffoldRole.Detail,
-                                    clickedIndex
-                                )
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         },
         extraPane = {
-            navigator.currentDestination?.contentKey?.let {
-                logger.debug { "ExtraPane: $it" }
-                AnimatedPane {
-                    val index = it as Int;
-                    ZoomableCardImage(
-                        productModel = productPagingItems[index]!!
-                    )
+            navigator.currentDestination?.contentKey?.let { key ->
+                logger.debug { "ExtraPane: $key" }
+                val index = key as Int
+                val product = productPagingItems[index]
+                if (product != null) {
+                    AnimatedPane {
+                        ZoomableCardImage(
+                            productModel = product
+                        )
+                    }
                 }
             }
         }

@@ -52,8 +52,8 @@ class ProductDetailsViewModel(
                 val searchCacheDb = extras[SearchModelCreationKeys.SearchCacheRepoIdKey]
 
                 return ProductDetailsViewModel(
-                    searchCacheDatabase = searchCacheDb!!,
-                    settingsDatabase = settingsDb!!,
+                    searchCacheDatabase = requireNotNull(searchCacheDb) { "SearchCacheDb not provided in ViewModel creation extras" },
+                    settingsDatabase = requireNotNull(settingsDb) { "SettingsDb not provided in ViewModel creation extras" },
 
                 ) as T
             }

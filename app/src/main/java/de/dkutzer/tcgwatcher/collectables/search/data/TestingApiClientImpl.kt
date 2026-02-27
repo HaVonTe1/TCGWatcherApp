@@ -74,7 +74,8 @@ class TestingApiClientImpl : BaseCardmarketApiClient() {
 
         val html =
             Thread.currentThread().contextClassLoader?.getResource("evoli_details.html")?.readText()
-        val document = Jsoup.parse(html!!)
+        val document = html?.let { Jsoup.parse(it) }
+            ?: throw IllegalStateException("Test resource 'evoli_details.html' not found")
         return parseProductDetails(document, link)
     }
 

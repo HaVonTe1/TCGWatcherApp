@@ -165,9 +165,9 @@ class SearchViewModel(
                 val quickSearchDb = extras[SearchModelCreationKeys.QuickSearchRepoIdKey]
 
                 return SearchViewModel(
-                    settingsDb!!,
-                    searchCacheDb!!,
-                    quickSearchDb!!
+                    requireNotNull(settingsDb) { "SettingsDb not provided in ViewModel creation extras" },
+                    requireNotNull(searchCacheDb) { "SearchCacheDb not provided in ViewModel creation extras" },
+                    requireNotNull(quickSearchDb) { "QuickSearchDb not provided in ViewModel creation extras" }
                 ) as T
             }
         }
