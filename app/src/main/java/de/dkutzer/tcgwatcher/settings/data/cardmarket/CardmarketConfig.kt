@@ -1,6 +1,7 @@
 package de.dkutzer.tcgwatcher.settings.data.cardmarket
 
 import de.dkutzer.tcgwatcher.settings.domain.BaseConfig
+import de.dkutzer.tcgwatcher.settings.domain.DEFAULT_TTL_SECONDS
 import de.dkutzer.tcgwatcher.settings.domain.Engines
 import de.dkutzer.tcgwatcher.settings.domain.Languages
 import de.dkutzer.tcgwatcher.settings.domain.SettingsModel
@@ -10,9 +11,10 @@ data class CardmarketConfig(
     override val lang: Languages = Languages.DE,
     override val engine: Engines = Engines.HTMLUNIT_NOJS,
     override val searchUrl: String = "$baseUrl/$lang/Pokemon/Products/Search",
-    override val limit: Int = 100 // 100 is max - we try to fetch all data and cache it
+    override val limit: Int = 100, // 100 is max - we try to fetch all data and cache it
+    override val ttlInSeconds: Long = DEFAULT_TTL_SECONDS
 
-) : BaseConfig(baseUrl, lang, engine, searchUrl, limit) {
+) : BaseConfig(baseUrl, lang, engine, searchUrl, limit, ttlInSeconds) {
     constructor(settingsModel: SettingsModel) :
             this(
                 lang = settingsModel.language,

@@ -2,6 +2,8 @@ package de.dkutzer.tcgwatcher.settings.domain
 
 import de.dkutzer.tcgwatcher.settings.data.cardmarket.CardmarketConfig
 
+const val DEFAULT_TTL_SECONDS = 259200L // 3 days in seconds
+
 
 open class BaseConfig(
     open val baseUrl: String,
@@ -9,7 +11,7 @@ open class BaseConfig(
     open val engine: Engines,
     open val searchUrl: String,
     open val limit: Int,
-    val ttlInSeconds: Long = (3 * 24 * 60 * 60L)
+    open val ttlInSeconds: Long = DEFAULT_TTL_SECONDS
 )
 
 
